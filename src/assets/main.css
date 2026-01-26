@@ -1,0 +1,270 @@
+@import "base.css";
+
+/* SupremeLL Font Face Definitions */
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Thin.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-ThinItalic.otf") format("opentype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-LightItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-RegularItalic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Book.otf") format("opentype");
+  font-weight: 450;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-BookItalic.otf") format("opentype");
+  font-weight: 450;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-BoldFlat.otf") format("opentype");
+  font-weight: 750;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-BoldFlatItalic.otf") format("opentype");
+  font-weight: 750;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SupremeLL";
+  src: url("/fonts/SupremeLL-BlackItalic.otf") format("opentype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: theme("fontFamily.primary"), sans-serif;
+  }
+
+  body {
+    font-family: theme("fontFamily.primary"), sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: theme("fontFamily.primary"), sans-serif;
+  }
+
+  p,
+  span,
+  div,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  label {
+    font-family: theme("fontFamily.primary"), sans-serif;
+  }
+}
+
+@layer utils {
+  .scrollbar-pretty {
+    @apply [&::-webkit-scrollbar]:w-1
+    [&::-webkit-scrollbar]:h-1
+    [&::-webkit-scrollbar-track]:rounded-full
+    [&::-webkit-scrollbar-track]:bg-white
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-gray-300;
+  }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+/* Custom Text Classes */
+@layer components {
+  /* Typography for the headings */
+  .vx-text-heading-1 {
+    @apply font-primary font-vx-bold leading-[3.75rem] tracking-[-0.01em] text-[3.25rem];
+  }
+  .vx-text-heading-2 {
+    @apply font-primary font-vx-bold leading-[3.25rem] tracking-[-0.005em] text-[2.75rem];
+  }
+  .vx-text-heading-3 {
+    @apply font-primary font-vx-bold leading-[2.75rem] tracking-[-0.005em] text-[2.25rem];
+  }
+  .vx-text-heading-4 {
+    @apply font-primary font-vx-semibold leading-[2.25em] tracking-[0] text-[1.75rem];
+  }
+  .vx-text-heading-5 {
+    @apply font-primary font-vx-medium leading-[2.75rem] tracking-[0] text-[1.25rem];
+  }
+  .vx-text-heading-6 {
+    @apply font-primary font-vx-medium leading-[1.25rem] tracking-[0] text-[1rem];
+  }
+
+  /* Typography for the body */
+  .vx-text-body-1xl {
+    @apply font-primary font-vx-regular leading-[1.55rem] tracking-[0] text-[1.125rem];
+  }
+  .vx-text-body-l {
+    @apply font-primary font-vx-regular leading-[1.5rem] tracking-[0] text-[1rem];
+  }
+  .vx-text-body-m {
+    @apply font-primary font-vx-regular leading-[1.25rem] tracking-[0] text-[0.875rem];
+  }
+  .vx-text-body-s {
+    @apply font-primary font-vx-regular leading-[1.125rem] tracking-[0] text-[0.75rem];
+  }
+
+  /* Typography for the UI Text Styles */
+  .vx-text-button-s {
+    @apply font-primary font-vx-semibold leading-[1rem] tracking-[0] text-[0.75rem];
+  }
+  .vx-text-button-m {
+    @apply font-primary font-vx-semibold leading-[1.125rem] tracking-[0] text-[0.875rem];
+  }
+  .vx-text-button-l {
+    @apply font-primary font-vx-semibold leading-[1.25rem] tracking-[0] text-[1rem];
+  }
+  .vx-text-label {
+    @apply font-primary font-vx-regular leading-[1rem] tracking-[0] text-[0.75rem];
+  }
+  .vx-text-label-title {
+    @apply font-primary font-vx-semibold leading-[1.125rem] tracking-[0] text-[0.875rem];
+  }
+  .vx-text-label-description {
+    @apply font-primary font-vx-regular leading-[1rem] tracking-[0] text-[0.75rem];
+  }
+  .vx-text-input {
+    @apply font-primary font-vx-regular leading-[1.5rem] tracking-[0] text-[1rem];
+  }
+  .vx-text-caption {
+    @apply font-primary font-vx-regular leading-[0.875rem] tracking-[0] text-[0.625rem];
+  }
+  .vx-text-tag {
+    @apply font-primary font-vx-medium leading-[1rem] tracking-[0.03125rem] text-[0.75rem];
+  }
+  .vx-text-tooltip {
+    @apply font-primary font-vx-regular leading-[1rem] tracking-[0] text-[0.75rem];
+  }
+  .vx-text-alert {
+    @apply font-primary font-vx-regular leading-[1.25rem] tracking-[0] text-[0.875rem];
+  }
+  .vx-text-table-cell {
+    @apply font-primary font-vx-regular leading-[1.25rem] tracking-[0] text-[0.875rem];
+  }
+  .vx-text-menu-item {
+    @apply font-primary font-vx-medium leading-[1rem] tracking-[0] text-[0.875rem];
+  }
+  .vx-text-meta-info {
+    @apply font-primary font-vx-regular leading-[1rem] tracking-[0.015625rem] text-[0.75rem];
+  }
+  .vx-text-badge-count {
+    @apply font-primary font-vx-bold leading-[0.875rem] tracking-[0.03125rem] text-[0.625rem];
+  }
+}

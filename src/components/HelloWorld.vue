@@ -1,41 +1,112 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { defineComponent, h, ref } from "vue";
+import BTButton from "@/components/ui/BTButton.vue";
+import { useDrawerStore } from "@/stores/drawer.ts";
+import {
+  useToastStore,
+  type ToastLocation,
+  type Toast,
+} from "@/stores/toast.ts";
 
-defineProps<{ msg: string }>()
+defineProps<{ msg: string }>();
 
-const count = ref(0)
+const count = ref(0);
+const drawerStore = useDrawerStore();
+const toastStore = useToastStore();
+
+const DrawerDemoContent = defineComponent({
+  name: "DrawerDemoContent",
+  props: {
+    count: { type: Number, required: true },
+  },
+  setup(props) {
+    return () =>
+      h("div", { class: "flex flex-col gap-4" }, [
+        h(
+          "p",
+          { class: "bt-text-body-m text-bt-grey-700" },
+          "Esto es contenido del drawer (demo).",
+        ),
+        h(
+          "div",
+          {
+            class:
+              "rounded-m bg-bt-grey-100 p-4 bt-text-body-s text-bt-grey-800",
+          },
+          `Count actual: ${props.count}`,
+        ),
+      ]);
+  },
+});
+
+function openDemoDrawer() {
+  drawerStore.openDrawer({
+    component: DrawerDemoContent,
+    direction: "right",
+    title: "BT Drawer (Demo)",
+    description: "Probando drawer desde HelloWorld",
+    props: { count: count.value },
+  });
+}
+
+function showToast(
+  severity: Toast["severity"],
+  location: ToastLocation = "top-right",
+) {
+  // Asumiendo que tu store tiene addToast(...) (típico)
+  toastStore.addToast?.({
+    title: "BT Toast",
+    message: `Toast severity: ${severity}`,
+    severity,
+    location,
+  });
+
+  // Si tu store usa otro nombre (pushToast / showToast), decime y lo ajusto.
+}
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
+  <div class="mx-auto max-w-xl px-6 py-12 flex flex-col gap-6">
+    <h1 class="bt-text-heading-3 text-bt-grey-900">
+      {{ msg }}
+    </h1>
 
-  <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
+    <div
+      class="rounded-m bg-bt-white shadow-bt-elevation-200 p-6 flex flex-col gap-4"
+    >
+      <p class="bt-text-body-m text-bt-grey-700">
+        Demo: Drawer + Toasts usando BT design tokens
+      </p>
+
+      <div class="flex flex-wrap gap-2">
+        <BTButton size="md" variant="primary" @click="count++">
+          count is {{ count }}
+        </BTButton>
+
+        <BTButton size="md" variant="secondary" @click="openDemoDrawer">
+          Open Drawer
+        </BTButton>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <BTButton size="sm" variant="primary" @click="showToast('success')"
+          >Toast Success</BTButton
+        >
+        <BTButton size="sm" variant="primary" @click="showToast('info')"
+          >Toast Info</BTButton
+        >
+        <BTButton size="sm" variant="primary" @click="showToast('warning')"
+          >Toast Warning</BTButton
+        >
+        <BTButton size="sm" variant="destructive" @click="showToast('error')"
+          >Toast Error</BTButton
+        >
+      </div>
+
+      <p class="bt-text-body-s text-bt-grey-500">
+        *Si no aparece el toast, tu store no se llama <code>addToast</code>.
+        Decime el método real y te lo dejo perfecto.
+      </p>
+    </div>
   </div>
-
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
-      >create-vue</a
-    >, the official Vue + Vite starter
-  </p>
-  <p>
-    Learn more about IDE Support for Vue in the
-    <a
-      href="https://vuejs.org/guide/scaling-up/tooling.html#ide-support"
-      target="_blank"
-      >Vue Docs Scaling up Guide</a
-    >.
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
 </template>
-
-<style scoped>
-.read-the-docs {
-  color: #888;
-}
-</style>

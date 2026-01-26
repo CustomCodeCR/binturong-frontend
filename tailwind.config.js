@@ -2,15 +2,15 @@
 export default {
   content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
   safelist: [
-    "vx-text-heading-1",
-    "vx-text-heading-2",
-    "vx-text-heading-3",
-    "vx-text-heading-4",
-    "vx-text-heading-5",
-    "vx-text-heading-6",
-    "vx-text-body-l",
-    "vx-text-body-m",
-    "vx-text-body-s",
+    "bt-text-heading-1",
+    "bt-text-heading-2",
+    "bt-text-heading-3",
+    "bt-text-heading-4",
+    "bt-text-heading-5",
+    "bt-text-heading-6",
+    "bt-text-body-l",
+    "bt-text-body-m",
+    "bt-text-body-s",
     "grid-cols-1",
     "grid-cols-2",
     "grid-cols-3",
@@ -39,153 +39,132 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        primary: ["SupremeLL", "sand-serif"],
+        primary: ["SupremeLL", "sans-serif"],
       },
       fontWeight: {
-        "vx-thin": "100",
-        "vx-extralight": "200",
-        "vx-light": "300",
-        "vx-regular": "400",
-        "vx-medium": "500",
-        "vx-semibold": "600",
-        "vx-bold": "700",
-        "vx-extrabold": "800",
+        "bt-thin": "100",
+        "bt-extralight": "200",
+        "bt-light": "300",
+        "bt-regular": "400",
+        "bt-medium": "500",
+        "bt-semibold": "600",
+        "bt-bold": "700",
+        "bt-extrabold": "800",
       },
       screens: {
-        xs: "20rem" /* 320px */,
-        sm: "40rem" /* 640px */,
-        md: "48rem" /* 768px */,
-        lg: "64rem" /* 1024px */,
-        xl: "80rem" /* 1280px */,
-        "2xl": "96rem" /* 1536px */,
-        "3xl": "112rem" /* 1792px */,
+        xs: "20rem",
+        sm: "40rem",
+        md: "48rem",
+        lg: "64rem",
+        xl: "80rem",
+        "2xl": "96rem",
+        "3xl": "112rem",
       },
       gridTemplateColumns: {
-        "vx-2": "minmax(0, 39.5rem) minmax(0, 27.5rem)",
+        "bt-2": "minmax(0, 39.5rem) minmax(0, 27.5rem)",
       },
       spacing: {
-        "vx-spacing-4": "0.25rem" /* 4px */,
-        "vx-spacing-8": "0.5rem" /* 8px */,
-        "vx-spacing-12": "0.75rem" /* 12px */,
-        "vx-spacing-16": "1rem" /* 16px */,
-        "vx-spacing-24": "1.5rem" /* 24px */,
-        "vx-spacing-32": "2rem" /* 32px */,
-        "vx-spacing-40": "2.5rem" /* 40px */,
-        "vx-spacing-44": "2.75rem" /* 44px */,
-        "vx-spacing-64": "4rem" /* 64px */,
+        "bt-spacing-4": "0.25rem",
+        "bt-spacing-8": "0.5rem",
+        "bt-spacing-12": "0.75rem",
+        "bt-spacing-16": "1rem",
+        "bt-spacing-24": "1.5rem",
+        "bt-spacing-32": "2rem",
+        "bt-spacing-40": "2.5rem",
+        "bt-spacing-44": "2.75rem",
+        "bt-spacing-64": "4rem",
       },
       boxShadow: {
-        "vx-elevation-0":
-          "0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.1)",
-        "vx-elevation-100":
-          "0 1px 2px 0 rgba(22, 23, 24, 0.06), 0 0 1px 0 rgba(22, 23, 24, 0.06)",
-        "vx-elevation-200":
-          "0 2px 4px 0 rgba(22, 23, 24, 0.08), 0 1px 2px 0 rgba(22, 23, 24, 0.06)",
-        "vx-elevation-300":
-          "0 4px 8px 0 rgba(22, 23, 24, 0.08), 0 2px 4px 0 rgba(22, 23, 24, 0.06)",
-        "vx-elevation-400":
-          "0 8px 16px 0 rgba(22, 23, 24, 0.10), 0 4px 6px 0 rgba(22, 23, 24, 0.06)",
-        "vx-elevation-500":
-          "0 12px 24px 0 rgba(22, 23, 24, 0.14), 0 6px 12px 0 rgba(22, 23, 24, 0.08)",
+        "bt-elevation-0":
+          "0 0 0 1px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12)",
+        "bt-elevation-100": "0 1px 2px rgba(17,24,39,0.08)",
+        "bt-elevation-200": "0 2px 4px rgba(17,24,39,0.12)",
+        "bt-elevation-300": "0 4px 8px rgba(17,24,39,0.14)",
+        "bt-elevation-400": "0 8px 16px rgba(17,24,39,0.18)",
+        "bt-elevation-500": "0 12px 24px rgba(17,24,39,0.22)",
       },
       borderRadius: {
-        xs: "0.125rem" /* 2px */,
-        s: "0.25rem" /* 4px */,
-        m: "0.5rem" /* 8px */,
-        l: "0.75rem" /* 12px */,
-        full: "9999px" /* 9999px */,
+        xs: "0.125rem",
+        s: "0.25rem",
+        m: "0.5rem",
+        l: "0.75rem",
+        full: "9999px",
       },
       colors: {
-        // Primary
-        "vx-primary-50": "#F7F5FC",
-        "vx-primary-100": "#EEEAF8",
-        "vx-primary-200": "#D6CFF1",
-        "vx-primary-300": "#B7AEE6",
-        "vx-primary-400": "#958BCF",
-        "vx-primary-500": "#583F98",
-        "vx-primary-600": "#442F7A",
-        "vx-primary-700": "#32215C",
-        "vx-primary-800": "#241645",
-        "vx-primary-900": "#170B30",
-        // Secondary
-        "vx-secondary-100": "#F5F5F5",
-        "vx-secondary-200": "#E6E6E6",
-        "vx-secondary-300": "#D6D6D6",
-        "vx-secondary-400": "#C6C6C6",
-        "vx-secondary-500": "#B3B2B3",
-        "vx-secondary-600": "#969696",
-        "vx-secondary-700": "#787878",
-        "vx-secondary-800": "#5A5A5A",
-        "vx-secondary-900": "#3C3C3C",
-        // Grey Scale
-        "vx-grey-50": "#FCFCFD",
-        "vx-grey-100": "#F9FAFB",
-        "vx-grey-200": "#F3F4F6",
-        "vx-grey-300": "#E5E7EB",
-        "vx-grey-400": "#D1D5DB",
-        "vx-grey-500": "#9CA3AF",
-        "vx-grey-600": "#6B7280",
-        "vx-grey-700": "#4B5563",
-        "vx-grey-800": "#374151",
-        "vx-grey-900": "#1F2937",
-        // UI States
-        "vx-hover": "rgba(88, 63, 152, 0.12)", // #583F98 with 12% opacity
-        "vx-pressed": "rgba(88, 63, 152, 0.16)", // #583F98 with 16% opacity
-        "vx-disabled": "#E5E7EB",
-        "vx-focus": "#958BCF",
+        /* =========================
+           BRAND – ACERO / SEGURIDAD
+        ========================== */
+        "bt-primary-50": "#F3F6F9",
+        "bt-primary-100": "#E5EBF1",
+        "bt-primary-200": "#CBD5E1",
+        "bt-primary-300": "#94A3B8",
+        "bt-primary-400": "#64748B",
+        "bt-primary-500": "#334155", // acero principal
+        "bt-primary-600": "#1E293B",
+        "bt-primary-700": "#0F172A",
+        "bt-primary-800": "#020617",
+        "bt-primary-900": "#020617",
 
-        "vx-white": "#FFFFFF",
+        /* =========================
+           ACCENT – BRONCE / LLAVES
+        ========================== */
+        "bt-accent-50": "#FFF8EB",
+        "bt-accent-100": "#FDEFD3",
+        "bt-accent-200": "#F9D8A4",
+        "bt-accent-300": "#F4BF6A",
+        "bt-accent-400": "#E6A84A",
+        "bt-accent-500": "#C8922E", // latón
+        "bt-accent-600": "#A8791F",
+        "bt-accent-700": "#7A5616",
+        "bt-accent-800": "#533A0F",
 
-        // Success
-        "vx-success-50": "#E8F8F1",
-        "vx-success-100": "#ECFDF5",
-        "vx-success-200": "#A9E7D1",
-        "vx-success-300": "#34D399",
-        "vx-success-400": "#22C88C",
-        "vx-success-500": "#10B981",
-        "vx-success-600": "#0E9F6E",
-        "vx-success-700": "#047857",
-        "vx-success-800": "#035243",
-        // Warning
-        "vx-warning-50": "#FFF7ED",
-        "vx-warning-100": "#FFEDD5",
-        "vx-warning-200": "#FED7AA",
-        "vx-warning-300": "#FDBA74",
-        "vx-warning-400": "#FB923C",
-        "vx-warning-500": "#F59E0B",
-        "vx-warning-600": "#EA580C",
-        "vx-warning-700": "#B45309",
-        "vx-warning-800": "#9A3412",
-        // Low Warning
-        "vx-low-warning-50": "#FFFBEB",
-        "vx-low-warning-100": "#FEF3C7",
-        "vx-low-warning-200": "#FDE68A",
-        "vx-low-warning-300": "#FCD34D",
-        "vx-low-warning-400": "#FBBF24",
-        "vx-low-warning-500": "#F59E0B",
-        "vx-low-warning-600": "#D97706",
-        "vx-low-warning-700": "#D45309",
-        "vx-low-warning-800": "#92400E",
-        // Error
-        "vx-error-50": "#FDEEEE",
-        "vx-error-100": "#FBD9D9",
-        "vx-error-200": "#F7B8B8",
-        "vx-error-300": "#F29393",
-        "vx-error-400": "#EC6E6E",
-        "vx-error-500": "#EF4444",
-        "vx-error-600": "#DC2626",
-        "vx-error-700": "#B91C1C",
-        "vx-error-800": "#7F1D1D",
-        // Information
-        "vx-info-50": "#F0F8FF",
-        "vx-info-100": "#EFF6FF",
-        "vx-info-200": "#BFDBFE",
-        "vx-info-300": "#93C5FD",
-        "vx-info-400": "#93C5FD",
-        "vx-info-500": "#3B82F6",
-        "vx-info-600": "#2563EB",
-        "vx-info-700": "#1D4ED8",
-        "vx-info-800": "#1E40AF",
+        /* =========================
+           GREYS – METAL / UI
+        ========================== */
+        "bt-grey-50": "#FAFAFA",
+        "bt-grey-100": "#F4F4F5",
+        "bt-grey-200": "#E4E4E7",
+        "bt-grey-300": "#D4D4D8",
+        "bt-grey-400": "#A1A1AA",
+        "bt-grey-500": "#71717A",
+        "bt-grey-600": "#52525B",
+        "bt-grey-700": "#3F3F46",
+        "bt-grey-800": "#27272A",
+        "bt-grey-900": "#18181B",
+
+        /* =========================
+           STATES
+        ========================== */
+        "bt-hover": "rgba(51,65,85,0.12)",
+        "bt-pressed": "rgba(51,65,85,0.18)",
+        "bt-disabled": "#E5E7EB",
+        "bt-focus": "#64748B",
+
+        "bt-white": "#FFFFFF",
+
+        /* SUCCESS */
+        "bt-success-100": "#ECFDF5",
+        "bt-success-300": "#6EE7B7",
+        "bt-success-500": "#10B981",
+        "bt-success-700": "#047857",
+
+        /* WARNING */
+        "bt-warning-100": "#FFF7ED",
+        "bt-warning-300": "#FDBA74",
+        "bt-warning-500": "#F59E0B",
+        "bt-warning-700": "#B45309",
+
+        /* ERROR */
+        "bt-error-100": "#FEE2E2",
+        "bt-error-300": "#FCA5A5",
+        "bt-error-500": "#EF4444",
+        "bt-error-700": "#B91C1C",
+
+        /* INFO */
+        "bt-info-100": "#EFF6FF",
+        "bt-info-300": "#93C5FD",
+        "bt-info-500": "#3B82F6",
+        "bt-info-700": "#1D4ED8",
       },
     },
   },

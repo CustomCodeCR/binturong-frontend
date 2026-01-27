@@ -2,10 +2,12 @@
 import { ref } from "vue";
 import BTInput from "@/components/ui/BTInput.vue";
 import BTButton from "@/components/ui/BTButton.vue";
+import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
 const rememberMe = ref(false);
+const router = useRouter();
 
 const handleLogin = () => {
   console.log("Datos de login:", {
@@ -13,6 +15,10 @@ const handleLogin = () => {
     password: password.value,
     remember: rememberMe.value,
   });
+};
+
+const handleClick = () => {
+  router.push("/home");
 };
 </script>
 
@@ -73,7 +79,12 @@ const handleLogin = () => {
           </div>
 
           <!-- Submit -->
-          <BTButton type="submit" variant="primary" size="lg">
+          <BTButton
+            @click="handleClick"
+            type="submit"
+            variant="primary"
+            size="lg"
+          >
             Sign in
           </BTButton>
 

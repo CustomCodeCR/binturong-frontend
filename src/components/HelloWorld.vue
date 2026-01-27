@@ -7,11 +7,13 @@ import {
   type ToastLocation,
   type Toast,
 } from "@/stores/toast.ts";
+import { useRouter } from "vue-router";
 
 defineProps<{ msg: string }>();
 
 const count = ref(0);
 const drawerStore = useDrawerStore();
+const router = useRouter();
 const toastStore = useToastStore();
 
 const DrawerDemoContent = defineComponent({
@@ -60,9 +62,10 @@ function showToast(
     severity,
     location,
   });
-
-  // Si tu store usa otro nombre (pushToast / showToast), decime y lo ajusto.
 }
+const handleClick = () => {
+  router.push("/users");
+};
 </script>
 
 <template>
@@ -100,6 +103,13 @@ function showToast(
         >
         <BTButton size="sm" variant="destructive" @click="showToast('error')"
           >Toast Error</BTButton
+        >
+        <BTButton
+          @click="handleClick"
+          type="submit"
+          size="sm"
+          variant="secondary"
+          >list</BTButton
         >
       </div>
 

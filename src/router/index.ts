@@ -15,6 +15,11 @@ export const router = createRouter({
       name: "login",
       component: Login,
     },
+    {
+      path: "/users",
+      name: "UserView",
+      component: () => import("@/views/UserView.vue"),
+    },
   ],
 });
 

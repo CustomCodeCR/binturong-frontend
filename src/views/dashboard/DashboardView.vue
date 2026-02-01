@@ -1,9 +1,9 @@
 <script setup lang="ts">
 const stats = [
-  { title: "Clientes", value: 128 },
-  { title: "Servicios", value: 56 },
-  { title: "Inventario", value: 342 },
-  { title: "Empleados", value: 12 },
+  { title: "Clientes", value: 128, icon: "👥"},
+  { title: "Servicios", value: 56, icon: "🛠️" },
+  { title: "Inventario", value: 342, icon: "🔑" },
+  { title: "Empleados", value: 12, icon: "👷" },
 ];
 
 const services = [
@@ -32,54 +32,60 @@ const services = [
 </script>
 
 <template>
-  <div class="space-y-8">
+  <div class="p-6 space-y-8 bg-gray-100 min-h-screen">
 
-    <!-- Título -->
+    <!-- TÍTULO -->
     <div>
-      <h1 class="text-2xl font-bold">Dashboard</h1>
+      <h1 class="text-3xl font-bold text-slate-800">Dashboard</h1>
       <p class="text-gray-500">Resumen general de la cerrajería</p>
     </div>
 
-    <!-- Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <div
         v-for="stat in stats"
         :key="stat.title"
-        class="bg-white rounded-lg p-5 shadow"
+        class="bg-white rounded-xl p-5 shadow flex items-center gap-4"
       >
-        <p class="text-gray-500 text-sm">{{ stat.title }}</p>
-        <p class="text-2xl font-bold mt-2">{{ stat.value }}</p>
+        <div class="text-3xl">
+          {{ stat.icon }}
+        </div>
+
+        <div>
+          <p class="text-gray-500 text-sm">{{ stat.title }}</p>
+          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
+        </div>
       </div>
     </div>
 
-    <!-- Acciones rápidas -->
-    <div class="bg-white rounded-lg p-6 shadow">
+    <!-- ACCIONES RÁPIDAS -->
+    <div class="bg-white rounded-xl p-6 shadow">
       <h2 class="text-lg font-semibold mb-4">Acciones rápidas</h2>
 
       <div class="flex flex-wrap gap-3">
-        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          Nuevo Servicio
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          ➕ Nuevo Servicio
         </button>
 
-        <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-          Nuevo Cliente
+        <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          👤 Nuevo Cliente
         </button>
 
-        <button class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">
-          Ver Inventario
+        <button class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800">
+          📦 Ver Inventario
         </button>
       </div>
     </div>
 
-    <!-- Tabla -->
-    <div class="bg-white rounded-lg p-6 shadow">
+    <!-- TABLA -->
+    <div class="bg-white rounded-xl p-6 shadow">
       <h2 class="text-lg font-semibold mb-4">Últimos servicios</h2>
 
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b text-left text-gray-600">
-              <th class="py-2">Cliente</th>
+              <th class="py-3">Cliente</th>
               <th>Servicio</th>
               <th>Empleado</th>
               <th>Fecha</th>
@@ -91,15 +97,15 @@ const services = [
             <tr
               v-for="(service, index) in services"
               :key="index"
-              class="border-b last:border-0"
+              class="border-b last:border-0 hover:bg-gray-50"
             >
-              <td class="py-2">{{ service.client }}</td>
+              <td class="py-3 font-medium">{{ service.client }}</td>
               <td>{{ service.service }}</td>
               <td>{{ service.employee }}</td>
               <td>{{ service.date }}</td>
               <td>
                 <span
-                  class="px-2 py-1 rounded text-xs font-medium"
+                  class="px-3 py-1 rounded-full text-xs font-semibold"
                   :class="{
                     'bg-green-100 text-green-700': service.status === 'Completado',
                     'bg-yellow-100 text-yellow-700': service.status === 'Pendiente',

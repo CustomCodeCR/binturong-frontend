@@ -22,11 +22,41 @@ export const router = createRouter({
           path: "/roles",
           name: "roles",
           component: () => import("@/views/roles/RolesView.vue")
-        }
-
+        },
+      {
+          path: "clientes",
+          name: "clientes",
+          component: () => import("@/views/clients/ClientesView.vue"),
+        },
+        {
+          path: "proveedores",
+          name: "proveedores",
+          component: () => import("@/views/suppliers/ProveedoresView.vue"),
+        },
+        {
+          path: "sucursales",
+          name: "sucursales",
+          component: () => import("@/views/branches/SucursalesView.vue"),
+        },
+        {
+          path: "empleados",
+          name: "empleados",
+          component: () => import("@/views/employees/EmpleadosView.vue"),
+        },
+        {
+          path: "inventario",
+          name: "inventario",
+          component: () => import("@/views/inventory/InventarioView.vue"),
+        },
+        {
+          path: "auditoria",
+          name: "auditoria",
+          component: () => import("@/views/auditlog/AuditoriaView.vue"),
+        },
       ],
     },
   ],
 })
+
 
 export default router

@@ -4,7 +4,12 @@ import MainLayout from "@/layouts/MainLayout.vue"
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
+      {
+      path: "/login",
+      name: "login",
+      component: () => import("@/views/auth/LoginView.vue"),
+      },
+      {
       path: "/",
       component: MainLayout,
       children: [
@@ -57,6 +62,5 @@ export const router = createRouter({
     },
   ],
 })
-
 
 export default router

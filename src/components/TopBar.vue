@@ -1,28 +1,24 @@
-<script setup lang="ts">
-</script>
-
 <template>
   <header
-    class="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 shadow-sm"
+    class="h-20 w-full bg-slate-900 text-white border-b border-slate-800 flex items-center justify-center relative"
   >
-    <!-- Izquierda -->
-    <div class="text-2xl font-bold text-gray-800">
+    <!-- Título centrado -->
+    <h1 class="text-2xl font-bold tracking-wide">
       Cerrajería Calderón
-    </div>
+    </h1>
 
-    <!-- Derecha -->
-    <div class="flex items-center gap-4">
-      <div class="text-right">
-        <p class="text-sm font-semibold text-gray-700">Administrador</p>
-        <p class="text-xs text-gray-500">admin@calderon.com</p>
+    <!-- Usuario (derecha, posición absoluta) -->
+    <div class="absolute right-8 flex items-center gap-4">
+      <div class="text-right leading-tight">
+        <p class="text-sm font-semibold">Administrador</p>
+        <p class="text-xs text-slate-300">admin@calderon.com</p>
       </div>
 
       <div
-        class="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold"
+        class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold"
       >
         A
       </div>
     </div>
   </header>
 </template>
-

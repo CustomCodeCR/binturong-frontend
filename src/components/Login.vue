@@ -18,7 +18,7 @@ const handleLogin = () => {
 };
 
 const handleClick = () => {
-  router.push("/home");
+  router.push("/dashboard");
 };
 </script>
 

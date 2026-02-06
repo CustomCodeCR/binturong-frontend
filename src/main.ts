@@ -5,8 +5,8 @@ import { createApp, watch } from "vue";
 import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
 
-import lang_en from "@/lang/en-US.json";
-import lang_es from "@/lang/es-ES.json";
+import es from "./i18n/es.json";
+import en from "./i18n/en.json";
 
 import App from "./App.vue";
 import router from "./router";
@@ -25,8 +25,8 @@ const i18n = createI18n({
   locale: "en",
   fallbackLocale: "en",
   messages: {
-    en: lang_en,
-    es: lang_es,
+    en: en,
+    es: es,
   },
 });
 

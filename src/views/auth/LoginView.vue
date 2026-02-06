@@ -1,41 +1,45 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import { useRouter } from "vue-router"
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import BTButton from "@/components/ui/BTButton.vue";
 
-const router = useRouter()
+const router = useRouter();
 
-const email = ref("")
-const password = ref("")
-const loading = ref(false)
-const error = ref("")
+const email = ref("");
+const password = ref("");
+const loading = ref(false);
+const error = ref("");
 
 const login = async () => {
-  error.value = ""
+  error.value = "";
 
   if (!email.value || !password.value) {
-    error.value = "Todos los campos son obligatorios"
-    return
+    error.value = "Todos los campos son obligatorios";
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
 
   // Simulación de login (luego lo conectás al backend)
   setTimeout(() => {
-    loading.value = false
+    loading.value = false;
 
     if (email.value === "admin@admin.com" && password.value === "123456") {
-      router.push("/home")
+      router.push("/home");
     } else {
-      error.value = "Credenciales incorrectas"
+      error.value = "Credenciales incorrectas";
     }
-  }, 1200)
-}
+  }, 1200);
+};
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8 border border-slate-700">
-
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800"
+  >
+    <div
+      class="w-full max-w-md bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8 border border-slate-700"
+    >
       <!-- Logo / Título -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-white">Cerrajería Calderón</h1>
@@ -52,7 +56,6 @@ const login = async () => {
 
       <!-- Form -->
       <form @submit.prevent="login" class="space-y-5">
-
         <div>
           <label class="block text-sm text-slate-300 mb-1">Correo</label>
           <input
@@ -73,14 +76,9 @@ const login = async () => {
           />
         </div>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-500 transition flex justify-center items-center gap-2 disabled:opacity-60"
-        >
-          <span v-if="!loading">Iniciar sesión</span>
-          <span v-else class="animate-pulse">Verificando...</span>
-        </button>
+        <BTButton variant="blue" size="cta" fullWidth type="submit">
+          {{ $t("login") }}
+        </BTButton>
       </form>
 
       <!-- Footer -->

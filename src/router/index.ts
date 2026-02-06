@@ -1,15 +1,16 @@
-import { createRouter, createWebHistory } from "vue-router"
-import MainLayout from "@/layouts/MainLayout.vue"
+import { createRouter, createWebHistory } from "vue-router";
+import MainLayout from "@/layouts/MainLayout.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-      {
+    {
       path: "/login",
       name: "login",
       component: () => import("@/views/auth/LoginView.vue"),
-      },
-      {
+    },
+
+    {
       path: "/",
       component: MainLayout,
       children: [
@@ -26,9 +27,9 @@ export const router = createRouter({
         {
           path: "/roles",
           name: "roles",
-          component: () => import("@/views/roles/RolesView.vue")
+          component: () => import("@/views/roles/RolesView.vue"),
         },
-      {
+        {
           path: "clientes",
           name: "clientes",
           component: () => import("@/views/clients/ClientesView.vue"),
@@ -61,6 +62,6 @@ export const router = createRouter({
       ],
     },
   ],
-})
+});
 
-export default router
+export default router;

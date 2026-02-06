@@ -14,9 +14,11 @@ export interface Props {
     | "icon-text"
     | "icon-text-primary"
     | "icon"
-    | "custom";
+    | "custom"
+    | "blue";
 
   size?: "xs" | "sm" | "md" | "lg" | "cta";
+  fullWidth?: boolean; // <-- prop nueva
   disabled?: boolean;
   loading?: boolean;
   reverse?: boolean;
@@ -26,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
   shape: "circle",
   variant: "primary",
   size: "md",
+  fullWidth: false,
   disabled: false,
   loading: false,
   reverse: false,
@@ -55,6 +58,11 @@ const variants = {
   primary: {
     wrapper:
       "bg-bt-primary-500 hover:bg-bt-hover text-white hover:text-bt-primary-500 active:bg-bt-pressed active:text-bt-primary-500 focus:text-white focus:bg-bt-focus",
+    button: "",
+  },
+  blue: {
+    wrapper:
+      "bg-blue-600 hover:bg-blue-700 text-white active:bg-blue-800 focus:ring-2 focus:ring-blue-500",
     button: "",
   },
   secondary: {
@@ -168,6 +176,7 @@ const element_classes = computed(() => ({
     shapes[props.shape].wrapper,
     sizes[props.size].wrapper,
     selected_variant.value.wrapper,
+    props.fullWidth ? "w-full" : "",
   ].join(" "),
   button: [
     base_classes.button,

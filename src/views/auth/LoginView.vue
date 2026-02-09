@@ -57,21 +57,23 @@ const login = async () => {
       <!-- Form -->
       <form @submit.prevent="login" class="space-y-5">
         <div>
-          <label class="block text-sm text-slate-300 mb-1">Correo</label>
+          <label class="block text-sm text-slate-300 mb-1">{{
+            $t("email")
+          }}</label>
           <input
             v-model="email"
             type="email"
-            placeholder="admin@admin.com"
             class="w-full px-4 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label class="block text-sm text-slate-300 mb-1">Contraseña</label>
+          <label class="block text-sm text-slate-300 mb-1">{{
+            $t("password")
+          }}</label>
           <input
             v-model="password"
             type="password"
-            placeholder="••••••"
             class="w-full px-4 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -83,7 +85,7 @@ const login = async () => {
 
       <!-- Footer -->
       <div class="text-center text-xs text-slate-500 mt-6">
-        © 2026 Cerrajería Calderón
+        {{ $t("copyRigth") }}
       </div>
     </div>
   </div>

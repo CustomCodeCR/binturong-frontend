@@ -1,6 +1,8 @@
 {
+  "copyRigth": "© 2026 Cerrajería Calderón",
   "login": "Login",
   "register": "Register",
-
-  "welcome": "welcome, "
+  "welcome": "welcome, ",
+  "password": "Password",
+  "email": "Email"
 }

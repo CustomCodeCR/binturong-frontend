@@ -20,7 +20,6 @@ const login = async () => {
 
   loading.value = true;
 
-  // Simulación de login (luego lo conectás al backend)
   setTimeout(() => {
     loading.value = false;
 
@@ -40,13 +39,13 @@ const login = async () => {
     <div
       class="w-full max-w-md bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8 border border-slate-700"
     >
-      <!-- Logo / Título -->
+      <!-- titulo -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-white">Cerrajería Calderón</h1>
-        <p class="text-slate-400 mt-2">Acceso al sistema</p>
+        <h1 class="text-3xl font-bold text-white">{{ $t("businessName") }}</h1>
+        <p class="text-slate-400 mt-2">{{ $t("acceso") }}</p>
       </div>
 
-      <!-- Error -->
+      <!-- error -->
       <div
         v-if="error"
         class="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg p-3"
@@ -54,7 +53,7 @@ const login = async () => {
         {{ error }}
       </div>
 
-      <!-- Form -->
+      <!-- form -->
       <form @submit.prevent="login" class="space-y-5">
         <div>
           <label class="block text-sm text-slate-300 mb-1">{{
@@ -83,7 +82,7 @@ const login = async () => {
         </BTButton>
       </form>
 
-      <!-- Footer -->
+      <!-- footer -->
       <div class="text-center text-xs text-slate-500 mt-6">
         {{ $t("copyRigth") }}
       </div>

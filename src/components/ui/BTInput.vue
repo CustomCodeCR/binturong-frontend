@@ -3,7 +3,7 @@ import { ShieldX } from "lucide-vue-next";
 import { computed } from "vue";
 
 export interface Props {
-  variant?: "primary";
+  variant?: "primary" | "login";
   disabled?: boolean;
   error?: boolean;
   errorMsg?: string;
@@ -70,6 +70,16 @@ const variants = {
     "label-title": "",
     "label-description": "text-bt-grey-600",
     input: "border-bt-grey-400 focus:ring-bt-focus",
+    "error-container": "",
+    error: "",
+  },
+  login: {
+    wrapper: "bg-transparent",
+    "label-wrapper": "mb-1.5",
+    "label-title": "text-white font-medium",
+    "label-description": "text-slate-400",
+    input:
+      "bg-[#0d1117] border-slate-700 text-white placeholder:text-slate-500 focus:ring-blue-500/50 focus:border-blue-400",
     "error-container": "",
     error: "",
   },

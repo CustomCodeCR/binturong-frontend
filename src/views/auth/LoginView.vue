@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import BTButton from "@/components/ui/BTButton.vue";
+import BTInput from "@/components/ui/BTInput.vue";
 
 const router = useRouter();
 
@@ -59,10 +60,12 @@ const login = async () => {
           <label class="block text-sm text-slate-300 mb-1">{{
             $t("email")
           }}</label>
-          <input
+          <BTInput
             v-model="email"
             type="email"
-            class="w-full px-4 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            variant="login"
+            :disabled="loading"
+            :error="!!error"
           />
         </div>
 
@@ -70,10 +73,12 @@ const login = async () => {
           <label class="block text-sm text-slate-300 mb-1">{{
             $t("password")
           }}</label>
-          <input
+          <BTInput
             v-model="password"
             type="password"
-            class="w-full px-4 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            variant="login"
+            :disabled="loading"
+            :error="!!error"
           />
         </div>
 

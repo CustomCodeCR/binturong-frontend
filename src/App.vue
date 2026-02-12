@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import BTToastContainer from "@/components/containers/BTToastContainer.vue";
-import BTModalContainer from "@/components/containers/BTModalContainer.vue";
-import BTDrawerContainer from "@/components/containers/BTDrawerContainer.vue";
+import BTToastContainer from "@/shared/components/icons/containers/BTToastContainer.vue";
+import BTModalContainer from "@/shared/components/icons/containers/BTModalContainer.vue";
+import BTDrawerContainer from "@/shared/components/icons/containers/BTDrawerContainer.vue";
 import { RouterView } from "vue-router";
 </script>
 
@@ -9,7 +9,6 @@ import { RouterView } from "vue-router";
   <BTToastContainer />
   <BTModalContainer />
   <BTDrawerContainer />
-  
 
   <RouterView />
 </template>

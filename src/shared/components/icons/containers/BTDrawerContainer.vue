@@ -3,12 +3,12 @@ import {
   useDrawerStore,
   type DrawerDirection,
   type DrawerSize,
-} from "@/stores/drawer.ts";
+} from "@/core/stores/drawer";
 import { computed, watch } from "vue";
 import { X } from "lucide-vue-next";
-import BTButton from "@/components/ui/BTButton.vue";
-import UIHeading from "@/components/ui/UIHeading.vue";
-import UIBody from "@/components/ui/UIBody.vue";
+import BTButton from "@/shared/components/ui/BTButton.vue";
+import UIHeading from "@/shared/components/ui/UIHeading.vue";
+import UIBody from "@/shared/components/ui/UIBody.vue";
 
 const drawerStore = useDrawerStore();
 

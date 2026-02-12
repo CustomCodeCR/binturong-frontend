@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { defineComponent, h, ref } from "vue";
 import BTButton from "@/components/ui/BTButton.vue";
-import { useDrawerStore } from "@/stores/drawer.ts";
+import { useDrawerStore } from "@/core/stores/drawer";
 import {
   useToastStore,
   type ToastLocation,
   type Toast,
-} from "@/stores/toast.ts";
+} from "@/core/stores/toast";
 import { useRouter } from "vue-router";
 
 defineProps<{ msg: string }>();

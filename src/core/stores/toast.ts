@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { toCapitalized } from "@/utils/strings.ts";
+import { toCapitalized } from "@/core/utils/strings";
 
 const DEFAULT_DURATION = 4000;
 

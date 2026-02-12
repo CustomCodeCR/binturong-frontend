@@ -1,16 +1,16 @@
-import "./assets/base.css";
 import "./assets/main.css";
+import "./assets/base.css";
 
 import { createApp, watch } from "vue";
 import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
 
-import es from "./i18n/es.json";
-import en from "./i18n/en.json";
+import es from "./core/i18n/es.json";
+import en from "./core/i18n/en.json";
 
 import App from "./App.vue";
-import router from "./router";
-import { useLocale } from "@/stores/locale.ts";
+import router from "./core/router";
+import { useLocale } from "@/core/stores/locale";
 
 const app = createApp(App);
 

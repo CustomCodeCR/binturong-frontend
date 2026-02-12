@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import CloseIcon from "@/components/icons/CloseIcon.vue";
+import CloseIcon from "@/shared/components/icons/CloseIcon.vue";
 import { SquareCheck } from "lucide-vue-next";
 
 export interface Props {

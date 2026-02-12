@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import Sidebar from "@/components/Sidebar.vue"
-import TopBar from "@/components/TopBar.vue"
-import Footer from "@/components/Footer.vue"
+import Sidebar from "@/shared/components/layouts/Sidebar.vue";
+import TopBar from "@/shared/components/layouts/TopBar.vue";
+import Footer from "@/shared/components/layouts/Footer.vue";
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col bg-gray-100">
-
     <!-- TOP BAR (ancho completo) -->
     <TopBar />
 
     <!-- CUERPO -->
     <div class="flex flex-1">
-
       <!-- SIDEBAR -->
       <Sidebar />
 
@@ -20,7 +18,6 @@ import Footer from "@/components/Footer.vue"
       <main class="flex-1 p-6 overflow-auto">
         <router-view />
       </main>
-
     </div>
 
     <!-- FOOTER -->

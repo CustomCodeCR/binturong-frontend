@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import BTButton from "@/components/ui/BTButton.vue";
-import BTInput from "@/components/ui/BTInput.vue";
+import BTButton from "@/shared/components/ui/BTButton.vue";
+import BTInput from "@/shared/components/ui/BTInput.vue";
 
 const router = useRouter();
 

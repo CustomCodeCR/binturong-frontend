@@ -3,9 +3,9 @@ import {
   type Toast,
   type ToastLocation,
   useToastStore,
-} from "@/stores/toast.ts";
+} from "@/core/stores/toast";
 import { computed } from "vue";
-import BTAlert from "@/components/ui/BTAlert.vue";
+import BTAlert from "@/shared/components/ui/BTAlert.vue";
 import {
   CircleX,
   Info,

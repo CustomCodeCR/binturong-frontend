@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// Importamos tus componentes de texto si ya los tienes, 
-// si no, podemos usar etiquetas HTML estándar con clases.
+
 </script>
 
 <template>

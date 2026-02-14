@@ -2,62 +2,65 @@
 import { ShieldX } from "lucide-vue-next";
 import { computed } from "vue";
 
+export interface Option {
+  value: string | number;
+  label: string;
+  disabled?: boolean;
+}
+
 export interface Props {
   variant?: "primary" | "login";
   disabled?: boolean;
   error?: boolean;
   errorMsg?: string;
-  inputValue?: string;
-  inputId?: string;
-  inputType?: HTMLInputElement["type"];
-  inputPlaceholder?: string;
-  inputAutocomplete?: "on" | "off";
+  selectValue?: string | number | null;
+  selectId?: string;
+  placeholder?: string;
+  options: Option[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: "primary",
   disabled: false,
   error: false,
-  errorMsg: "Error message",
-  inputValue: "",
-  inputId: "",
-  inputPlaceholder: "",
-  inputType: "text",
-  inputAutocomplete: "off",
+  errorMsg: "Seleccione una opción válida",
+  selectValue: null,
+  selectId: "",
+  placeholder: "Seleccionar...",
 });
 
 const emit = defineEmits<{
-  (e: "update:inputValue", value: string): void;
+  (e: "update:selectValue", value: string | number): void;
   (e: "blur", ev: FocusEvent): void;
   (e: "focus", ev: FocusEvent): void;
   (e: "change", ev: Event): void;
 }>();
 
-function onInput(ev: Event) {
-  const val = (ev.target as HTMLInputElement).value;
-  emit("update:inputValue", val);
-}
 function onChange(ev: Event) {
+  const val = (ev.target as HTMLSelectElement).value;
+  emit("update:selectValue", val);
   emit("change", ev);
 }
+
 function onBlur(ev: FocusEvent) {
   emit("blur", ev);
 }
+
 function onFocus(ev: FocusEvent) {
   emit("focus", ev);
 }
 
-// Base classes
+
 const base_classes = {
   wrapper: "relative",
   "label-wrapper": "flex flex-col",
   "label-title": "bt-text-label-title",
   "label-description": "bt-text-label-description",
-  input: [
+  select: [
     "flex items-center px-[0.375rem] w-full min-h-[2.75rem] rounded-full border",
     "hover:shadow-bt-elevation-200",
     "focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-bt-grey-500",
-    "bt-text-input pl-3.5",
+    "bt-text-input pl-3.5 pr-10 appearance-none cursor-pointer bg-white",
   ].join(" "),
   "error-container": "",
   error: "",
@@ -69,7 +72,7 @@ const variants = {
     "label-wrapper": "",
     "label-title": "",
     "label-description": "text-bt-grey-600",
-    input: "border-bt-grey-400 focus:ring-bt-focus",
+    select: "border-bt-grey-400 focus:ring-bt-focus",
     "error-container": "",
     error: "",
   },
@@ -78,8 +81,8 @@ const variants = {
     "label-wrapper": "mb-1.5",
     "label-title": "text-white font-medium",
     "label-description": "text-slate-400",
-    input:
-      "bg-[#0d1117] border-slate-700 text-white placeholder:text-slate-500 focus:ring-blue-500/50 focus:border-blue-400",
+    select:
+      "bg-[#0d1117] border-slate-700 text-white focus:ring-blue-500/50 focus:border-blue-400",
     "error-container": "",
     error: "",
   },
@@ -91,7 +94,7 @@ const disabled_state = {
     "label-wrapper": "",
     "label-title": "text-bt-grey-500 cursor-not-allowed",
     "label-description": "text-bt-grey-500 cursor-not-allowed",
-    input: [
+    select: [
       "border-bt-grey-400",
       "disabled:ring-0 disabled:bg-bt-grey-100 disabled:cursor-not-allowed disabled:hover:shadow-none",
     ].join(" "),
@@ -103,7 +106,7 @@ const disabled_state = {
     "label-wrapper": "",
     "label-title": "text-slate-400 cursor-not-allowed",
     "label-description": "text-slate-400 cursor-not-allowed",
-    input: [
+    select: [
       "border-slate-700",
       "disabled:ring-0 disabled:bg-[#0d1117]/50 disabled:cursor-not-allowed disabled:hover:shadow-none",
     ].join(" "),
@@ -118,7 +121,7 @@ const error_state = {
     "label-wrapper": "",
     "label-title": "",
     "label-description": "",
-    input: "border-bt-error-500",
+    select: "border-bt-error-500",
     "error-container":
       "flex items-center text-bt-error-500 cursor-not-allowed mt-1 space-x-1",
     error: "text-bt-error-500 bt-text-label-description cursor-not-allowed",
@@ -128,7 +131,7 @@ const error_state = {
     "label-wrapper": "",
     "label-title": "",
     "label-description": "",
-    input: "border-red-500",
+    select: "border-red-500",
     "error-container":
       "flex items-center text-red-500 cursor-not-allowed mt-1 space-x-1",
     error: "text-red-500 bt-text-label-description cursor-not-allowed",
@@ -155,24 +158,13 @@ const element_classes = computed(() => ({
     base_classes["label-description"],
     selected_variant["label-description"],
   ].join(" "),
-  input: [base_classes.input, selected_variant.input].join(" "),
+  select: [base_classes.select, selected_variant.select].join(" "),
   "error-container": [
     base_classes["error-container"],
     selected_variant["error-container"],
   ].join(" "),
   error: [base_classes.error, selected_variant.error].join(" "),
 }));
-
-// Prevent Invalid Keys When inputType === 'number'
-const preventInvalidKeys = (event: KeyboardEvent) => {
-  if (props.inputType !== "number") return;
-
-  const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
-  if (allowedKeys.includes(event.key)) return;
-
-  const isNumber = /^[0-9.]$/.test(event.key);
-  if (!isNumber) event.preventDefault();
-};
 </script>
 
 <template>
@@ -180,7 +172,7 @@ const preventInvalidKeys = (event: KeyboardEvent) => {
     <div :class="element_classes['label-wrapper']">
       <label
         v-if="$slots.label"
-        :for="props.inputId"
+        :for="props.selectId"
         :class="element_classes['label-title']"
       >
         <slot name="label">Label</slot>
@@ -194,27 +186,35 @@ const preventInvalidKeys = (event: KeyboardEvent) => {
       </span>
     </div>
 
-    <input
-      class="appearance-none"
-      :id="props.inputId"
-      :type="props.inputType"
-      :class="[
-        element_classes.input,
-        props.inputType === 'number'
-          ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
-          : '',
-      ]"
-      :disabled="props.disabled"
-      :value="props.inputValue"
-      :placeholder="props.inputPlaceholder"
-      :autocomplete="props.inputAutocomplete"
-      :aria-invalid="props.error ? 'true' : 'false'"
-      @input="onInput"
-      @change="onChange"
-      @blur="onBlur"
-      @focus="onFocus"
-      @keydown="preventInvalidKeys"
-    />
+    <div class="relative">
+      <select
+        :id="props.selectId"
+        :class="element_classes.select"
+        :disabled="props.disabled"
+        :value="props.selectValue"
+        :aria-invalid="props.error ? 'true' : 'false'"
+        @change="onChange"
+        @blur="onBlur"
+        @focus="onFocus"
+      >
+        <option :value="null" disabled>{{ props.placeholder }}</option>
+        <option
+          v-for="option in props.options"
+          :key="option.value"
+          :value="option.value"
+          :disabled="option.disabled"
+        >
+          {{ option.label }}
+        </option>
+      </select>
+      
+      <!-- Dropdown arrow icon -->
+      <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+        <svg class="w-4 h-4 text-bt-grey-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
 
     <div v-if="props.error" :class="element_classes['error-container']">
       <ShieldX :size="14" />

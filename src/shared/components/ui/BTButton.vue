@@ -18,7 +18,7 @@ export interface Props {
     | "blue";
 
   size?: "xs" | "sm" | "md" | "lg" | "cta";
-  fullWidth?: boolean; // <-- prop nueva
+  fullWidth?: boolean;
   disabled?: boolean;
   loading?: boolean;
   reverse?: boolean;
@@ -109,6 +109,10 @@ const disabled_state = {
     wrapper: "bg-bt-disabled cursor-not-allowed",
     button: "text-bt-grey-500",
   },
+  blue: {
+    wrapper: "bg-gray-400 cursor-not-allowed",
+    button: "text-gray-200",
+  },
   secondary: {
     wrapper:
       "outline outline-2 outline-offset-[-2px] outline-bt-disabled cursor-not-allowed",
@@ -116,6 +120,10 @@ const disabled_state = {
   },
   tertiary: {
     wrapper: "bg-bt-disabled cursor-not-allowed",
+    button: "text-bt-grey-400",
+  },
+  fourth: {
+    wrapper: "bg-bt-grey-200 cursor-not-allowed",
     button: "text-bt-grey-400",
   },
   text: {
@@ -130,9 +138,17 @@ const disabled_state = {
     wrapper: "cursor-not-allowed",
     button: "text-bt-grey-400 space-x-4",
   },
+  "icon-text-primary": {
+    wrapper: "bg-bt-grey-300 cursor-not-allowed",
+    button: "text-bt-grey-500",
+  },
   icon: {
-    wrapper: "!min-w-0 !cursor-not-allowed",
+    wrapper: "!min-w-0 !cursor-not-allowed bg-bt-grey-200",
     button: "text-bt-grey-400",
+  },
+  custom: {
+    wrapper: "cursor-not-allowed",
+    button: "",
   },
 };
 

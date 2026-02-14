@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref } from "vue";
+import BTButton from "@/shared/components/ui/BTButton.vue";
+import BTHeader from "@/shared/components/ui/BTHeader.vue";
+import BTModal from "@/shared/components/ui/BTModal.vue";
+import BTInput from "@/shared/components/ui/BTInput.vue";
+import { useToastStore } from '@/core/stores/toast';
+
 
 const clientes = ref([
   {
@@ -26,31 +32,56 @@ const clientes = ref([
     tipo: "Frecuente",
     estado: "Inactivo"
   }
-])
+]);
+
+const showModal = ref(false);
+
+// Form data
+const formData = ref({
+  nombre: '',
+  telefono: '',
+  correo: '',
+  tipo: 'Frecuente',
+});
+
+
+
+const toastStore = useToastStore();
+
+function handleConfirm() {
+  console.log('Creating client:', formData.value);
+  
+  // Show success toast
+  toastStore.addToast({
+    severity: 'success',
+    title: 'Cliente creado',
+    message: 'El cliente se creó exitosamente',
+    duration: 3000,
+  });
+  
+  showModal.value = false;
+}
 </script>
 
 <template>
   <div class="space-y-6">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">Clientes</h1>
-        <p class="text-sm text-gray-500">
-          Gestión y seguimiento de clientes
-        </p>
-      </div>
-
-      <button
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        + Nuevo Cliente
-      </button>
-    </div>
+    <BTHeader>
+      <template #title>Clientes</template>
+      <template #description>Gestión y seguimiento de clientes</template>
+      <template #action>
+        <BTButton 
+          variant="blue" 
+          size="md"
+          shape="rounded"
+          @click="showModal = true"
+        >
+          + Nuevo Cliente
+        </BTButton>
+      </template>
+    </BTHeader>
 
     <!-- Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
       <div
         v-for="cliente in clientes"
         :key="cliente.id"
@@ -63,7 +94,6 @@ const clientes = ref([
           >
             {{ cliente.nombre.charAt(0) }}
           </div>
-
           <div>
             <p class="font-semibold text-gray-800">
               {{ cliente.nombre }}
@@ -92,18 +122,34 @@ const clientes = ref([
           >
             {{ cliente.estado }}
           </span>
-
-          <div class="flex gap-3 text-sm">
-            <button class="text-blue-600 hover:underline">
-              Ver
-            </button>
-            <button class="text-gray-600 hover:underline">
-              Editar
-            </button>
+          <div class="flex gap-3">
+            <BTButton variant="text" size="sm">Ver</BTButton>
+            <BTButton variant="text" size="sm">Editar</BTButton>
           </div>
         </div>
       </div>
-
     </div>
+
+    <!-- Modal -->
+    <BTModal 
+      v-model="showModal" 
+      title="Nuevo Cliente"
+      size="medium"
+      @confirm="handleConfirm"
+    >
+      <div class="space-y-4">
+        <BTInput v-model:inputValue="formData.nombre">
+          <template #label>Nombre completo</template>
+        </BTInput>
+        
+        <BTInput v-model:inputValue="formData.telefono" inputType="tel">
+          <template #label>Teléfono</template>
+        </BTInput>
+        
+        <BTInput v-model:inputValue="formData.correo" inputType="email">
+          <template #label>Correo electrónico</template>
+        </BTInput>
+      </div>
+    </BTModal>
   </div>
 </template>

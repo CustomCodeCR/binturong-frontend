@@ -7,11 +7,12 @@ export interface Props {
   disabled?: boolean;
   error?: boolean;
   errorMsg?: string;
-  inputValue?: string;
-  inputId?: string;
-  inputType?: HTMLInputElement["type"];
-  inputPlaceholder?: string;
-  inputAutocomplete?: "on" | "off";
+  textValue?: string;
+  textId?: string;
+  textPlaceholder?: string;
+  rows?: number;
+  maxLength?: number;
+  showCount?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -19,46 +20,57 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   error: false,
   errorMsg: "Error message",
-  inputValue: "",
-  inputId: "",
-  inputPlaceholder: "",
-  inputType: "text",
-  inputAutocomplete: "off",
+  textValue: "",
+  textId: "",
+  textPlaceholder: "",
+  rows: 4,
+  showCount: false,
 });
 
 const emit = defineEmits<{
-  (e: "update:inputValue", value: string): void;
+  (e: "update:textValue", value: string): void;
   (e: "blur", ev: FocusEvent): void;
   (e: "focus", ev: FocusEvent): void;
   (e: "change", ev: Event): void;
 }>();
 
 function onInput(ev: Event) {
-  const val = (ev.target as HTMLInputElement).value;
-  emit("update:inputValue", val);
+  const val = (ev.target as HTMLTextAreaElement).value;
+  emit("update:textValue", val);
 }
+
 function onChange(ev: Event) {
   emit("change", ev);
 }
+
 function onBlur(ev: FocusEvent) {
   emit("blur", ev);
 }
+
 function onFocus(ev: FocusEvent) {
   emit("focus", ev);
 }
 
-// Base classes
+const characterCount = computed(() => {
+  if (!props.showCount) return null;
+  const current = props.textValue?.length || 0;
+  return props.maxLength ? `${current}/${props.maxLength}` : `${current}`;
+});
+
+// Same class system as BTInput
 const base_classes = {
   wrapper: "relative",
   "label-wrapper": "flex flex-col",
   "label-title": "bt-text-label-title",
   "label-description": "bt-text-label-description",
-  input: [
-    "flex items-center px-[0.375rem] w-full min-h-[2.75rem] rounded-full border",
+  textarea: [
+    "flex items-start px-[0.375rem] w-full rounded-2xl border py-2.5",
     "hover:shadow-bt-elevation-200",
     "focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-bt-grey-500",
-    "bt-text-input pl-3.5",
+    "bt-text-input pl-3.5 resize-vertical",
   ].join(" "),
+  "count-wrapper": "flex justify-end mt-1",
+  count: "text-xs text-bt-grey-600",
   "error-container": "",
   error: "",
 };
@@ -69,7 +81,9 @@ const variants = {
     "label-wrapper": "",
     "label-title": "",
     "label-description": "text-bt-grey-600",
-    input: "border-bt-grey-400 focus:ring-bt-focus",
+    textarea: "border-bt-grey-400 focus:ring-bt-focus",
+    "count-wrapper": "",
+    count: "",
     "error-container": "",
     error: "",
   },
@@ -78,8 +92,10 @@ const variants = {
     "label-wrapper": "mb-1.5",
     "label-title": "text-white font-medium",
     "label-description": "text-slate-400",
-    input:
+    textarea:
       "bg-[#0d1117] border-slate-700 text-white placeholder:text-slate-500 focus:ring-blue-500/50 focus:border-blue-400",
+    "count-wrapper": "",
+    count: "text-slate-400",
     "error-container": "",
     error: "",
   },
@@ -91,10 +107,12 @@ const disabled_state = {
     "label-wrapper": "",
     "label-title": "text-bt-grey-500 cursor-not-allowed",
     "label-description": "text-bt-grey-500 cursor-not-allowed",
-    input: [
+    textarea: [
       "border-bt-grey-400",
       "disabled:ring-0 disabled:bg-bt-grey-100 disabled:cursor-not-allowed disabled:hover:shadow-none",
     ].join(" "),
+    "count-wrapper": "",
+    count: "text-bt-grey-500",
     "error-container": "",
     error: "",
   },
@@ -103,10 +121,12 @@ const disabled_state = {
     "label-wrapper": "",
     "label-title": "text-slate-400 cursor-not-allowed",
     "label-description": "text-slate-400 cursor-not-allowed",
-    input: [
+    textarea: [
       "border-slate-700",
       "disabled:ring-0 disabled:bg-[#0d1117]/50 disabled:cursor-not-allowed disabled:hover:shadow-none",
     ].join(" "),
+    "count-wrapper": "",
+    count: "text-slate-400",
     "error-container": "",
     error: "",
   },
@@ -118,7 +138,9 @@ const error_state = {
     "label-wrapper": "",
     "label-title": "",
     "label-description": "",
-    input: "border-bt-error-500",
+    textarea: "border-bt-error-500",
+    "count-wrapper": "",
+    count: "",
     "error-container":
       "flex items-center text-bt-error-500 cursor-not-allowed mt-1 space-x-1",
     error: "text-bt-error-500 bt-text-label-description cursor-not-allowed",
@@ -128,7 +150,9 @@ const error_state = {
     "label-wrapper": "",
     "label-title": "",
     "label-description": "",
-    input: "border-red-500",
+    textarea: "border-red-500",
+    "count-wrapper": "",
+    count: "",
     "error-container":
       "flex items-center text-red-500 cursor-not-allowed mt-1 space-x-1",
     error: "text-red-500 bt-text-label-description cursor-not-allowed",
@@ -155,24 +179,18 @@ const element_classes = computed(() => ({
     base_classes["label-description"],
     selected_variant["label-description"],
   ].join(" "),
-  input: [base_classes.input, selected_variant.input].join(" "),
+  textarea: [base_classes.textarea, selected_variant.textarea].join(" "),
+  "count-wrapper": [
+    base_classes["count-wrapper"],
+    selected_variant["count-wrapper"],
+  ].join(" "),
+  count: [base_classes.count, selected_variant.count].join(" "),
   "error-container": [
     base_classes["error-container"],
     selected_variant["error-container"],
   ].join(" "),
   error: [base_classes.error, selected_variant.error].join(" "),
 }));
-
-// Prevent Invalid Keys When inputType === 'number'
-const preventInvalidKeys = (event: KeyboardEvent) => {
-  if (props.inputType !== "number") return;
-
-  const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
-  if (allowedKeys.includes(event.key)) return;
-
-  const isNumber = /^[0-9.]$/.test(event.key);
-  if (!isNumber) event.preventDefault();
-};
 </script>
 
 <template>
@@ -180,7 +198,7 @@ const preventInvalidKeys = (event: KeyboardEvent) => {
     <div :class="element_classes['label-wrapper']">
       <label
         v-if="$slots.label"
-        :for="props.inputId"
+        :for="props.textId"
         :class="element_classes['label-title']"
       >
         <slot name="label">Label</slot>
@@ -194,27 +212,24 @@ const preventInvalidKeys = (event: KeyboardEvent) => {
       </span>
     </div>
 
-    <input
-      class="appearance-none"
-      :id="props.inputId"
-      :type="props.inputType"
-      :class="[
-        element_classes.input,
-        props.inputType === 'number'
-          ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
-          : '',
-      ]"
+    <textarea
+      :id="props.textId"
+      :class="element_classes.textarea"
       :disabled="props.disabled"
-      :value="props.inputValue"
-      :placeholder="props.inputPlaceholder"
-      :autocomplete="props.inputAutocomplete"
+      :value="props.textValue"
+      :placeholder="props.textPlaceholder"
+      :rows="props.rows"
+      :maxlength="props.maxLength"
       :aria-invalid="props.error ? 'true' : 'false'"
       @input="onInput"
       @change="onChange"
       @blur="onBlur"
       @focus="onFocus"
-      @keydown="preventInvalidKeys"
     />
+
+    <div v-if="characterCount" :class="element_classes['count-wrapper']">
+      <span :class="element_classes.count">{{ characterCount }}</span>
+    </div>
 
     <div v-if="props.error" :class="element_classes['error-container']">
       <ShieldX :size="14" />

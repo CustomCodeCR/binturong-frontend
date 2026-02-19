@@ -17,7 +17,8 @@ export const router = createRouter({
         {
           path: "home",
           name: "dashboard",
-          component: () => import("@/modules/dashboard/DashboardView.vue"),
+          component: () =>
+            import("@/modules/dashboard/views/DashboardView.vue"),
         },
         {
           path: "users",
@@ -27,37 +28,41 @@ export const router = createRouter({
         {
           path: "/roles",
           name: "roles",
-          component: () => import("@/modules/roles/RolesView.vue"),
+          component: () => import("@/modules/roles/views/RolesView.vue"),
         },
         {
           path: "clientes",
           name: "clientes",
-          component: () => import("@/modules/clients/ClientesView.vue"),
+          component: () => import("@/modules/clients/views/ClientesView.vue"),
         },
         {
           path: "proveedores",
           name: "proveedores",
-          component: () => import("@/modules/suppliers/ProveedoresView.vue"),
+          component: () =>
+            import("@/modules/suppliers/views/ProveedoresView.vue"),
         },
         {
           path: "sucursales",
           name: "sucursales",
-          component: () => import("@/modules/branches/SucursalesView.vue"),
+          component: () =>
+            import("@/modules/branches/views/SucursalesView.vue"),
         },
         {
           path: "empleados",
           name: "empleados",
-          component: () => import("@/modules/employees/EmpleadosView.vue"),
+          component: () =>
+            import("@/modules/employees/views/EmpleadosView.vue"),
         },
         {
           path: "inventario",
           name: "inventario",
-          component: () => import("@/modules/inventory/InventarioView.vue"),
+          component: () =>
+            import("@/modules/inventory/views/InventarioView.vue"),
         },
         {
           path: "auditoria",
           name: "auditoria",
-          component: () => import("@/modules/auditlog/AuditoriaView.vue"),
+          component: () => import("@/modules/auditlog/views/AuditoriaView.vue"),
         },
       ],
     },

@@ -1,4 +1,4 @@
-import type { RequestOptions } from "@/interfaces/requestOptions.ts";
+import type { RequestOptions } from "@/core/api/interfaces/requestOptions";
 import {
   ApiError,
   ClientError,
@@ -7,7 +7,7 @@ import {
   ServerError,
   handleApiResponse,
   safeJsonParse,
-} from "./apiErrorHandler";
+} from "@/core/api/apiErrorHandler";
 
 const BASE_URL = import.meta.env.VITE_API_URL as string;
 

@@ -3,11 +3,13 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import BTButton from "@/shared/components/ui/BTButton.vue";
 import BTInput from "@/shared/components/ui/BTInput.vue";
+import { useAuthStore } from "@/core/stores/auth";
 
 const router = useRouter();
+const auth = useAuthStore();
 
-const email = ref("");
-const password = ref("");
+const email = ref("admin@system.local");
+const password = ref("Admin123!");
 const loading = ref(false);
 const error = ref("");
 
@@ -20,16 +22,14 @@ const login = async () => {
   }
 
   loading.value = true;
-
-  setTimeout(() => {
+  try {
+    await auth.login(email.value, password.value);
+    router.push("/home");
+  } catch (e: any) {
+    error.value = e?.message ?? "No se pudo iniciar sesión";
+  } finally {
     loading.value = false;
-
-    if (email.value === "admin@admin.com" && password.value === "123456") {
-      router.push("/home");
-    } else {
-      error.value = "Credenciales incorrectas";
-    }
-  }, 1200);
+  }
 };
 </script>
 

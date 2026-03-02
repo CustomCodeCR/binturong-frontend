@@ -69,22 +69,22 @@ export const router = createRouter({
   ],
 });
 
-import { useAuthStore } from "@/core/stores/auth";
+// import { useAuthStore } from "@/core/stores/auth";
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem("token")
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem("token")
 
-  // Deja pasar siempre a login
-  if (to.path === "/login") {
-    // Si ya hay token, no debería volver al login
-    if (token) return next("/home")
-    return next()
-  }
+//   // Deja pasar siempre a login
+//   if (to.path === "/login") {
+//     // Si ya hay token, no debería volver al login
+//     if (token) return next("/home")
+//     return next()
+//   }
 
-  // Todo lo demás requiere token
-  if (!token) return next("/login")
+//   // Todo lo demás requiere token
+//   if (!token) return next("/login")
 
-  next()
-})
+//   next()
+// })
 
 export default router;

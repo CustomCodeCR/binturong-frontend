@@ -3,10 +3,11 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import BTButton from "@/shared/components/ui/BTButton.vue";
 import BTInput from "@/shared/components/ui/BTInput.vue";
-import { useAuthStore } from "@/core/stores/auth";
+import { AuthService } from "@/core/services/authService";
+import type { LoginRequest } from "@/core/interfaces/auth";
 
 const router = useRouter();
-const auth = useAuthStore();
+const auth = AuthService;
 
 const email = ref("admin@system.local");
 const password = ref("Admin123!");
@@ -23,7 +24,13 @@ const login = async () => {
 
   loading.value = true;
   try {
-    await auth.login(email.value, password.value);
+    const payload: LoginRequest = {
+      usernameOrEmail: email.value,
+      password: password.value,
+    };
+
+    await auth.login(payload);
+
     router.push("/home");
   } catch (e: any) {
     error.value = e?.message ?? "No se pudo iniciar sesión";
@@ -40,13 +47,11 @@ const login = async () => {
     <div
       class="w-full max-w-md bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8 border border-slate-700"
     >
-      <!-- titulo -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-white">{{ $t("businessName") }}</h1>
         <p class="text-slate-400 mt-2">{{ $t("acceso") }}</p>
       </div>
 
-      <!-- error -->
       <div
         v-if="error"
         class="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg p-3"
@@ -54,7 +59,6 @@ const login = async () => {
         {{ error }}
       </div>
 
-      <!-- form -->
       <form @submit.prevent="login" class="space-y-5">
         <div>
           <label class="block text-sm text-slate-300 mb-1">{{
@@ -62,7 +66,7 @@ const login = async () => {
           }}</label>
           <BTInput
             v-model="email"
-            type="email"
+            type="text"
             variant="login"
             :disabled="loading"
             :error="!!error"
@@ -82,12 +86,18 @@ const login = async () => {
           />
         </div>
 
-        <BTButton variant="blue" size="cta" fullWidth type="submit">
-          {{ $t("login") }}
+        <BTButton
+          variant="blue"
+          size="cta"
+          fullWidth
+          type="submit"
+          :disabled="loading"
+        >
+          <span v-if="!loading">{{ $t("login") }}</span>
+          <span v-else>Cargando...</span>
         </BTButton>
       </form>
 
-      <!-- footer -->
       <div class="text-center text-xs text-slate-500 mt-6">
         {{ $t("copyRigth") }}
       </div>

@@ -138,4 +138,78 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  createTax: {
+    method: "POST",
+    path: "/api/taxes",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseTaxes: {
+    method: "GET",
+    path: "/api/taxes",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readTaxById: {
+    method: "GET",
+    path: "/api/taxes/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateTax: {
+    method: "PUT",
+    path: "/api/taxes/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteTax: {
+    method: "DELETE",
+    path: "/api/taxes/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createProductCategory: {
+    method: "POST",
+    path: "/api/product-categories",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseProductCategories: {
+    method: "GET",
+    path: "/api/product-categories",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readProductCategoryById: {
+    method: "GET",
+    path: "/api/product-categories/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateProductCategory: {
+    method: "PUT",
+    path: "/api/product-categories/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteProductCategory: {
+    method: "DELETE",
+    path: "/api/product-categories/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

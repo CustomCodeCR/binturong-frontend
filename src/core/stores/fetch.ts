@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
+import { defineStore } from "pinia";
 
-export const useFetchStore = defineStore('fetch', {
+export const useFetchStore = defineStore("fetch", {
   state: () => ({
     isLoading: false,
     loadError: null as string | null,
@@ -8,64 +8,80 @@ export const useFetchStore = defineStore('fetch', {
   }),
 
   actions: {
-    async getService<T>(serviceFn: (...args: any[]) => Promise<T>, ...args: any[]): Promise<T | null> {
-      this.isLoading = true
-      this.loadError = null
+    async getService<T>(
+      serviceFn: (...args: any[]) => Promise<T>,
+      ...args: any[]
+    ): Promise<T | null> {
+      this.isLoading = true;
+      this.loadError = null;
       try {
-        const data = await serviceFn(...args)
-        return data
+        const data = await serviceFn(...args);
+        return data;
       } catch (e: any) {
-        this.loadError = e?.message ?? 'Request failed'
-        return null
+        this.loadError = e?.message ?? "Request failed";
+        return null;
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
 
-    async postService<T>(serviceFn: (...args: any[]) => Promise<T>, ...args: any[]): Promise<T | null> {
-      this.loadError = null
+    async postService<T>(
+      serviceFn: (...args: any[]) => Promise<T>,
+      ...args: any[]
+    ): Promise<T | null> {
+      this.loadError = null;
       try {
-        const out = await serviceFn(...args)
-        return out
+        const out = await serviceFn(...args);
+        return out;
       } catch (e: any) {
-        this.loadError = e?.message ?? 'Request failed'
-        return null
+        this.loadError = e?.message ?? "Request failed";
+        return null;
       }
     },
 
-    async putService<T>(serviceFn: (...args: any[]) => Promise<T>, ...args: any[]): Promise<T | null> {
-      this.loadError = null
+    async putService<T>(
+      serviceFn: (...args: any[]) => Promise<T>,
+      ...args: any[]
+    ): Promise<T | null> {
+      this.loadError = null;
       try {
-        const out = await serviceFn(...args)
-        return out
+        const out = await serviceFn(...args);
+        return out;
       } catch (e: any) {
-        this.loadError = e?.message ?? 'Request failed'
-        return null
+        this.loadError = e?.message ?? "Request failed";
+        return null;
       }
     },
 
-    async deleteService<T>(serviceFn: (...args: any[]) => Promise<T>, ...args: any[]): Promise<T | null> {
-      this.loadError = null
+    async deleteService<T>(
+      serviceFn: (...args: any[]) => Promise<T>,
+      ...args: any[]
+    ): Promise<T | null> {
+      this.loadError = null;
       try {
-        const out = await serviceFn(...args)
-        return out
+        const out = await serviceFn(...args);
+        return out;
       } catch (e: any) {
-        this.loadError = e?.message ?? 'Request failed'
-        return null
+        this.loadError = e?.message ?? "Request failed";
+        return null;
       }
     },
 
-    async withPending<T>(key: string, serviceFn: (...args: any[]) => Promise<T>, ...args: any[]): Promise<T | null> {
-      this.pending[key] = true
+    async withPending<T>(
+      key: string,
+      serviceFn: (...args: any[]) => Promise<T>,
+      ...args: any[]
+    ): Promise<T | null> {
+      this.pending[key] = true;
       try {
-        const out = await serviceFn(...args)
-        return out
+        const out = await serviceFn(...args);
+        return out;
       } catch (e: any) {
-        this.loadError = e?.message ?? 'Request failed'
-        return null
+        this.loadError = e?.message ?? "Request failed";
+        return null;
       } finally {
-        this.pending[key] = false
+        this.pending[key] = false;
       }
     },
   },
-}
+});

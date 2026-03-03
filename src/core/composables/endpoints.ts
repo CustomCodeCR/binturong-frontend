@@ -812,4 +812,49 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  createRole: {
+    method: "POST",
+    path: "/api/roles",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseRoles: {
+    method: "GET",
+    path: "/api/roles",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readRoleById: {
+    method: "GET",
+    path: "/api/roles/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateRole: {
+    method: "PUT",
+    path: "/api/roles/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteRole: {
+    method: "DELETE",
+    path: "/api/roles/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  addScopesToRole: {
+    method: "PUT",
+    path: "/api/roles/{{id}}/scopes",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
 };

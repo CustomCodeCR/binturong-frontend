@@ -545,4 +545,167 @@ export const Endpoints: Record<string, Endpoint> = {
       "Content-Type": "application/json",
     },
   },
+  createClient: {
+    method: "POST",
+    path: "/api/clients",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseClients: {
+    method: "GET",
+    path: "/api/clients",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readClientById: {
+    method: "GET",
+    path: "/api/clients/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateClient: {
+    method: "PUT",
+    path: "/api/clients/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteClient: {
+    method: "DELETE",
+    path: "/api/clients/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  clientHistory: {
+    method: "GET",
+    path: "/api/clients/{{id}}/history",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  clientHistoryPdf: {
+    method: "GET",
+    path: "/api/clients/{{id}}/history/pdf",
+    headers: {
+      Accept: "application/pdf",
+    },
+  },
+  createClientContact: {
+    method: "POST",
+    path: "/api/clients/{{clientId}}/contacts",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  updateClientContact: {
+    method: "PUT",
+    path: "/api/clients/{{clientId}}/contacts/{{contactId}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteClientContact: {
+    method: "DELETE",
+    path: "/api/clients/{{clientId}}/contacts/{{contactId}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  setPrimaryClientContact: {
+    method: "PUT",
+    path: "/api/clients/{{clientId}}/contacts/{{contactId}}/primary",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  addClientAttachment: {
+    method: "POST",
+    path: "/api/clients/{{clientId}}/attachments",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  deleteClientAttachment: {
+    method: "DELETE",
+    path: "/api/clients/{{clientId}}/attachments/{{attachmentId}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  addClientAddress: {
+    method: "POST",
+    path: "/api/clients/{{clientId}}/addresses",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  updateClientAddress: {
+    method: "PUT",
+    path: "/api/clients/{{clientId}}/addresses/{{addressId}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteClientAddress: {
+    method: "DELETE",
+    path: "/api/clients/{{clientId}}/addresses/{{addressId}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  setPrimaryClientAddress: {
+    method: "PUT",
+    path: "/api/clients/{{clientId}}/addresses/{{addressId}}/primary",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createSalesOrder: {
+    method: "POST",
+    path: "/api/sales-orders",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseSalesOrders: {
+    method: "GET",
+    path: "/api/sales-orders",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readSalesOrderById: {
+    method: "GET",
+    path: "/api/sales-orders/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createSalesOrderFromQuote: {
+    method: "POST",
+    path: "/api/sales-orders/from-quote/{{quoteId}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  confirmSalesOrder: {
+    method: "POST",
+    path: "/api/sales-orders/{{id}}/confirm",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
 };

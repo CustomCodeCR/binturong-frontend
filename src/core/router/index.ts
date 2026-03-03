@@ -75,6 +75,11 @@ export const router = createRouter({
           name: "impuestos",
           component: () => import("@/modules/taxes/views/taxes.vue"),
         },
+        {
+          path: "productos",
+          name: "productos",
+          component: () => import("@/modules/products/views/product.vue"),
+        },
       ],
     },
   ],

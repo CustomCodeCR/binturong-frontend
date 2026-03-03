@@ -90,8 +90,9 @@ onMounted(fetchInventario);
     <div class="flex justify-between items-center max-w-7xl mx-auto">
       <div>
         <h1 class="text-3xl font-black text-slate-900 tracking-tight">
-          Categorías de Productos
+          Categorías de Inventario
         </h1>
+        <p class="text-slate-500 font-medium">Cerrajería Calderón</p>
       </div>
       <button
         @click="openCreate"

@@ -708,4 +708,28 @@ export const Endpoints: Record<string, Endpoint> = {
       "Content-Type": "application/json",
     },
   },
+  purchaseInInventory: {
+    method: "POST",
+    path: "/api/inventory/movements/purchase-in",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  serviceOutInventory: {
+    method: "POST",
+    path: "/api/inventory/movements/service-out",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  physicalAdjustmentInventory: {
+    method: "POST",
+    path: "/api/inventory/movements/physical-adjustment",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
 };

@@ -238,7 +238,7 @@ onMounted(loadAllData);
               class="p-3 bg-gray-50 border rounded-xl"
             >
               <option value="" disabled>Seleccione Unidad</option>
-              <option v-for="uom in unidades" :key="uom.id" :value="uom.id">
+              <option v-for="uom in unidades" :key="uom.id" :value="uom.uomId">
                 {{ uom.name }}
               </option>
             </select>
@@ -254,7 +254,7 @@ onMounted(loadAllData);
               class="p-3 bg-gray-50 border rounded-xl"
             >
               <option value="" disabled>Seleccione Impuesto</option>
-              <option v-for="tax in impuestos" :key="tax.id" :value="tax.id">
+              <option v-for="tax in impuestos" :key="tax.id" :value="tax.taxId">
                 {{ tax.name }} ({{ tax.percentage }}%)
               </option>
             </select>

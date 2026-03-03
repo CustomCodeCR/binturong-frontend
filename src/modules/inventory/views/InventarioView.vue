@@ -1,135 +1,244 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, onMounted } from "vue";
+import { ProductCategoriesService } from "@/core/services/productCategoriesService";
+import type {
+  ProductCategory,
+  ProductCategoryCreateRequest,
+  ProductCategoryUpdateRequest,
+} from "@/core/interfaces/productCategories";
 
-const inventario = ref([
-  {
-    id: 1,
-    nombre: "Cerradura Yale",
-    categoria: "Cerraduras",
-    stock: 25,
-    minimo: 10
-  },
-  {
-    id: 2,
-    nombre: "Llave en blanco",
-    categoria: "Llaves",
-    stock: 120,
-    minimo: 50
-  },
-  {
-    id: 3,
-    nombre: "Candado de seguridad",
-    categoria: "Candados",
-    stock: 6,
-    minimo: 10
-  },
-  {
-    id: 4,
-    nombre: "Kit instalación cerradura",
-    categoria: "Herramientas",
-    stock: 3,
-    minimo: 5
+const inventario = ref<ProductCategory[]>([]);
+const loading = ref(true);
+const processing = ref(false);
+const error = ref("");
+const showModal = ref(false);
+const isEditing = ref(false);
+const selectedId = ref<string | null>(null);
+
+const form = ref<ProductCategoryCreateRequest>({
+  name: "",
+  description: "",
+  isActive: true,
+});
+
+const fetchInventario = async () => {
+  try {
+    loading.value = true;
+    inventario.value = await ProductCategoriesService.browse();
+  } catch (e: any) {
+    error.value = "Error al conectar con la API";
+  } finally {
+    loading.value = false;
   }
-])
+};
 
-const estadoStock = (item: any) => {
-  if (item.stock <= item.minimo) return "bajo"
-  if (item.stock <= item.minimo * 1.5) return "medio"
-  return "alto"
-}
+const openCreate = () => {
+  isEditing.value = false;
+  selectedId.value = null;
+  form.value = { name: "", description: "", isActive: true };
+  showModal.value = true;
+};
+
+const openEdit = (item: ProductCategory) => {
+  isEditing.value = true;
+  selectedId.value = item.id;
+  form.value = {
+    name: item.name,
+    description: item.description,
+    isActive: item.isActive,
+  };
+  showModal.value = true;
+};
+
+const handleSubmit = async () => {
+  if (!form.value.name) return;
+
+  try {
+    processing.value = true;
+    error.value = "";
+
+    if (isEditing.value && selectedId.value) {
+      await ProductCategoriesService.update(selectedId.value, form.value);
+
+      const index = inventario.value.findIndex(
+        (c) => c.id === selectedId.value,
+      );
+      if (index !== -1) {
+        inventario.value[index] = {
+          ...inventario.value[index],
+          ...form.value,
+        };
+      }
+    } else {
+      await ProductCategoriesService.create(form.value);
+      await fetchInventario();
+    }
+
+    showModal.value = false;
+  } catch (e: any) {
+    error.value = "No se pudo guardar la información. Revisa la consola.";
+  } finally {
+    processing.value = false;
+  }
+};
+
+onMounted(fetchInventario);
 </script>
 
 <template>
-  <div class="space-y-6">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between">
+  <div class="p-8 space-y-8 bg-slate-50 min-h-screen">
+    <div class="flex justify-between items-center max-w-7xl mx-auto">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">Inventario</h1>
-        <p class="text-sm text-gray-500">
-          Control de productos y niveles de stock
-        </p>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">
+          Inventario
+        </h1>
+        <p class="text-slate-500 font-medium">Cerrajería Calderón</p>
       </div>
-
-      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        + Agregar Producto
+      <button
+        @click="openCreate"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+      >
+        + Nueva Categoría
       </button>
     </div>
 
-    <!-- Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      v-if="error"
+      class="max-w-7xl mx-auto bg-red-50 border border-red-200 text-red-600 p-4 rounded-2xl font-semibold animate-bounce"
+    >
+      {{ error }}
+    </div>
 
+    <div
+      v-if="loading"
+      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+    >
+      <div
+        v-for="i in 3"
+        :key="i"
+        class="h-48 bg-white rounded-3xl animate-pulse border border-slate-100"
+      ></div>
+    </div>
+
+    <div
+      v-else
+      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+    >
       <div
         v-for="item in inventario"
         :key="item.id"
-        class="bg-white rounded-xl shadow p-5 hover:shadow-lg transition"
+        class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl hover:border-blue-100 transition-all duration-300 group"
       >
-        <!-- Título -->
-        <div class="flex justify-between items-start mb-3">
-          <div>
-            <h2 class="font-semibold text-lg text-gray-800">
-              {{ item.nombre }}
-            </h2>
-            <p class="text-sm text-gray-500">
-              {{ item.categoria }}
-            </p>
-          </div>
-
-          <!-- Estado -->
-          <span
-            :class="[
-              'text-xs font-bold px-2 py-1 rounded',
-              estadoStock(item) === 'alto' && 'bg-green-100 text-green-700',
-              estadoStock(item) === 'medio' && 'bg-yellow-100 text-yellow-700',
-              estadoStock(item) === 'bajo' && 'bg-red-100 text-red-700'
-            ]"
+        <div class="flex justify-between items-start mb-4">
+          <h2
+            class="font-bold text-xl text-slate-800 group-hover:text-blue-600 transition-colors"
           >
-            {{
-              estadoStock(item) === 'alto'
-                ? 'Stock alto'
-                : estadoStock(item) === 'medio'
-                ? 'Stock medio'
-                : 'Stock bajo'
-            }}
+            {{ item.name }}
+          </h2>
+          <span
+            :class="
+              item.isActive
+                ? 'text-green-600 bg-green-50'
+                : 'text-slate-400 bg-slate-100'
+            "
+            class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter"
+          >
+            {{ item.isActive ? "Activo" : "Inactivo" }}
           </span>
         </div>
-
-        <!-- Stock -->
-        <div class="mb-4">
-          <div class="flex justify-between text-sm mb-1">
-            <span>Stock actual</span>
-            <span class="font-semibold">{{ item.stock }}</span>
-          </div>
-
-          <!-- Barra -->
-          <div class="w-full bg-gray-200 rounded h-2">
-            <div
-              class="h-2 rounded"
-              :class="[
-                estadoStock(item) === 'alto' && 'bg-green-500',
-                estadoStock(item) === 'medio' && 'bg-yellow-500',
-                estadoStock(item) === 'bajo' && 'bg-red-500'
-              ]"
-              :style="{ width: Math.min((item.stock / (item.minimo * 2)) * 100, 100) + '%' }"
-            ></div>
-          </div>
-
-          <p class="text-xs text-gray-500 mt-1">
-            Mínimo recomendado: {{ item.minimo }}
-          </p>
-        </div>
-
-        <!-- Acciones -->
-        <div class="flex justify-end gap-3 text-sm">
-          <button class="text-blue-600 hover:underline">
-            Editar
-          </button>
-          <button class="text-gray-600 hover:underline">
-            Movimientos
+        <p
+          class="text-sm text-slate-500 mb-8 line-clamp-2 leading-relaxed h-10"
+        >
+          {{ item.description || "Sin descripción detallada" }}
+        </p>
+        <div class="flex justify-end border-t border-slate-50 pt-5">
+          <button
+            @click="openEdit(item)"
+            class="text-blue-600 font-black text-sm hover:underline tracking-tight"
+          >
+            EDITAR DETALLES
           </button>
         </div>
       </div>
+    </div>
 
+    <div
+      v-if="showModal"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-6"
+    >
+      <div
+        class="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl border border-white"
+      >
+        <h2 class="text-2xl font-black mb-2 text-slate-900">
+          {{ isEditing ? "Actualizar" : "Crear" }} Categoría
+        </h2>
+        <p class="text-slate-400 mb-8 font-medium">
+          Ingresa los datos para organizar tu inventario.
+        </p>
+
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+          <div class="space-y-2">
+            <label class="text-xs font-black text-slate-400 uppercase ml-1"
+              >Nombre</label
+            >
+            <input
+              v-model="form.name"
+              type="text"
+              required
+              class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-black text-slate-400 uppercase ml-1"
+              >Descripción</label
+            >
+            <textarea
+              v-model="form.description"
+              class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none h-32 resize-none focus:border-blue-500 focus:bg-white transition-all"
+            ></textarea>
+          </div>
+
+          <div
+            class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100"
+          >
+            <input
+              v-model="form.isActive"
+              type="checkbox"
+              id="active-check"
+              class="w-5 h-5 accent-blue-600"
+            />
+            <label
+              for="active-check"
+              class="text-sm font-bold text-slate-700 cursor-pointer"
+              >¿Esta categoría está activa?</label
+            >
+          </div>
+
+          <div class="flex gap-4 pt-6">
+            <button
+              type="button"
+              @click="showModal = false"
+              class="flex-1 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              :disabled="processing"
+              class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-100 hover:bg-blue-700 disabled:bg-slate-200 transition-all"
+            >
+              {{
+                processing
+                  ? "PROCESANDO..."
+                  : isEditing
+                    ? "GUARDAR CAMBIOS"
+                    : "CREAR CATEGORÍA"
+              }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>

@@ -879,4 +879,59 @@ export const Endpoints: Record<string, Endpoint> = {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     },
   },
+  createContracts: {
+    method: "POST",
+    path: "/api/contracts",
+    headers: { Accept: "application/json" },
+  },
+  getContracts: {
+    method: "GET",
+    path: "/api/contracts",
+    headers: { Accept: "application/json" },
+  },
+  getContractById: {
+    method: "GET",
+    path: "/api/contracts/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  updateContracts: {
+    method: "PUT",
+    path: "/api/contracts/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  deleteContracts: {
+    method: "DELETE",
+    path: "/api/contracts/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  quoteToContract: {
+    method: "POST",
+    path: "/api/contracts/convert-from-quote/{{quoteId}}",
+    headers: { Accept: "application/json" },
+  },
+  createContractMilestones: {
+    method: "POST",
+    path: "/api/contracts/{{id}}/milestones",
+    headers: { Accept: "application/json" },
+  },
+  updateContractMilestones: {
+    method: "PUT",
+    path: "/api/contracts/{{id}}/milestones/{{milestoneId}}",
+    headers: { Accept: "application/json" },
+  },
+  deleteContractMilestones: {
+    method: "DELETE",
+    path: "/api/contracts/{{id}}/milestones/{{milestoneId}}",
+    headers: { Accept: "application/json" },
+  },
+  addContractAttachments: {
+    method: "POST",
+    path: "/api/contracts/{{id}}/attachments",
+    headers: { Accept: "application/json" },
+  },
+  deleteContractAttachment: {
+    method: "DELETE",
+    path: "/api/contracts/{{id}}/attachments/{{attachmentId}}",
+    headers: { Accept: "application/json" },
+  },
 };

@@ -1,25 +1,14 @@
 import type { RequestOptions } from "@/core/api/interfaces/requestOptions";
 import {
   ApiError,
-  ClientError,
   MissingParameterError,
   NetworkError,
-  ServerError,
   handleApiResponse,
   safeJsonParse,
 } from "@/core/api/apiErrorHandler";
 
 const BASE_URL = import.meta.env.VITE_API_URL as string;
 
-/**
- * Replaces parameters in an endpoint URL with their corresponding values.
- * Parameters in the URL should be in the format {{paramName}}.
- *
- * @param endpoint - The endpoint URL with parameters
- * @param params - Object containing parameter names and their values
- * @returns The endpoint with parameters replaced by their values
- * @throws MissingParameterError if a required parameter is not provided
- */
 export function replaceEndpointParams(
   endpoint: string,
   params: Record<string, string>,
@@ -32,14 +21,22 @@ export function replaceEndpointParams(
   });
 }
 
-/**
- * Makes an HTTP request to the API.
- *
- * @param endpoint - The API endpoint to call
- * @param options - Request configuration options
- * @returns Promise resolving to the response data
- * @throws ApiError or its subclasses if the request fails
- */
+function isJsonContentType(ct: string): boolean {
+  const v = ct.toLowerCase();
+  return v.includes("application/json") || v.includes("+json");
+}
+
+function isBinaryContentType(ct: string): boolean {
+  const v = ct.toLowerCase();
+  return (
+    v.includes("application/pdf") ||
+    v.includes("application/octet-stream") ||
+    v.includes("application/vnd.ms-excel") ||
+    v.includes("application/vnd.openxmlformats-officedocument") ||
+    v.includes("application/zip")
+  );
+}
+
 export async function fetchClient<T>(
   endpoint: string,
   options: RequestOptions,
@@ -66,41 +63,43 @@ export async function fetchClient<T>(
     const fullUrl = `${BASE_URL}${endpoint}`;
     const response = await fetch(fullUrl, config);
 
-    // Handle no-content responses
-    if (response.status === 204) {
-      return {} as T;
-    }
+    // No content
+    if (response.status === 204) return {} as T;
 
-    // Special handling for 404 - return empty object instead of throwing error
-    if (response.status === 404) {
-      return {} as T;
-    }
+    // Mantener tu comportamiento actual para 404
+    if (response.status === 404) return {} as T;
 
-    // Check for other error responses
+    // Errors
     if (!response.ok) {
       await handleApiResponse(response, endpoint, options.method);
-      // If handleApiResponse doesn't throw, we'll continue (shouldn't happen)
     }
 
-    // Parse JSON response safely
-    const data = await safeJsonParse(response);
+    const contentType = response.headers.get("content-type") ?? "";
 
-    // Handle null response (non-JSON or empty)
-    if (data === null) {
-      return {} as T;
+    // ✅ Archivos (PDF/Excel/etc) => Blob
+    if (isBinaryContentType(contentType)) {
+      return (await response.blob()) as unknown as T;
     }
 
-    return data as T;
+    // ✅ JSON => safeJsonParse (tu lógica actual)
+    if (isJsonContentType(contentType)) {
+      const data = await safeJsonParse(response);
+      return (data ?? ({} as unknown)) as T;
+    }
+
+    // ✅ Texto u otros => intenta text (y si viene vacío, {})
+    if (contentType.toLowerCase().startsWith("text/")) {
+      const txt = await response.text();
+      return (txt as unknown as T) ?? ({} as T);
+    }
+
+    // Fallback: si no sabemos qué es, mejor Blob (más seguro que intentar JSON)
+    return (await response.blob()) as unknown as T;
   } catch (error) {
-    // Log the error for debugging
     console.error("API request failed:", error);
 
-    // Rethrow ApiErrors as they are already properly formatted
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
 
-    // Convert generic errors to NetworkError for consistent error handling
     throw new NetworkError(endpoint, options.method, error as Error);
   }
 }

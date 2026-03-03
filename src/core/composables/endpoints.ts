@@ -857,4 +857,26 @@ export const Endpoints: Record<string, Endpoint> = {
       "Content-Type": "application/json",
     },
   },
+  browseAudit: {
+    method: "GET",
+    path: "/api/audit",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportAuditPdf: {
+    method: "GET",
+    path: "/api/audit/export/pdf",
+    headers: {
+      Accept: "application/pdf",
+    },
+  },
+  exportAuditExcel: {
+    method: "GET",
+    path: "/api/audit/export/excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
 };

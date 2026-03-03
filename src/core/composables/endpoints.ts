@@ -300,4 +300,78 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  createPurchaseRequest: {
+    method: "POST",
+    path: "/api/purchases/requests",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browsePurchaseRequests: {
+    method: "GET",
+    path: "/api/purchases/requests",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readPurchaseRequestById: {
+    method: "GET",
+    path: "/api/purchases/requests/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createPurchaseOrder: {
+    method: "POST",
+    path: "/api/purchases/orders",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browsePurchaseOrders: {
+    method: "GET",
+    path: "/api/purchases/orders",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readPurchaseOrderById: {
+    method: "GET",
+    path: "/api/purchases/orders/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createPurchaseReceipt: {
+    method: "POST",
+    path: "/api/purchases/receipts",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browsePurchaseReceipts: {
+    method: "GET",
+    path: "/api/purchases/receipts",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readPurchaseReceiptById: {
+    method: "GET",
+    path: "/api/purchases/receipts/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  rejectPurchaseReceipt: {
+    method: "POST",
+    path: "/api/purchases/receipts/{{id}}/reject",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
 };

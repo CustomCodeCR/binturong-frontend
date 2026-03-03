@@ -36,27 +36,21 @@ const form = ref<ProductCreateRequest>({
   isActive: true,
 });
 
-const loadDependencies = async () => {
+const loadAllData = async () => {
   try {
-    const [catRes, uomRes, taxRes] = await Promise.all([
+    loading.value = true;
+    const [prodRes, catRes, uomRes, taxRes] = await Promise.all([
+      ProductsService.browse(),
       ProductCategoriesService.browse(),
       UnitsOfMeasureService.browse(),
       TaxesService.browse(),
     ]);
+    productos.value = prodRes;
     categorias.value = catRes;
     unidades.value = uomRes;
     impuestos.value = taxRes;
-  } catch (e) {
-    console.error("Error cargando catálogos secundarios", e);
-  }
-};
-
-const fetchProductos = async () => {
-  try {
-    loading.value = true;
-    productos.value = await ProductsService.browse();
   } catch (e: any) {
-    error.value = "Error al cargar el catálogo de productos";
+    error.value = "Error al sincronizar datos.";
   } finally {
     loading.value = false;
   }
@@ -101,118 +95,90 @@ const openEdit = (item: Product) => {
 };
 
 const handleSubmit = async () => {
+  if (!form.value.categoryId || !form.value.uomId || !form.value.taxId) {
+    error.value =
+      "Por favor, seleccione una Categoría, Unidad e Impuesto válidos.";
+    return;
+  }
+
   try {
     processing.value = true;
+    error.value = "";
+
+    const payload = {
+      ...form.value,
+      basePrice: Number(form.value.basePrice),
+      averageCost: Number(form.value.averageCost),
+    };
+
     if (isEditing.value && selectedId.value) {
-      await ProductsService.update(selectedId.value, form.value);
+      await ProductsService.update(selectedId.value, payload);
       const index = productos.value.findIndex((p) => p.id === selectedId.value);
       if (index !== -1) {
-        const cat = categorias.value.find(
-          (c) => c.id === form.value.categoryId,
-        );
-        const uom = unidades.value.find((u) => u.id === form.value.uomId);
-
+        const cat = categorias.value.find((c) => c.id === payload.categoryId);
+        const uom = unidades.value.find((u) => u.id === payload.uomId);
         productos.value[index] = {
           ...productos.value[index],
-          ...form.value,
-          categoryName: cat ? cat.name : productos.value[index].categoryName,
-          uomCode: uom ? uom.code : productos.value[index].uomCode,
+          ...payload,
+          categoryName: cat?.name || "",
+          uomCode: uom?.code || "",
         };
       }
     } else {
-      await ProductsService.create(form.value);
-      await fetchProductos();
+      await ProductsService.create(payload);
+      productos.value = await ProductsService.browse();
     }
     showModal.value = false;
   } catch (e: any) {
-    error.value = "Error al procesar el producto";
+    error.value =
+      "Error de formato: Asegúrese de seleccionar todas las opciones desplegables.";
+    console.error(e);
   } finally {
     processing.value = false;
   }
 };
 
-onMounted(() => {
-  fetchProductos();
-  loadDependencies();
-});
+onMounted(loadAllData);
 </script>
 
 <template>
   <div class="p-8 space-y-8 bg-slate-50 min-h-screen">
     <div class="flex justify-between items-center max-w-7xl mx-auto">
-      <div>
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight">
-          Productos
-        </h1>
-        <p class="text-slate-500 font-medium">Catálogo General de Cerrajería</p>
-      </div>
+      <h1 class="text-3xl font-black text-slate-900">Productos</h1>
       <button
         @click="openCreate"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg"
+        class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold"
       >
-        + Nuevo Producto
+        + Nuevo
       </button>
     </div>
 
     <div
-      v-if="loading"
-      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+      v-if="error"
+      class="max-w-7xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow"
     >
-      <div
-        v-for="i in 3"
-        :key="i"
-        class="h-64 bg-white rounded-3xl animate-pulse"
-      ></div>
+      <p class="font-bold">Error de validación:</p>
+      <p>{{ error }}</p>
     </div>
 
     <div
-      v-else
-      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      v-if="!loading"
+      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
     >
       <div
         v-for="item in productos"
         :key="item.id"
-        class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-xl transition-all"
+        class="bg-white p-6 rounded-3xl border shadow-sm"
       >
-        <div>
-          <div class="flex justify-between items-start mb-2">
-            <span
-              class="text-[10px] font-black text-blue-500 uppercase tracking-widest"
-              >{{ item.sku }}</span
-            >
-            <span
-              :class="
-                item.isActive
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-slate-50 text-slate-400'
-              "
-              class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase"
-            >
-              {{ item.isActive ? "Activo" : "Inactivo" }}
-            </span>
-          </div>
-          <h2 class="font-bold text-lg text-slate-800 line-clamp-1">
-            {{ item.name }}
-          </h2>
-          <p class="text-xs text-slate-400 mb-4">
-            {{ item.categoryName || "Sin Categoría" }}
-          </p>
-
-          <div class="flex items-baseline gap-2 mb-4">
-            <span class="text-2xl font-black text-slate-900"
-              >${{ item.basePrice }}</span
-            >
-            <span class="text-xs text-slate-400 font-medium"
-              >/ {{ item.uomCode }}</span
-            >
-          </div>
-        </div>
-        <div class="flex justify-end border-t border-slate-50 pt-4">
+        <h3 class="font-bold text-lg">{{ item.name }}</h3>
+        <p class="text-gray-500 text-sm">{{ item.categoryName }}</p>
+        <div class="mt-4 flex justify-between items-center">
+          <span class="font-black text-xl">${{ item.basePrice }}</span>
           <button
             @click="openEdit(item)"
-            class="text-blue-600 font-black text-xs hover:underline"
+            class="text-blue-600 font-bold text-sm"
           >
-            EDITAR PRODUCTO
+            EDITAR
           </button>
         </div>
       </div>
@@ -220,130 +186,109 @@ onMounted(() => {
 
     <div
       v-if="showModal"
-      class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-6"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
-        class="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-[2rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
       >
-        <h2 class="text-2xl font-black mb-6 text-slate-900">
+        <h2 class="text-2xl font-black mb-6">
           {{ isEditing ? "Editar" : "Nuevo" }} Producto
         </h2>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >Nombre</label
-              >
-              <input
-                v-model="form.name"
-                type="text"
-                required
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500 transition-all"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >SKU</label
-              >
-              <input
-                v-model="form.sku"
-                type="text"
-                required
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500 transition-all"
-              />
-            </div>
+        <form
+          @submit.prevent="handleSubmit"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          <input
+            v-model="form.name"
+            placeholder="Nombre"
+            required
+            class="p-3 bg-gray-50 border rounded-xl outline-none focus:border-blue-500"
+          />
+          <input
+            v-model="form.sku"
+            placeholder="SKU"
+            required
+            class="p-3 bg-gray-50 border rounded-xl outline-none focus:border-blue-500"
+          />
+
+          <div class="flex flex-col gap-1">
+            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1"
+              >Categoría</label
+            >
+            <select
+              v-model="form.categoryId"
+              required
+              class="p-3 bg-gray-50 border rounded-xl"
+            >
+              <option value="" disabled>Seleccione Categoría</option>
+              <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >Categoría</label
-              >
-              <select
-                v-model="form.categoryId"
-                required
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500 appearance-none"
-              >
-                <option value="" disabled>Seleccione...</option>
-                <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
-                  {{ cat.name }}
-                </option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >Unidad (UOM)</label
-              >
-              <select
-                v-model="form.uomId"
-                required
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500 appearance-none"
-              >
-                <option value="" disabled>Seleccione...</option>
-                <option v-for="uom in unidades" :key="uom.id" :value="uom.id">
-                  {{ uom.code }} - {{ uom.name }}
-                </option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >Impuesto</label
-              >
-              <select
-                v-model="form.taxId"
-                required
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500 appearance-none"
-              >
-                <option value="" disabled>Seleccione...</option>
-                <option v-for="tax in impuestos" :key="tax.id" :value="tax.id">
-                  {{ tax.name }} ({{ tax.percentage }}%)
-                </option>
-              </select>
-            </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1"
+              >Unidad (UOM)</label
+            >
+            <select
+              v-model="form.uomId"
+              required
+              class="p-3 bg-gray-50 border rounded-xl"
+            >
+              <option value="" disabled>Seleccione Unidad</option>
+              <option v-for="uom in unidades" :key="uom.id" :value="uom.id">
+                {{ uom.name }}
+              </option>
+            </select>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >Precio Base</label
-              >
-              <input
-                v-model="form.basePrice"
-                type="number"
-                step="0.01"
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-black text-slate-400 uppercase ml-1"
-                >Costo Promedio</label
-              >
-              <input
-                v-model="form.averageCost"
-                type="number"
-                step="0.01"
-                class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-500"
-              />
-            </div>
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1"
+              >Impuesto</label
+            >
+            <select
+              v-model="form.taxId"
+              required
+              class="p-3 bg-gray-50 border rounded-xl"
+            >
+              <option value="" disabled>Seleccione Impuesto</option>
+              <option v-for="tax in impuestos" :key="tax.id" :value="tax.id">
+                {{ tax.name }} ({{ tax.percentage }}%)
+              </option>
+            </select>
           </div>
 
-          <div class="flex gap-4 pt-4">
+          <input
+            v-model="form.basePrice"
+            type="number"
+            step="0.01"
+            placeholder="Precio"
+            class="p-3 bg-gray-50 border rounded-xl"
+          />
+          <input
+            v-model="form.averageCost"
+            type="number"
+            step="0.01"
+            placeholder="Costo"
+            class="p-3 bg-gray-50 border rounded-xl"
+          />
+
+          <div class="md:col-span-2 flex justify-end gap-3 mt-6">
             <button
               type="button"
               @click="showModal = false"
-              class="flex-1 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition-colors"
+              class="px-6 py-2 text-gray-400 font-bold"
             >
               Cancelar
             </button>
             <button
               type="submit"
               :disabled="processing"
-              class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition-all"
+              class="px-10 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100"
             >
-              {{ processing ? "PROCESANDO..." : "GUARDAR PRODUCTO" }}
+              {{ processing ? "Guardando..." : "Guardar Producto" }}
             </button>
           </div>
         </form>

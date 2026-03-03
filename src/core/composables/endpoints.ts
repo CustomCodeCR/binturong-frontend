@@ -732,4 +732,84 @@ export const Endpoints: Record<string, Endpoint> = {
       "Content-Type": "application/json",
     },
   },
+  createBranch: {
+    method: "POST",
+    path: "/api/branches",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseBranches: {
+    method: "GET",
+    path: "/api/branches",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readBranchById: {
+    method: "GET",
+    path: "/api/branches/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateBranch: {
+    method: "PUT",
+    path: "/api/branches/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteBranch: {
+    method: "DELETE",
+    path: "/api/branches/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  reportSalesByBranch: {
+    method: "GET",
+    path: "/api/branches/{{id}}/reports/sales",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  compareBranches: {
+    method: "GET",
+    path: "/api/branches/reports/compare",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  reportSalesByBranchPdf: {
+    method: "GET",
+    path: "/api/branches/{{id}}/reports/sales/pdf",
+    headers: {
+      Accept: "application/pdf",
+    },
+  },
+  reportSalesByBranchExcel: {
+    method: "GET",
+    path: "/api/branches/{{id}}/reports/sales/excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
+  browseBranchesInventory: {
+    method: "GET",
+    path: "/api/branches/inventory",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  browseBranchInventoryById: {
+    method: "GET",
+    path: "/api/branches/{{id}}/inventory",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

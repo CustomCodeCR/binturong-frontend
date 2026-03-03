@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref } from "vue";
 import {
   LogOut,
   LayoutDashboard,
@@ -10,25 +10,23 @@ import {
   Building2,
   Briefcase,
   Package,
-  ClipboardList
-} from "lucide-vue-next"
+  ClipboardList,
+} from "lucide-vue-next";
 
-const collapsed = ref(false)
-const showLogout = ref(false)
+const collapsed = ref(false);
+const showLogout = ref(false);
 </script>
 
 <template>
   <aside
     :class="[
       'bg-slate-900 text-white flex flex-col transition-all duration-300',
-      collapsed ? 'w-16' : 'w-64'
+      collapsed ? 'w-16' : 'w-64',
     ]"
   >
     <!-- Header -->
     <div class="p-4 flex justify-center">
-      <button @click="collapsed = !collapsed" class="text-xl">
-        ☰
-      </button>
+      <button @click="collapsed = !collapsed" class="text-xl">☰</button>
     </div>
 
     <!-- Navegación -->
@@ -93,11 +91,11 @@ const showLogout = ref(false)
       </RouterLink>
 
       <RouterLink
-        to="/inventario"
+        to="/Categoria"
         class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700"
       >
         <Package :size="20" />
-        <span v-if="!collapsed">Inventario</span>
+        <span v-if="!collapsed">Categorías</span>
       </RouterLink>
 
       <RouterLink
@@ -140,15 +138,11 @@ const showLogout = ref(false)
           Cancelar
         </button>
 
-        <button
-          class="px-4 py-2 text-sm rounded bg-blue-600 text-white"
-        >
+        <button class="px-4 py-2 text-sm rounded bg-blue-600 text-white">
           Cambiar cuenta
         </button>
 
-        <button
-          class="px-4 py-2 text-sm rounded bg-red-600 text-white"
-        >
+        <button class="px-4 py-2 text-sm rounded bg-red-600 text-white">
           Salir
         </button>
       </div>

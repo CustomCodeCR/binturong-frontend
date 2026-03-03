@@ -54,8 +54,8 @@ export const router = createRouter({
             import("@/modules/employees/views/EmpleadosView.vue"),
         },
         {
-          path: "inventario",
-          name: "inventario",
+          path: "Categoria",
+          name: "Categoria",
           component: () =>
             import("@/modules/inventory/views/InventarioView.vue"),
         },

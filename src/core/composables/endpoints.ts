@@ -249,4 +249,55 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  createEmployee: {
+    method: "POST",
+    path: "/api/employees",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseEmployees: {
+    method: "GET",
+    path: "/api/employees",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readEmployeeById: {
+    method: "GET",
+    path: "/api/employees/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateEmployee: {
+    method: "PUT",
+    path: "/api/employees/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteEmployee: {
+    method: "DELETE",
+    path: "/api/employees/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  checkInEmployee: {
+    method: "POST",
+    path: "/api/employees/{{id}}/check-in",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  checkOutEmployee: {
+    method: "POST",
+    path: "/api/employees/{{id}}/check-out",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

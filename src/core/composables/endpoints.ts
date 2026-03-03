@@ -969,4 +969,54 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/invoices/convert-from-quote/{{quoteId}}",
     headers: { Accept: "application/json" },
   },
+  createCreditNote: {
+    method: "POST",
+    path: "/api/credit-notes",
+    headers: { Accept: "application/json" },
+  },
+  getCreditNotes: {
+    method: "GET",
+    path: "/api/credit-notes",
+    headers: { Accept: "application/json" },
+  },
+  getCreditNoteById: {
+    method: "GET",
+    path: "/api/credit-notes/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  emitCreditNote: {
+    method: "POST",
+    path: "/api/credit-notes/{{id}}/emit",
+    headers: { Accept: "application/json" },
+  },
+  deleteCreditNote: {
+    method: "DELETE",
+    path: "/api/credit-notes/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  createDebitNote: {
+    method: "POST",
+    path: "/api/debit-notes",
+    headers: { Accept: "application/json" },
+  },
+  getDebitNotes: {
+    method: "GET",
+    path: "/api/debit-notes",
+    headers: { Accept: "application/json" },
+  },
+  getDebitNoteById: {
+    method: "GET",
+    path: "/api/debit-notes/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  emitDebitNote: {
+    method: "POST",
+    path: "/api/debit-notes/{{id}}/emit",
+    headers: { Accept: "application/json" },
+  },
+  deleteDebitNote: {
+    method: "DELETE",
+    path: "/api/debit-notes/{{id}}",
+    headers: { Accept: "application/json" },
+  },
 };

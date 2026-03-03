@@ -64,6 +64,12 @@ export const router = createRouter({
           name: "auditoria",
           component: () => import("@/modules/auditlog/views/AuditoriaView.vue"),
         },
+        {
+          path: "unidad-medida",
+          name: "unidad-medida",
+          component: () =>
+            import("@/modules/unitOfMeasure/views/unitOfMeasure.vue"),
+        },
       ],
     },
   ],

@@ -99,6 +99,14 @@ const showLogout = ref(false);
       </RouterLink>
 
       <RouterLink
+        to="/unidad-medida"
+        class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700"
+      >
+        <Package :size="20" />
+        <span v-if="!collapsed">Unidades de Medida</span>
+      </RouterLink>
+
+      <RouterLink
         to="/auditoria"
         class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700"
       >

@@ -934,4 +934,39 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/contracts/{{id}}/attachments/{{attachmentId}}",
     headers: { Accept: "application/json" },
   },
+  createInvoices: {
+    method: "POST",
+    path: "/api/invoices",
+    headers: { Accept: "application/json" },
+  },
+  getInvoices: {
+    method: "GET",
+    path: "/api/invoices",
+    headers: { Accept: "application/json" },
+  },
+  getInvoiceById: {
+    method: "GET",
+    path: "/api/invoices/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  updateInvoices: {
+    method: "PUT",
+    path: "/api/invoices/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  deleteInvoices: {
+    method: "DELETE",
+    path: "/api/invoices/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  emitInvoices: {
+    method: "POST",
+    path: "/api/invoices/{{id}}/emit",
+    headers: { Accept: "application/json" },
+  },
+  quoteToInvoice: {
+    method: "POST",
+    path: "/api/invoices/convert-from-quote/{{quoteId}}",
+    headers: { Accept: "application/json" },
+  },
 };

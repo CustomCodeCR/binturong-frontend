@@ -70,6 +70,11 @@ export const router = createRouter({
           component: () =>
             import("@/modules/unitOfMeasure/views/unitOfMeasure.vue"),
         },
+        {
+          path: "impuestos",
+          name: "impuestos",
+          component: () => import("@/modules/taxes/views/taxes.vue"),
+        },
       ],
     },
   ],

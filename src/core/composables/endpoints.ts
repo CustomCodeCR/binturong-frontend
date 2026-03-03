@@ -374,4 +374,117 @@ export const Endpoints: Record<string, Endpoint> = {
       "Content-Type": "application/json",
     },
   },
+  createSupplier: {
+    method: "POST",
+    path: "/api/suppliers",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  browseSuppliers: {
+    method: "GET",
+    path: "/api/suppliers",
+    headers: { Accept: "application/json" },
+  },
+  readSupplierById: {
+    method: "GET",
+    path: "/api/suppliers/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  updateSupplier: {
+    method: "PUT",
+    path: "/api/suppliers/{{id}}",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  deleteSupplier: {
+    method: "DELETE",
+    path: "/api/suppliers/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  updateSupplierCredit: {
+    method: "PUT",
+    path: "/api/suppliers/{{id}}/credit",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  createSupplierContact: {
+    method: "POST",
+    path: "/api/suppliers/{{supplierId}}/contacts",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  updateSupplierContact: {
+    method: "PUT",
+    path: "/api/suppliers/{{supplierId}}/contacts/{{contactId}}",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  deleteSupplierContact: {
+    method: "DELETE",
+    path: "/api/suppliers/{{supplierId}}/contacts/{{contactId}}",
+    headers: { Accept: "application/json" },
+  },
+  setPrimarySupplierContact: {
+    method: "PUT",
+    path: "/api/suppliers/{{supplierId}}/contacts/{{contactId}}/primary",
+    headers: { Accept: "application/json" },
+  },
+  addSupplierAttachment: {
+    method: "POST",
+    path: "/api/suppliers/{{supplierId}}/attachments",
+    headers: { Accept: "application/json" },
+  },
+  removeSupplierAttachment: {
+    method: "DELETE",
+    path: "/api/suppliers/{{supplierId}}/attachments/{{attachmentId}}",
+    headers: { Accept: "application/json" },
+  },
+  supplierPurchaseHistory: {
+    method: "GET",
+    path: "/api/suppliers/{{id}}/purchase-history",
+    headers: { Accept: "application/json" },
+  },
+  supplierPurchaseHistoryPdf: {
+    method: "GET",
+    path: "/api/suppliers/{{id}}/purchase-history/pdf",
+    headers: { Accept: "application/pdf" },
+  },
+  supplierPurchaseHistoryExcel: {
+    method: "GET",
+    path: "/api/suppliers/{{id}}/purchase-history/excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
+  createSupplierEvaluation: {
+    method: "POST",
+    path: "/api/suppliers/evaluations",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  browseSupplierEvaluationsBySupplierId: {
+    method: "GET",
+    path: "/api/suppliers/evaluations/{{supplierId}}",
+    headers: { Accept: "application/json" },
+  },
+  createSupplierQuote: {
+    method: "POST",
+    path: "/api/suppliers/quotes",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  browseSupplierQuotes: {
+    method: "GET",
+    path: "/api/suppliers/quotes",
+    headers: { Accept: "application/json" },
+  },
+  readSupplierQuoteById: {
+    method: "GET",
+    path: "/api/suppliers/quotes/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  respondSupplierQuote: {
+    method: "POST",
+    path: "/api/suppliers/quotes/{{id}}/respond",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  rejectSupplierQuote: {
+    method: "POST",
+    path: "/api/suppliers/quotes/{{id}}/reject",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
 };

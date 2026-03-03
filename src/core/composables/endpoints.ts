@@ -212,4 +212,41 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  createProduct: {
+    method: "POST",
+    path: "/api/products",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseProducts: {
+    method: "GET",
+    path: "/api/products",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readProductById: {
+    method: "GET",
+    path: "/api/products/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateProduct: {
+    method: "PUT",
+    path: "/api/products/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  deleteProduct: {
+    method: "DELETE",
+    path: "/api/products/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

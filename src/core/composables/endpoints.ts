@@ -9,7 +9,6 @@ export interface Endpoint {
 export type EndpointsMap = Record<string, Endpoint>;
 
 export const Endpoints: Record<string, Endpoint> = {
-  // ... tus endpoints existentes
   login: {
     method: "POST",
     path: "/api/auth/login",
@@ -486,5 +485,64 @@ export const Endpoints: Record<string, Endpoint> = {
     method: "POST",
     path: "/api/suppliers/quotes/{{id}}/reject",
     headers: { Accept: "application/json", "Content-Type": "application/json" },
+  },
+  createQuote: {
+    method: "POST",
+    path: "/api/quotes",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  createQuoteDetail: {
+    method: "POST",
+    path: "/api/quotes/{{id}}/details",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseQuotes: {
+    method: "GET",
+    path: "/api/quotes",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readQuoteById: {
+    method: "GET",
+    path: "/api/quotes/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  sendQuote: {
+    method: "POST",
+    path: "/api/quotes/{{id}}/send",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  acceptQuote: {
+    method: "POST",
+    path: "/api/quotes/{{id}}/accept",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  rejectQuote: {
+    method: "POST",
+    path: "/api/quotes/{{id}}/reject",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  expireQuote: {
+    method: "POST",
+    path: "/api/quotes/{{id}}/expire",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
   },
 };

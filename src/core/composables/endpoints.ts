@@ -1064,4 +1064,52 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/payables/accounts-payable/{{id}}/payments",
     headers: { Accept: "application/json" },
   },
+  getAccountsReceivable: {
+    method: "GET",
+    path: "/api/accounts-receivable",
+    headers: { Accept: "application/json" },
+  },
+  registerPaymentCash: {
+    method: "POST",
+    path: "/api/payments/register/cash",
+    headers: { Accept: "application/json" },
+  },
+  registerPaymentTransfer: {
+    method: "POST",
+    path: "/api/payments/register/transfer",
+    headers: { Accept: "application/json" },
+  },
+  registerPaymentCard: {
+    method: "POST",
+    path: "/api/payments/register/card",
+    headers: { Accept: "application/json" },
+  },
+  registerPartialPayment: {
+    method: "POST",
+    path: "/api/payments/register/partial",
+    headers: { Accept: "application/json" },
+  },
+  getPayments: {
+    method: "GET",
+    path: "/api/payments",
+    headers: { Accept: "application/json" },
+  },
+  getPaymentById: {
+    method: "GET",
+    path: "/api/payments/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  reportPaymentPdf: {
+    method: "GET",
+    path: "/api/payments/reports/history/pdf",
+    headers: { Accept: "application/pdf" },
+  },
+  reportPaymentExcel: {
+    method: "GET",
+    path: "/api/payments/reports/history/excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream",
+    },
+  },
 };

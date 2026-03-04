@@ -1044,4 +1044,24 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/payment-methods/{{id}}",
     headers: { Accept: "application/json" },
   },
+  createAccountPayable: {
+    method: "POST",
+    path: "/api/payables/accounts-payable",
+    headers: { Accept: "application/json" },
+  },
+  getAccountsPayables: {
+    method: "GET",
+    path: "/api/payables/accounts-payable",
+    headers: { Accept: "application/json" },
+  },
+  getAccountPayableById: {
+    method: "GET",
+    path: "/api/payables/accounts-payable/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  registerPaymentAccountPayable: {
+    method: "POST",
+    path: "/api/payables/accounts-payable/{{id}}/payments",
+    headers: { Accept: "application/json" },
+  },
 };

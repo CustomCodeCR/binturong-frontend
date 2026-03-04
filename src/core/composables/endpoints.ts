@@ -1019,4 +1019,29 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/debit-notes/{{id}}",
     headers: { Accept: "application/json" },
   },
+  createPaymentMethod: {
+    method: "POST",
+    path: "/api/payment-methods",
+    headers: { Accept: "application/json" },
+  },
+  getPaymentMethods: {
+    method: "GET",
+    path: "/api/payment-methods",
+    headers: { Accept: "application/json" },
+  },
+  getPaymentMethodById: {
+    method: "GET",
+    path: "/api/payment-methods/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  updatePaymentMethod: {
+    method: "PUT",
+    path: "/api/payment-methods/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  deletePaymentMethod: {
+    method: "DELETE",
+    path: "/api/payment-methods/{{id}}",
+    headers: { Accept: "application/json" },
+  },
 };

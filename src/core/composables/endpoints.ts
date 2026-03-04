@@ -1152,4 +1152,77 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/inventory-transfers/{{id}}/reject",
     headers: { Accept: "application/json" },
   },
+  createPayroll: {
+    method: "POST",
+    path: "/api/payroll",
+    headers: { Accept: "application/json" },
+  },
+  getPayrolls: {
+    method: "GET",
+    path: "/api/payroll",
+    headers: { Accept: "application/json" },
+  },
+  getPayrollById: {
+    method: "GET",
+    path: "/api/payroll/{{payrollId}}",
+    headers: { Accept: "application/json" },
+  },
+  updatePayroll: {
+    method: "PUT",
+    path: "/api/payroll/{{payrollId}}",
+    headers: { Accept: "application/json" },
+  },
+  deletePayroll: {
+    method: "DELETE",
+    path: "/api/payroll/{{payrollId}}",
+    headers: { Accept: "application/json" },
+  },
+  calculatePayroll: {
+    method: "POST",
+    path: "/api/payroll/calculate",
+    headers: { Accept: "application/json" },
+  },
+  createOvertimePayroll: {
+    method: "POST",
+    path: "/api/payroll/overtime",
+    headers: { Accept: "application/json" },
+  },
+  deleteOvertimePayroll: {
+    method: "DELETE",
+    path: "/api/payroll/overtime/{{overtimeId}}",
+    headers: { Accept: "application/json" },
+  },
+  addCommisionPayroll: {
+    method: "PUT",
+    path: "/api/payroll/{{payrollId}}/details/{{detailId}}/commission",
+    headers: { Accept: "application/json" },
+  },
+  generatePayrollPdf: {
+    method: "GET",
+    path: "/api/payroll/{{payrollId}}/payslips/{{employeeId}}.pdf",
+    headers: { Accept: "application/pdf" },
+  },
+  sendPayrollEmail: {
+    method: "POST",
+    path: "/api/payroll/{{payrollId}}/payslips/{{employeeId}}/send-email",
+    headers: { Accept: "application/json" },
+  },
+  historyEmployeePayroll: {
+    method: "GET",
+    path: "/api/payroll/employees/{{employeeId}}/history",
+    headers: { Accept: "application/json" },
+  },
+  exportHistoryEmployeePayrollPdf: {
+    method: "GET",
+    path: "/api/payroll/employees/{{employeeId}}/history/export.pdf",
+    headers: { Accept: "application/pdf" },
+  },
+  exportHistoryEmployeePayrollExcel: {
+    method: "GET",
+    path: "/api/payroll/employees/{{employeeId}}/history/export.xls",
+    headers: {
+      Accept:
+        "application/vnd.ms-excel, application/octet-stream, application/xls",
+    },
+  },
 };

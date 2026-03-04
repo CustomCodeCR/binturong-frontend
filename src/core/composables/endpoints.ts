@@ -1112,4 +1112,44 @@ export const Endpoints: Record<string, Endpoint> = {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream",
     },
   },
+  createInventoryTransfer: {
+    method: "POST",
+    path: "/api/inventory-transfers",
+    headers: { Accept: "application/json" },
+  },
+  getInventoryTransfers: {
+    method: "GET",
+    path: "/api/inventory-transfers",
+    headers: { Accept: "application/json" },
+  },
+  getInventoryTransferById: {
+    method: "GET",
+    path: "/api/inventory-transfers/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  deleteInventoryTransfer: {
+    method: "DELETE",
+    path: "/api/inventory-transfers/{{id}}",
+    headers: { Accept: "application/json" },
+  },
+  requestReviewInventoryTransfer: {
+    method: "POST",
+    path: "/api/inventory-transfers/{{id}}/request-review",
+    headers: { Accept: "application/json" },
+  },
+  approveInventoryTransfer: {
+    method: "POST",
+    path: "/api/inventory-transfers/{{id}}/approve",
+    headers: { Accept: "application/json" },
+  },
+  confirmInventoryTransfer: {
+    method: "POST",
+    path: "/api/inventory-transfers/{{id}}/confirm",
+    headers: { Accept: "application/json" },
+  },
+  rejectInventoryTransfer: {
+    method: "POST",
+    path: "/api/inventory-transfers/{{id}}/reject",
+    headers: { Accept: "application/json" },
+  },
 };

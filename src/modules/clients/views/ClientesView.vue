@@ -1,155 +1,114 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import BTButton from "@/shared/components/ui/BTButton.vue";
-import BTHeader from "@/shared/components/ui/BTHeader.vue";
-import BTModal from "@/shared/components/ui/BTModal.vue";
-import BTInput from "@/shared/components/ui/BTInput.vue";
-import { useToastStore } from '@/core/stores/toast';
+import { ref, onMounted } from "vue";
+import { ClientsService } from "@/core/services/clientsService";
+import type { Client } from "@/core/interfaces/clients";
 
-
-const clientes = ref([
-  {
-    id: 1,
-    nombre: "Juan Pérez",
-    telefono: "8888-1234",
-    correo: "juan@email.com",
-    tipo: "Frecuente",
-    estado: "Activo"
-  },
-  {
-    id: 2,
-    nombre: "María López",
-    telefono: "8777-5678",
-    correo: "maria@email.com",
-    tipo: "Ocasional",
-    estado: "Activo"
-  },
-  {
-    id: 3,
-    nombre: "Carlos Gómez",
-    telefono: "8666-9999",
-    correo: "carlos@email.com",
-    tipo: "Frecuente",
-    estado: "Inactivo"
-  }
-]);
-
+const clients = ref<Client[]>([]);
+const loading = ref(true);
+const error = ref("");
 const showModal = ref(false);
+const isEditing = ref(false);
+const selectedClient = ref<Client | null>(null);
 
-// Form data
-const formData = ref({
-  nombre: '',
-  telefono: '',
-  correo: '',
-  tipo: 'Frecuente',
+const form = ref({
+  tradeName: "",
+  identification: "",
+  email: "",
+  primaryPhone: "",
+  score: 0,
+  isActive: true,
 });
 
+const fetchClients = async () => {
+  try {
+    loading.value = true;
+    clients.value = await ClientsService.browse();
+  } catch (e) {
+    error.value = "Error al cargar clientes";
+  } finally {
+    loading.value = false;
+  }
+};
 
+const openEdit = (client: Client) => {
+  isEditing.value = true;
+  selectedClient.value = client;
+  form.value = {
+    tradeName: client.tradeName,
+    identification: client.identification,
+    email: client.email,
+    primaryPhone: client.primaryPhone,
+    score: client.score,
+    isActive: client.isActive,
+  };
+  showModal.value = true;
+};
 
-const toastStore = useToastStore();
+const handleDelete = async (id: string) => {
+  if (!confirm("¿Eliminar cliente?")) return;
+  await ClientsService.delete(id);
+  await fetchClients();
+};
 
-function handleConfirm() {
-  console.log('Creating client:', formData.value);
-  
-  // Show success toast
-  toastStore.addToast({
-    severity: 'success',
-    title: 'Cliente creado',
-    message: 'El cliente se creó exitosamente',
-    duration: 3000,
-  });
-  
-  showModal.value = false;
-}
+onMounted(fetchClients);
 </script>
 
 <template>
-  <div class="space-y-6">
-    <BTHeader>
-      <template #title>Clientes</template>
-      <template #description>Gestión y seguimiento de clientes</template>
-      <template #action>
-        <BTButton 
-          variant="blue" 
-          size="md"
-          shape="rounded"
-          @click="showModal = true"
-        >
-          + Nuevo Cliente
-        </BTButton>
-      </template>
-    </BTHeader>
+  <div class="p-8 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto flex justify-between mb-8">
+      <h1 class="text-3xl font-black">Directorio de Clientes</h1>
+      <button class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">
+        + Nuevo Cliente
+      </button>
+    </div>
 
-    <!-- Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      v-if="!loading"
+      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    >
       <div
-        v-for="cliente in clientes"
-        :key="cliente.id"
-        class="bg-white rounded-xl shadow p-5 hover:shadow-lg transition"
+        v-for="c in clients"
+        :key="c.id"
+        class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"
       >
-        <!-- Avatar -->
-        <div class="flex items-center gap-4 mb-4">
-          <div
-            class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold"
-          >
-            {{ cliente.nombre.charAt(0) }}
-          </div>
+        <div class="flex justify-between items-start mb-4">
           <div>
-            <p class="font-semibold text-gray-800">
-              {{ cliente.nombre }}
-            </p>
-            <p class="text-sm text-gray-500">
-              {{ cliente.tipo }}
-            </p>
+            <h3 class="font-black text-lg">{{ c.tradeName }}</h3>
+            <p class="text-xs text-slate-400">{{ c.identification }}</p>
           </div>
-        </div>
-
-        <!-- Info -->
-        <div class="space-y-2 text-sm text-gray-600">
-          <p>📞 {{ cliente.telefono }}</p>
-          <p>✉️ {{ cliente.correo }}</p>
-        </div>
-
-        <!-- Footer -->
-        <div class="flex justify-between items-center mt-4">
           <span
-            :class="[
-              'text-xs font-semibold px-2 py-1 rounded',
-              cliente.estado === 'Activo'
+            :class="
+              c.isActive
                 ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700'
-            ]"
+                : 'bg-red-100 text-red-600'
+            "
+            class="px-2 py-1 rounded-lg text-[10px] font-bold"
           >
-            {{ cliente.estado }}
+            {{ c.isActive ? "ACTIVO" : "INACTIVO" }}
           </span>
-          <div class="flex gap-3">
-            <BTButton variant="text" size="sm">Ver</BTButton>
-            <BTButton variant="text" size="sm">Editar</BTButton>
-          </div>
+        </div>
+
+        <div class="space-y-2 mb-4 text-sm">
+          <p>📧 {{ c.email }}</p>
+          <p>📞 {{ c.primaryPhone }}</p>
+          <p class="font-bold text-blue-600">Score: {{ c.score }}</p>
+        </div>
+
+        <div class="flex gap-2 border-t pt-4">
+          <button
+            @click="handleDelete(c.id)"
+            class="text-red-500 font-bold text-xs uppercase"
+          >
+            Eliminar
+          </button>
+          <button
+            @click="openEdit(c)"
+            class="text-blue-600 font-bold text-xs uppercase"
+          >
+            Detalles / Editar
+          </button>
         </div>
       </div>
     </div>
-
-    <!-- Modal -->
-    <BTModal 
-      v-model="showModal" 
-      title="Nuevo Cliente"
-      size="medium"
-      @confirm="handleConfirm"
-    >
-      <div class="space-y-4">
-        <BTInput v-model:inputValue="formData.nombre">
-          <template #label>Nombre completo</template>
-        </BTInput>
-        
-        <BTInput v-model:inputValue="formData.telefono" inputType="tel">
-          <template #label>Teléfono</template>
-        </BTInput>
-        
-        <BTInput v-model:inputValue="formData.correo" inputType="email">
-          <template #label>Correo electrónico</template>
-        </BTInput>
-      </div>
-    </BTModal>
   </div>
 </template>

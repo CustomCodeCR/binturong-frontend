@@ -80,6 +80,12 @@ export const router = createRouter({
           name: "productos",
           component: () => import("@/modules/products/views/product.vue"),
         },
+        {
+          path: "branches",
+          name: "branches",
+          component: () =>
+            import("@/modules/branches/views/SucursalesView.vue"),
+        },
       ],
     },
   ],

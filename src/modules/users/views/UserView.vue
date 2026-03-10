@@ -26,7 +26,7 @@ const form = ref({
 const fetchUsuarios = async () => {
   try {
     loading.value = true;
-    usuarios.value = await UsersService.browse(); //
+    usuarios.value = await UsersService.browse();
   } catch (e: any) {
     error.value = "Error al cargar la lista de usuarios";
   } finally {
@@ -68,36 +68,37 @@ const handleSubmit = async () => {
     if (isEditing.value && selectedId.value) {
       const updatePayload: UserUpdateRequest = {
         username: form.value.username,
-        email: form.value.email,
         isActive: form.value.isActive,
         mustChangePassword: form.value.mustChangePassword,
         lastLogin: null,
         failedAttempts: 0,
         lockedUntil: null,
       };
-
-      await UsersService.update(selectedId.value, updatePayload); //
-
-      const index = usuarios.value.findIndex((u) => u.id === selectedId.value);
-      if (index !== -1) {
-        usuarios.value[index] = { ...usuarios.value[index], ...updatePayload };
-      }
+      await UsersService.update(selectedId.value, updatePayload);
     } else {
-      const createPayload: UserCreateRequest = {
+      await UsersService.create({
         username: form.value.username,
         email: form.value.email,
         password: form.value.password,
         isActive: form.value.isActive,
-      };
-      await UsersService.create(createPayload);
-      await fetchUsuarios();
+      });
     }
-
+    await fetchUsuarios();
     showModal.value = false;
   } catch (e: any) {
-    error.value = "Error al procesar la solicitud del usuario";
+    error.value = "Error al guardar el usuario.";
   } finally {
     processing.value = false;
+  }
+};
+
+const handleDelete = async (id: string) => {
+  if (!confirm("¿Eliminar usuario?")) return;
+  try {
+    await UsersService.delete(id);
+    usuarios.value = usuarios.value.filter((u) => u.id !== id);
+  } catch (e: any) {
+    error.value = "No se pudo eliminar.";
   }
 };
 
@@ -113,31 +114,27 @@ onMounted(fetchUsuarios);
       </div>
       <button
         @click="openCreate"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all"
+        class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold"
       >
         + Nuevo Usuario
       </button>
     </div>
 
     <div
-      v-if="loading"
-      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+      v-if="error"
+      class="max-w-7xl mx-auto p-4 bg-red-100 text-red-700 rounded-xl font-bold"
     >
-      <div
-        v-for="i in 3"
-        :key="i"
-        class="h-48 bg-white rounded-3xl animate-pulse border border-slate-100"
-      ></div>
+      {{ error }}
     </div>
 
     <div
-      v-else
-      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      v-if="!loading"
+      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
     >
       <div
         v-for="item in usuarios"
         :key="item.id"
-        class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-md transition-all"
+        class="bg-white p-6 rounded-[2rem] border shadow-sm"
       >
         <div class="flex justify-between items-start mb-4">
           <div class="flex items-center gap-3">
@@ -148,47 +145,44 @@ onMounted(fetchUsuarios);
             </div>
             <div>
               <h2 class="font-bold text-slate-800">{{ item.username }}</h2>
-              <p class="text-xs text-slate-400">{{ item.email }}</p>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">
+                {{ item.email }}
+              </p>
             </div>
           </div>
           <span
             :class="
               item.isActive
-                ? 'text-green-600 bg-green-50'
-                : 'text-red-400 bg-red-50'
+                ? 'bg-green-50 text-green-600'
+                : 'bg-red-50 text-red-400'
             "
-            class="px-3 py-1 rounded-full text-[10px] font-black uppercase"
+            class="px-3 py-1 rounded-full text-[9px] font-black uppercase"
+            >{{ item.isActive ? "Activo" : "Inactivo" }}</span
           >
-            {{ item.isActive ? "Activo" : "Inactivo" }}
-          </span>
         </div>
-
-        <div class="space-y-2 mb-6">
-          <div class="flex justify-between text-xs">
-            <span class="text-slate-400">Cambio de pass:</span>
+        <div class="space-y-2 mb-4">
+          <p class="text-[11px] text-slate-400 font-medium">
+            Cambio de clave:
             <span
-              class="font-bold"
               :class="
                 item.mustChangePassword ? 'text-orange-500' : 'text-slate-600'
               "
+              >{{ item.mustChangePassword ? "Requerido" : "Normal" }}</span
             >
-              {{ item.mustChangePassword ? "Requerido" : "No" }}
-            </span>
-          </div>
-          <div class="flex justify-between text-xs">
-            <span class="text-slate-400">Último acceso:</span>
-            <span class="text-slate-600 font-medium">{{
-              item.lastLogin || "Nunca"
-            }}</span>
-          </div>
+          </p>
         </div>
-
-        <div class="flex justify-end border-t border-slate-50 pt-4">
+        <div class="flex justify-between border-t pt-4">
+          <button
+            @click="handleDelete(item.id)"
+            class="text-red-400 text-xs font-bold uppercase"
+          >
+            Eliminar
+          </button>
           <button
             @click="openEdit(item)"
-            class="text-blue-600 font-black text-xs hover:underline"
+            class="text-blue-600 text-xs font-black uppercase"
           >
-            CONFIGURAR
+            Configurar
           </button>
         </div>
       </div>
@@ -196,79 +190,46 @@ onMounted(fetchUsuarios);
 
     <div
       v-if="showModal"
-      class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-6"
+      class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-6 z-50"
     >
-      <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
-        <h2 class="text-2xl font-black mb-8 text-slate-900">
+      <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-md">
+        <h2 class="text-2xl font-black mb-6">
           {{ isEditing ? "Editar" : "Nuevo" }} Usuario
         </h2>
+        <form @submit.prevent="handleSubmit" class="space-y-4">
+          <input
+            v-model="form.username"
+            placeholder="Username"
+            required
+            class="w-full p-4 bg-slate-50 border rounded-2xl"
+          />
+          <input
+            v-model="form.email"
+            placeholder="Email"
+            type="email"
+            required
+            class="w-full p-4 bg-slate-50 border rounded-2xl"
+          />
 
-        <form @submit.prevent="handleSubmit" class="space-y-5">
-          <div class="space-y-1">
-            <label class="text-xs font-black text-slate-400 uppercase"
-              >Username</label
-            >
-            <input
-              v-model="form.username"
-              type="text"
-              required
-              class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 transition-all"
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-xs font-black text-slate-400 uppercase"
-              >Email</label
-            >
-            <input
-              v-model="form.email"
-              type="email"
-              required
-              class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 transition-all"
-            />
-          </div>
-
-          <div v-if="!isEditing" class="space-y-1">
-            <label class="text-xs font-black text-slate-400 uppercase"
-              >Password Inicial</label
-            >
+          <div v-if="!isEditing">
             <input
               v-model="form.password"
+              placeholder="Password"
               type="password"
               required
-              class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 transition-all"
+              class="w-full p-4 bg-slate-50 border rounded-2xl"
             />
           </div>
 
-          <div class="flex flex-col gap-3 pt-2">
-            <div
-              class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100"
+          <div class="space-y-2 pt-2">
+            <label class="flex items-center gap-2 text-sm font-bold"
+              ><input type="checkbox" v-model="form.isActive" /> Cuenta
+              activa</label
             >
-              <input
-                v-model="form.isActive"
-                type="checkbox"
-                id="user-active"
-                class="w-5 h-5 accent-blue-600"
-              />
-              <label for="user-active" class="text-sm font-bold text-slate-700"
-                >Cuenta activa</label
-              >
-            </div>
-            <div
-              class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100"
+            <label class="flex items-center gap-2 text-sm font-bold"
+              ><input type="checkbox" v-model="form.mustChangePassword" />
+              Exigir cambio de clave</label
             >
-              <input
-                v-model="form.mustChangePassword"
-                type="checkbox"
-                id="user-must-change"
-                class="w-5 h-5 accent-orange-500"
-              />
-              <label
-                for="user-must-change"
-                class="text-sm font-bold text-slate-700"
-                >Exigir cambio de clave</label
-              >
-            </div>
           </div>
 
           <div class="flex gap-4 pt-4">
@@ -282,9 +243,9 @@ onMounted(fetchUsuarios);
             <button
               type="submit"
               :disabled="processing"
-              class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg"
+              class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black"
             >
-              {{ processing ? "..." : "GUARDAR" }}
+              GUARDAR
             </button>
           </div>
         </form>

@@ -48,7 +48,6 @@ const openEdit = (item: Tax) => {
   showModal.value = true;
 };
 
-// --- GUARDAR (POST / PUT) ---
 const handleSubmit = async () => {
   if (!form.value.name || !form.value.code) return;
 
@@ -58,7 +57,6 @@ const handleSubmit = async () => {
 
     if (isEditing.value && selectedId.value) {
       await TaxesService.update(selectedId.value, form.value);
-
       const index = impuestos.value.findIndex((t) => t.id === selectedId.value);
       if (index !== -1) {
         impuestos.value[index] = { ...impuestos.value[index], ...form.value };
@@ -71,6 +69,30 @@ const handleSubmit = async () => {
     showModal.value = false;
   } catch (e: any) {
     error.value = "No se pudo procesar la operación de impuestos";
+  } finally {
+    processing.value = false;
+  }
+};
+
+const handleDelete = async (id: string) => {
+  if (
+    !confirm(
+      "¿Está seguro de eliminar este impuesto? Esta acción no se puede deshacer.",
+    )
+  ) {
+    return;
+  }
+
+  try {
+    processing.value = true;
+    error.value = "";
+
+    await TaxesService.delete(id);
+
+    impuestos.value = impuestos.value.filter((t) => t.id !== id);
+  } catch (e: any) {
+    error.value =
+      "No se pudo eliminar el impuesto. Es posible que esté en uso en el inventario.";
   } finally {
     processing.value = false;
   }
@@ -112,7 +134,7 @@ onMounted(fetchImpuestos);
       <div
         v-for="i in 3"
         :key="i"
-        class="h-40 bg-white rounded-3xl animate-pulse border border-slate-100"
+        class="h-48 bg-white rounded-[2rem] animate-pulse border border-slate-100"
       ></div>
     </div>
 
@@ -123,43 +145,57 @@ onMounted(fetchImpuestos);
       <div
         v-for="item in impuestos"
         :key="item.id"
-        class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300"
+        class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
       >
-        <div class="flex justify-between items-start mb-4">
-          <div>
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <span
+                class="text-xs font-black text-emerald-500 uppercase tracking-widest"
+                >{{ item.code }}</span
+              >
+              <h2 class="font-bold text-xl text-slate-800">{{ item.name }}</h2>
+            </div>
             <span
-              class="text-xs font-black text-emerald-500 uppercase tracking-widest"
-              >{{ item.code }}</span
+              :class="
+                item.isActive
+                  ? 'text-emerald-600 bg-emerald-50'
+                  : 'text-slate-400 bg-slate-100'
+              "
+              class="px-3 py-1 rounded-full text-[10px] font-black uppercase"
             >
-            <h2 class="font-bold text-xl text-slate-800">{{ item.name }}</h2>
+              {{ item.isActive ? "Activo" : "Inactivo" }}
+            </span>
           </div>
-          <span
-            :class="
-              item.isActive
-                ? 'text-emerald-600 bg-emerald-50'
-                : 'text-slate-400 bg-slate-100'
-            "
-            class="px-3 py-1 rounded-full text-[10px] font-black uppercase"
-          >
-            {{ item.isActive ? "Activo" : "Inactivo" }}
-          </span>
+
+          <div class="mb-6">
+            <span class="text-3xl font-black text-slate-900"
+              >{{ item.percentage }}%</span
+            >
+            <p
+              class="text-xs text-slate-400 font-bold uppercase tracking-tighter"
+            >
+              Valor porcentual
+            </p>
+          </div>
         </div>
 
-        <div class="mb-6">
-          <span class="text-3xl font-black text-slate-900"
-            >{{ item.percentage }}%</span
+        <div
+          class="flex justify-between items-center border-t border-slate-50 pt-5 mt-4"
+        >
+          <button
+            @click="handleDelete(item.id)"
+            :disabled="processing"
+            class="text-red-400 hover:text-red-600 font-bold text-xs uppercase tracking-tight transition-colors disabled:opacity-50"
           >
-          <p class="text-xs text-slate-400 font-bold uppercase">
-            Valor porcentual
-          </p>
-        </div>
+            Eliminar
+          </button>
 
-        <div class="flex justify-end border-t border-slate-50 pt-5">
           <button
             @click="openEdit(item)"
-            class="text-emerald-600 font-black text-sm hover:underline"
+            class="bg-emerald-50 text-emerald-600 px-5 py-2 rounded-xl font-black text-xs hover:bg-emerald-600 hover:text-white transition-all uppercase"
           >
-            MODIFICAR
+            Modificar
           </button>
         </div>
       </div>
@@ -170,7 +206,7 @@ onMounted(fetchImpuestos);
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-6"
     >
       <div
-        class="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl border border-white"
+        class="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl border border-white relative"
       >
         <h2 class="text-2xl font-black mb-2 text-slate-900">
           {{ isEditing ? "Editar" : "Nuevo" }} Impuesto
@@ -189,7 +225,7 @@ onMounted(fetchImpuestos);
                 v-model="form.code"
                 type="text"
                 required
-                placeholder="IVA, ISR"
+                placeholder="IVA"
                 class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 transition-all uppercase"
               />
             </div>
@@ -215,7 +251,7 @@ onMounted(fetchImpuestos);
               v-model="form.name"
               type="text"
               required
-              placeholder="Ej: Impuesto al valor agregado"
+              placeholder="Ej: Impuesto General"
               class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 transition-all"
             />
           </div>
@@ -247,7 +283,7 @@ onMounted(fetchImpuestos);
             <button
               type="submit"
               :disabled="processing"
-              class="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:bg-slate-200 transition-all"
+              class="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all disabled:bg-slate-200"
             >
               {{ processing ? "GUARDANDO..." : "GUARDAR" }}
             </button>

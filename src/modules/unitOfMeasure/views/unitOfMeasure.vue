@@ -6,7 +6,6 @@ import type {
   UnitOfMeasureCreateRequest,
 } from "@/core/interfaces/unitsOfMeasure";
 
-// --- ESTADOS ---
 const unidades = ref<UnitOfMeasure[]>([]);
 const loading = ref(true);
 const processing = ref(false);
@@ -15,14 +14,12 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const selectedId = ref<string | null>(null);
 
-// Formulario basado en la interfaz de creación
 const form = ref<UnitOfMeasureCreateRequest>({
   code: "",
   name: "",
   isActive: true,
 });
 
-// --- CARGAR DATOS ---
 const fetchUnidades = async () => {
   try {
     loading.value = true;
@@ -34,7 +31,6 @@ const fetchUnidades = async () => {
   }
 };
 
-// --- MODALES ---
 const openCreate = () => {
   isEditing.value = false;
   selectedId.value = null;
@@ -53,7 +49,6 @@ const openEdit = (item: UnitOfMeasure) => {
   showModal.value = true;
 };
 
-// --- GUARDAR (POST / PUT) ---
 const handleSubmit = async () => {
   if (!form.value.name || !form.value.code) return;
 
@@ -62,23 +57,39 @@ const handleSubmit = async () => {
     error.value = "";
 
     if (isEditing.value && selectedId.value) {
-      // Actualizar
       await UnitsOfMeasureService.update(selectedId.value, form.value);
-
-      // Actualización reactiva local para refresco instantáneo
       const index = unidades.value.findIndex((u) => u.id === selectedId.value);
       if (index !== -1) {
         unidades.value[index] = { ...unidades.value[index], ...form.value };
       }
     } else {
-      // Crear
       await UnitsOfMeasureService.create(form.value);
       await fetchUnidades();
     }
-
     showModal.value = false;
   } catch (e: any) {
     error.value = "No se pudo procesar la unidad de medida";
+  } finally {
+    processing.value = false;
+  }
+};
+
+const handleDelete = async (id: string) => {
+  if (
+    !confirm(
+      "¿Desea eliminar esta unidad de medida? Esto podría afectar a los productos vinculados.",
+    )
+  ) {
+    return;
+  }
+
+  try {
+    processing.value = true;
+    error.value = "";
+    await UnitsOfMeasureService.delete(id);
+    unidades.value = unidades.value.filter((u) => u.id !== id);
+  } catch (e: any) {
+    error.value = "No se pudo eliminar la unidad. Verifique si está en uso.";
   } finally {
     processing.value = false;
   }
@@ -120,7 +131,7 @@ onMounted(fetchUnidades);
       <div
         v-for="i in 4"
         :key="i"
-        class="h-32 bg-white rounded-3xl animate-pulse border border-slate-100"
+        class="h-40 bg-white rounded-[2rem] animate-pulse border border-slate-100"
       ></div>
     </div>
 
@@ -131,31 +142,43 @@ onMounted(fetchUnidades);
       <div
         v-for="item in unidades"
         :key="item.id"
-        class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300"
+        class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
       >
-        <div class="flex justify-between items-start mb-2">
-          <span
-            class="text-xs font-black text-indigo-500 uppercase tracking-widest"
-            >{{ item.code }}</span
-          >
-          <span
-            :class="
-              item.isActive
-                ? 'text-green-600 bg-green-50'
-                : 'text-slate-400 bg-slate-100'
-            "
-            class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
-          >
-            {{ item.isActive ? "Activo" : "Inactivo" }}
-          </span>
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            <span
+              class="text-xs font-black text-indigo-500 uppercase tracking-widest"
+              >{{ item.code }}</span
+            >
+            <span
+              :class="
+                item.isActive
+                  ? 'text-green-600 bg-green-50'
+                  : 'text-slate-400 bg-slate-100'
+              "
+              class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+            >
+              {{ item.isActive ? "Activo" : "Inactivo" }}
+            </span>
+          </div>
+          <h2 class="font-bold text-lg text-slate-800 mb-6">{{ item.name }}</h2>
         </div>
-        <h2 class="font-bold text-lg text-slate-800 mb-6">{{ item.name }}</h2>
-        <div class="flex justify-end border-t border-slate-50 pt-4">
+
+        <div
+          class="flex justify-between items-center border-t border-slate-50 pt-4 mt-auto"
+        >
+          <button
+            @click="handleDelete(item.id)"
+            :disabled="processing"
+            class="text-red-400 hover:text-red-600 font-bold text-[10px] uppercase tracking-tighter disabled:opacity-50"
+          >
+            Eliminar
+          </button>
           <button
             @click="openEdit(item)"
-            class="text-indigo-600 font-black text-xs hover:underline"
+            class="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-xl font-black text-[10px] uppercase hover:bg-indigo-600 hover:text-white transition-all"
           >
-            EDITAR
+            Editar
           </button>
         </div>
       </div>
@@ -165,7 +188,9 @@ onMounted(fetchUnidades);
       v-if="showModal"
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-6"
     >
-      <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
+      <div
+        class="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl relative"
+      >
         <h2 class="text-2xl font-black mb-8 text-slate-900">
           {{ isEditing ? "Actualizar" : "Nueva" }} Unidad
         </h2>
@@ -173,7 +198,7 @@ onMounted(fetchUnidades);
         <form @submit.prevent="handleSubmit" class="space-y-6">
           <div class="space-y-2">
             <label class="text-xs font-black text-slate-400 uppercase ml-1"
-              >Código (Ej: KG, MTS, UND)</label
+              >Código (KG, MTS, UND)</label
             >
             <input
               v-model="form.code"

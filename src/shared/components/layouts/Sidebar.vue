@@ -129,6 +129,13 @@ const showLogout = ref(false);
         <ClipboardList :size="20" />
         <span v-if="!collapsed">Auditoría</span>
       </RouterLink>
+      <RouterLink
+        to="/almacenes"
+        class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700"
+      >
+        <ClipboardList :size="20" />
+        <span v-if="!collapsed">Almacenes</span>
+      </RouterLink>
     </nav>
 
     <!-- Logout -->

@@ -86,6 +86,11 @@ export const router = createRouter({
           component: () =>
             import("@/modules/branches/views/SucursalesView.vue"),
         },
+        {
+          path: "almacenes",
+          name: "almacenes",
+          component: () => import("@/modules/warehouses/views/warehouse.vue"),
+        },
       ],
     },
   ],

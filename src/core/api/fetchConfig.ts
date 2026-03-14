@@ -31,7 +31,7 @@ function isBinaryContentType(ct: string): boolean {
   return (
     v.includes("application/pdf") ||
     v.includes("application/octet-stream") ||
-    v.includes("application/vnd.ms-excel") ||
+    v.includes("application/vnd.ms-excel") || 
     v.includes("application/vnd.openxmlformats-officedocument") ||
     v.includes("application/zip")
   );

@@ -1,278 +1,470 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { UsersService } from "@/core/services/usersService";
-import { RolesService } from "@/core/services/rolesService";
-import type { User } from "@/core/interfaces/users";
+import { ref, onMounted, computed } from "vue"
+import BTButton from "@/shared/components/ui/BTButton.vue"
+import BTHeader from "@/shared/components/ui/BTHeader.vue"
+import BTModal from "@/shared/components/ui/BTModal.vue"
+import BTInput from "@/shared/components/ui/BTInput.vue"
+import BTCheckBox from "@/shared/components/ui/BTCheckBox.vue"
 
-// --- ESTADOS ---
-const usuarios = ref<User[]>([]);
-const rolesDisponibles = ref<any[]>([]);
-const loading = ref(true);
-const processing = ref(false);
-const showModal = ref(false);
-const isEditing = ref(false);
-const selectedId = ref<string | null>(null);
-const confirmPassword = ref("");
+import { useUserList } from "../composables/useUserList"
+import { useUserForm } from "../composables/useUserForm"
+import { useRoles } from "../composables/useRoles"
 
-const form = ref({
-  username: "",
-  email: "",
-  password: "",
-  roles: [] as any[],
-  isActive: true,
-  mustChangePassword: false,
-});
+import type { User } from "@/core/interfaces/users"
 
-// --- FILTROS ---
-const searchQuery = ref("");
-const statusFilter = ref("all");
-const roleFilter = ref("all");
 
-// --- VALIDACIONES (HU-USR-01 / HU-USR-02) ---
-const passwordsMatch = computed(
-  () => isEditing.value || form.value.password === confirmPassword.value,
-);
+/* -------------------------
+COMPOSABLES
+--------------------------*/
 
-const isFormValid = computed(() => {
-  const basicFields =
-    form.value.username && form.value.email && form.value.roles.length > 0;
-  return (
-    basicFields &&
-    (isEditing.value || (form.value.password && passwordsMatch.value))
-  );
-});
+const {
+  filteredUsers,
+  isLoading,
+  searchQuery,
+  statusFilter,
+  roleFilter,
+  fetchUsers,
+} = useUserList()
 
-// --- LÓGICA ---
-const filteredUsers = computed(() => {
-  return usuarios.value.filter((user) => {
-    const matchesSearch =
-      user.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesStatus =
-      statusFilter.value === "all" ||
-      (statusFilter.value === "active" ? user.isActive : !user.isActive);
-    const matchesRole =
-      roleFilter.value === "all" ||
-      user.roles?.some((r: any) => r.name === roleFilter.value);
-    return matchesSearch && matchesStatus && matchesRole;
-  });
-});
+const {
+  formData,
+  isSubmitting,
+  passwordsMatch,
+  createUser,
+  updateUser,
+  resetForm,
+  loadUser,
+  getError,
+  markAsTouched,
+} = useUserForm()
 
-const loadData = async () => {
-  loading.value = true;
-  try {
-    const [usersRes, rolesRes] = await Promise.all([
-      UsersService.browse(),
-      RolesService.browse(),
-    ]);
-    usuarios.value = usersRes;
-    rolesDisponibles.value = rolesRes;
-  } finally {
-    loading.value = false;
+const { roles, fetchRoles } = useRoles()
+
+
+/* -------------------------
+LOCAL STATE
+--------------------------*/
+
+const showModal = ref(false)
+const isEditing = ref(false)
+const selectedUserId = ref<string | null>(null)
+
+
+/* -------------------------
+INIT
+--------------------------*/
+
+onMounted(async () => {
+  await Promise.all([
+    fetchUsers(),
+    fetchRoles()
+  ])
+})
+
+
+/* -------------------------
+ACTIONS
+--------------------------*/
+
+function openCreate() {
+
+  isEditing.value = false
+  selectedUserId.value = null
+
+  resetForm()
+
+  showModal.value = true
+}
+
+
+function openEdit(user: User) {
+
+  isEditing.value = true
+  selectedUserId.value = user.id
+
+  loadUser(user)
+
+  showModal.value = true
+}
+
+
+async function handleSubmit() {
+
+  let success = false
+
+  if (isEditing.value) {
+
+    if (!selectedUserId.value) return
+
+    success = await updateUser(selectedUserId.value)
+
+  } else {
+
+    success = await createUser()
+
   }
-};
 
-const openCreate = () => {
-  isEditing.value = false;
-  selectedId.value = null;
-  form.value = {
-    username: "",
-    email: "",
-    password: "",
-    roles: [],
-    isActive: true,
-    mustChangePassword: false,
-  };
-  confirmPassword.value = "";
-  showModal.value = true;
-};
+  if (success) {
 
-const openEdit = (user: User) => {
-  isEditing.value = true;
-  selectedId.value = user.id;
-  form.value = {
-    username: user.username,
-    email: user.email,
-    password: "", // Contraseña vacía para edición
-    roles: user.roles || [],
-    isActive: user.isActive,
-    mustChangePassword: user.mustChangePassword,
-  };
-  showModal.value = true;
-};
+    showModal.value = false
 
-const handleSubmit = async () => {
-  if (!isFormValid.value) return;
-  processing.value = true;
-  try {
-    isEditing.value
-      ? await UsersService.update(selectedId.value!, form.value)
-      : await UsersService.create(form.value);
-    await loadData();
-    showModal.value = false;
-  } finally {
-    processing.value = false;
+    await fetchUsers()
+
   }
-};
 
-onMounted(loadData);
+}
+
+
+/* -------------------------
+TABLE CONFIG
+--------------------------*/
+
+const tableHeaders = [
+  { key: "username", label: "Username", sortable: true },
+  { key: "email", label: "Email", sortable: true },
+  { key: "roles", label: "Roles", sortable: false },
+  { key: "status", label: "Status", sortable: false },
+  { key: "actions", label: "Actions", sortable: false },
+]
+
+const tableRows = computed(() => filteredUsers.value)
+
 </script>
 
+
 <template>
-  <div class="p-8 bg-slate-50 min-h-screen">
-    <div class="max-w-7xl mx-auto space-y-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-slate-900">Users</h1>
-        <button
+  <div class="space-y-6">
+
+    <!-- HEADER -->
+
+    <BTHeader>
+
+      <template #title>
+        Users
+      </template>
+
+      <template #description>
+        Manage system users and roles
+      </template>
+
+      <template #action>
+
+        <BTButton
+          variant="blue"
+          size="md"
+          shape="rounded"
           @click="openCreate"
-          class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold"
         >
           + New User
-        </button>
+        </BTButton>
+
+      </template>
+
+    </BTHeader>
+
+
+    <!-- FILTERS -->
+
+    <div class="bg-white p-4 rounded-xl border flex gap-4">
+
+      <input
+        v-model="searchQuery"
+        placeholder="Search username or email..."
+        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+
+      <select
+        v-model="statusFilter"
+        class="px-4 py-2 border border-gray-300 rounded-lg"
+      >
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+
+      <select
+        v-model="roleFilter"
+        class="px-4 py-2 border border-gray-300 rounded-lg"
+      >
+        <option value="all">All Roles</option>
+
+        <option
+          v-for="r in roles"
+          :key="r.roleId"
+          :value="r.name"
+        >
+          {{ r.name }}
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- TABLE -->
+
+    <div class="bg-white rounded-xl border overflow-hidden">
+
+      <!-- loading -->
+
+      <div
+        v-if="isLoading"
+        class="text-center py-12"
+      >
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"/>
       </div>
 
-      <div class="bg-white p-4 rounded-2xl border flex gap-4">
-        <input
-          v-model="searchQuery"
-          placeholder="Search..."
-          class="flex-1 px-4 py-2 border rounded-xl"
-        />
-        <select v-model="statusFilter" class="px-4 border rounded-xl">
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-        <select v-model="roleFilter" class="px-4 border rounded-xl">
-          <option value="all">All Roles</option>
-          <option v-for="r in rolesDisponibles" :key="r.rolId" :value="r.name">
-            {{ r.name }}
-          </option>
-        </select>
+
+      <!-- empty -->
+
+      <div
+        v-else-if="tableRows.length === 0"
+        class="text-center py-12 text-gray-500"
+      >
+        No users found
       </div>
 
-      <div class="bg-white rounded-2xl border overflow-hidden">
-        <table class="w-full text-left">
-          <tr class="text-slate-400 text-xs uppercase border-b">
-            <th class="p-6">Username</th>
-            <th class="p-6">Email</th>
-            <th class="p-6">Roles</th>
-            <th class="p-6">Status</th>
-            <th class="p-6 text-right">Actions</th>
+
+      <!-- table -->
+
+      <table
+        v-else
+        class="w-full text-left"
+      >
+
+        <thead>
+
+          <tr class="bg-gray-50 border-b text-xs uppercase text-gray-600">
+
+            <th class="p-4 font-semibold">Username</th>
+            <th class="p-4 font-semibold">Email</th>
+            <th class="p-4 font-semibold">Roles</th>
+            <th class="p-4 font-semibold">Status</th>
+            <th class="p-4 font-semibold text-right">Actions</th>
+
           </tr>
+
+        </thead>
+
+
+        <tbody>
+
           <tr
-            v-for="user in filteredUsers"
+            v-for="user in tableRows"
             :key="user.id"
-            class="border-b hover:bg-slate-50"
+            class="border-b hover:bg-gray-50 transition-colors"
           >
-            <td class="p-6 font-bold">{{ user.username }}</td>
-            <td class="p-6 text-slate-500">{{ user.email }}</td>
-            <td class="p-6">
-              <span
-                v-for="r in user.roles"
-                :key="r.roleId"
-                class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black uppercase mr-1"
-                >{{ r.name }}</span
-              >
+
+            <td class="p-4 font-semibold text-gray-900">
+              {{ user.username }}
             </td>
-            <td class="p-6">
+
+            <td class="p-4 text-gray-600">
+              {{ user.email }}
+            </td>
+
+
+            <td class="p-4">
+
               <span
-                :class="
+                v-for="r in user.roles || []"
+                :key="r.roleId"
+                class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold mr-1"
+              >
+                {{ r.name }}
+              </span>
+
+            </td>
+
+
+            <td class="p-4">
+
+              <span
+                :class="[
+                  'inline-block px-2 py-1 rounded text-xs font-semibold',
                   user.isActive
-                    ? 'text-green-600 bg-green-50'
-                    : 'text-slate-500 bg-slate-100'
-                "
-                class="px-2 py-1 rounded text-[10px] font-bold uppercase"
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-600'
+                ]"
               >
                 {{ user.isActive ? "Active" : "Inactive" }}
               </span>
+
             </td>
-            <td class="p-6 text-right">
+
+
+            <td class="p-4 text-right">
+
               <button
                 @click="openEdit(user)"
-                class="text-blue-600 font-bold text-xs"
+                class="text-blue-600 hover:text-blue-800 font-semibold text-sm"
               >
-                Configure
+                Edit
               </button>
+
             </td>
+
           </tr>
-        </table>
-      </div>
+
+        </tbody>
+
+      </table>
+
     </div>
 
-    <div
-      v-if="showModal"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+
+    <!-- MODAL -->
+
+    <BTModal
+      v-model="showModal"
+      :title="isEditing ? 'Edit User' : 'Create User'"
+      size="medium"
     >
-      <div class="bg-white rounded-3xl w-full max-w-lg p-8 space-y-6">
-        <h2 class="text-2xl font-bold">
-          {{ isEditing ? "Edit" : "Create" }} User
-        </h2>
-        <form @submit.prevent="handleSubmit" class="space-y-4">
-          <input
-            v-model="form.username"
-            placeholder="Username"
-            required
-            class="w-full p-3 border rounded-xl"
-          />
-          <input
-            v-model="form.email"
-            type="email"
-            placeholder="Email"
-            required
-            class="w-full p-3 border rounded-xl"
-          />
+
+      <template #default>
+
+        <div class="space-y-4">
+
+
+          <BTInput
+            v-model:inputValue="formData.username"
+            :error="!!getError('username')"
+            :errorMsg="getError('username')"
+            @blur="markAsTouched('username')"
+          >
+            <template #label>
+              Username
+            </template>
+          </BTInput>
+
+
+          <BTInput
+            v-model:inputValue="formData.email"
+            inputType="email"
+            :error="!!getError('email')"
+            :errorMsg="getError('email')"
+            @blur="markAsTouched('email')"
+          >
+            <template #label>
+              Email
+            </template>
+          </BTInput>
+
+
+          <!-- PASSWORDS -->
 
           <template v-if="!isEditing">
-            <input
-              v-model="form.password"
-              type="password"
-              placeholder="Password"
-              required
-              class="w-full p-3 border rounded-xl"
-            />
-            <input
-              v-model="confirmPassword"
-              type="password"
-              placeholder="Confirm Password"
-              required
-              :class="{ 'border-red-400': !passwordsMatch }"
-              class="w-full p-3 border rounded-xl"
-            />
+
+            <BTInput
+              v-model:inputValue="formData.password"
+              inputType="password"
+              :error="!!getError('password')"
+              :errorMsg="getError('password')"
+              @blur="markAsTouched('password')"
+            >
+              <template #label>
+                Password
+              </template>
+            </BTInput>
+
+
+            <BTInput
+              v-model:inputValue="formData.confirmPassword"
+              inputType="password"
+              :error="!passwordsMatch"
+              :errorMsg="!passwordsMatch ? 'Passwords do not match' : ''"
+              @blur="markAsTouched('confirmPassword')"
+            >
+              <template #label>
+                Confirm Password
+              </template>
+            </BTInput>
+
           </template>
 
-          <div class="border p-4 rounded-xl">
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-2"
-              >Roles *</label
-            >
-            <div class="flex flex-wrap gap-2">
+
+          <!-- ROLES -->
+
+          <div class="border border-gray-300 p-4 rounded-lg">
+
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Roles *
+            </label>
+
+            <div class="space-y-2">
+
               <label
-                v-for="role in rolesDisponibles"
-                :key="role.id"
+                v-for="role in roles"
+                :key="role.roleId"
                 class="flex items-center gap-2 text-sm"
               >
-                <input type="checkbox" :value="role" v-model="form.roles" />
-                {{ role.name }}
+
+                <input
+                  type="checkbox"
+                  :value="role"
+                  v-model="formData.roles"
+                  class="rounded"
+                />
+
+                <span>{{ role.name }}</span>
+
               </label>
+
             </div>
+
           </div>
 
-          <label class="flex items-center gap-2"
-            ><input type="checkbox" v-model="form.isActive" /> Account
-            active</label
-          >
-          <label class="flex items-center gap-2"
-            ><input type="checkbox" v-model="form.mustChangePassword" /> Require
-            password change</label
-          >
 
-          <button
-            :disabled="!isFormValid || processing"
-            class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold disabled:opacity-50"
-          >
-            Save
-          </button>
-        </form>
-      </div>
-    </div>
+          <BTCheckBox v-model:checked="formData.isActive">
+
+            <template #label>
+              Account active
+            </template>
+
+          </BTCheckBox>
+
+
+          <BTCheckBox v-model:checked="formData.mustChangePassword">
+
+            <template #label>
+              Require password change on first login
+            </template>
+
+          </BTCheckBox>
+
+        </div>
+
+      </template>
+
+
+      <!-- FOOTER -->
+
+      <template #footer>
+
+        <BTButton
+          variant="secondary"
+          size="md"
+          shape="rounded"
+          @click="showModal = false"
+        >
+          Cancel
+        </BTButton>
+
+
+        <BTButton
+          variant="blue"
+          size="md"
+          shape="rounded"
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
+          @click="handleSubmit"
+        >
+          {{ isEditing ? "Update" : "Create" }}
+        </BTButton>
+
+      </template>
+
+    </BTModal>
+
   </div>
 </template>

@@ -4,14 +4,10 @@ import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 
 import { ProductsService } from "@/core/services/productsService";
-import { ProductCategoriesService } from "@/core/services/productCategoriesService";
-import { UnitsOfMeasureService } from "@/core/services/unitsOfMeasureService";
-import { TaxesService } from "@/core/services/taxesService";
+import { SelectService } from "@/core/services/selectService";
 
 import type { Product } from "@/core/interfaces/products";
-import type { ProductCategory } from "@/core/interfaces/productCategories";
-import type { UnitOfMeasure } from "@/core/interfaces/unitsOfMeasure";
-import type { Tax } from "@/core/interfaces/taxes";
+import type { SelectOption } from "@/core/interfaces/select";
 
 const props = defineProps<{
   productId: string;
@@ -41,9 +37,9 @@ const averageCost = ref<number | null>(null);
 const isService = ref(false);
 const isActive = ref(true);
 
-const categories = ref<ProductCategory[]>([]);
-const units = ref<UnitOfMeasure[]>([]);
-const taxes = ref<Tax[]>([]);
+const categories = ref<SelectOption[]>([]);
+const units = ref<SelectOption[]>([]);
+const taxes = ref<SelectOption[]>([]);
 
 function closeModal() {
   modalStore.close();
@@ -55,14 +51,19 @@ async function loadCatalogs() {
   try {
     const [categoriesResponse, unitsResponse, taxesResponse] =
       await Promise.all([
-        ProductCategoriesService.browse({ page: 1, pageSize: 100 }),
-        UnitsOfMeasureService.browse({ page: 1, pageSize: 100 }),
-        TaxesService.browse({ page: 1, pageSize: 100 }),
+        SelectService.selectProductCategories({ onlyActive: true }),
+        SelectService.selectUnitsOfMeasure({ onlyActive: true }),
+        SelectService.selectTaxes({ onlyActive: true }),
       ]);
 
-    categories.value = categoriesResponse;
-    units.value = unitsResponse;
-    taxes.value = taxesResponse;
+    categories.value = categoriesResponse ?? [];
+    units.value = unitsResponse ?? [];
+    taxes.value = taxesResponse ?? [];
+  } catch (error: any) {
+    modalStore.onError?.({
+      code: error?.status ?? 500,
+      message: error?.message ?? t("products.messages.catalogsLoadError"),
+    });
   } finally {
     loadingCatalogs.value = false;
   }
@@ -213,10 +214,10 @@ onMounted(async () => {
           </option>
           <option
             v-for="category in categories"
-            :key="category.categoryId"
-            :value="category.categoryId"
+            :key="category.id"
+            :value="category.id"
           >
-            {{ category.name }}
+            {{ category.label }}
           </option>
         </select>
       </div>
@@ -241,8 +242,8 @@ onMounted(async () => {
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
         >
           <option value="">{{ $t("products.placeholders.selectUom") }}</option>
-          <option v-for="unit in units" :key="unit.uomId" :value="unit.uomId">
-            {{ unit.code }} - {{ unit.name }}
+          <option v-for="unit in units" :key="unit.id" :value="unit.id">
+            {{ unit.label }}
           </option>
         </select>
       </div>
@@ -256,8 +257,8 @@ onMounted(async () => {
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
         >
           <option value="">{{ $t("products.placeholders.selectTax") }}</option>
-          <option v-for="tax in taxes" :key="tax.taxId" :value="tax.taxId">
-            {{ tax.code }} - {{ tax.percentage }}%
+          <option v-for="tax in taxes" :key="tax.id" :value="tax.id">
+            {{ tax.label }}
           </option>
         </select>
       </div>

@@ -4,19 +4,22 @@ import { useI18n } from "vue-i18n";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-vue-next";
 
 import { BranchesService } from "@/core/services/branchesService";
+import { EmployeesService } from "@/core/services/employeesService";
 import { InventoryTransfersService } from "@/core/services/inventoryTransfersService";
 
 import { useModalStore } from "@/core/stores/modalStore";
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useToastStore } from "@/core/stores/toastStore";
+import { useAuthStore } from "@/core/stores/authStore";
 
 import InventoryTransferCreateModal from "@/modules/inventory/components/InventoryTransferCreateModal.vue";
 import InventoryMovementModal from "@/modules/inventory/components/InventoryMovementModal.vue";
 import InventoryTransferDetailsDrawer from "@/modules/inventory/components/InventoryTransferDetailsDrawer.vue";
 import InventoryActionMenu from "@/modules/inventory/components/InventoryActionMenu.vue";
 
-import type { BranchInventoryItem } from "@/core/interfaces/branches";
+import type { Branch, BranchInventoryItem } from "@/core/interfaces/branches";
 import type { InventoryTransfer } from "@/core/interfaces/inventoryTransfers";
+import type { Employee } from "@/core/interfaces/employees";
 
 interface InventoryTransferSuccessPayload {
   transferId: string;
@@ -26,17 +29,27 @@ interface InventoryTransferSuccessPayload {
   lines: Array<unknown>;
 }
 
+interface BranchInventorySection {
+  branch: Branch;
+  items: BranchInventoryItem[];
+}
+
 const { t } = useI18n();
 
 const modalStore = useModalStore();
 const drawerStore = useDrawerStore();
 const toastStore = useToastStore();
+const authStore = useAuthStore();
 
 const activeTab = ref<"stock" | "transfers" | "alerts">("stock");
 
-const inventoryItems = ref<BranchInventoryItem[]>([]);
+const branches = ref<Branch[]>([]);
+const branchInventories = ref<BranchInventorySection[]>([]);
 const transfers = ref<InventoryTransfer[]>([]);
+const assignedEmployee = ref<Employee | null>(null);
 
+const loadingBranches = ref(false);
+const loadingEmployee = ref(false);
 const loadingInventory = ref(false);
 const loadingTransfers = ref(false);
 
@@ -55,9 +68,33 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchInventory(): Promise<BranchInventoryItem[]> {
-  return await BranchesService.browseInventory();
-}
+const isSuperAdminOrAdmin = computed(() => {
+  return authStore.roles.some((role) =>
+    ["superadmin", "admin"].includes(String(role).toLowerCase()),
+  );
+});
+
+const assignedBranchId = computed(() => {
+  return String((assignedEmployee.value as any)?.branchId ?? "").trim();
+});
+
+const assignedWarehouseId = computed(() => {
+  return String((assignedEmployee.value as any)?.warehouseId ?? "").trim();
+});
+
+const visibleBranches = computed(() => {
+  if (isSuperAdminOrAdmin.value) {
+    return branches.value;
+  }
+
+  if (!assignedBranchId.value) {
+    return [];
+  }
+
+  return branches.value.filter(
+    (branch) => branch.branchId === assignedBranchId.value,
+  );
+});
 
 async function fetchTransfers(): Promise<InventoryTransfer[]> {
   return await InventoryTransfersService.getInventoryTransfers({
@@ -67,37 +104,255 @@ async function fetchTransfers(): Promise<InventoryTransfer[]> {
   });
 }
 
-function replaceInventory(nextItems: BranchInventoryItem[]) {
-  inventoryItems.value = [...nextItems];
+async function loadBranches() {
+  loadingBranches.value = true;
+
+  try {
+    const response = await BranchesService.browse({
+      page: 1,
+      pageSize: 100,
+    });
+
+    branches.value = response ?? [];
+  } catch {
+    branches.value = [];
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("inventory.messages.loadBranchesError"),
+    });
+  } finally {
+    loadingBranches.value = false;
+  }
 }
 
-function replaceTransfers(nextTransfers: InventoryTransfer[]) {
-  transfers.value = [...nextTransfers];
+async function loadAssignedEmployee() {
+  assignedEmployee.value = null;
+
+  if (isSuperAdminOrAdmin.value) {
+    return;
+  }
+
+  if (!authStore.userId) {
+    return;
+  }
+
+  loadingEmployee.value = true;
+
+  try {
+    const employees = await EmployeesService.browse({
+      page: 1,
+      pageSize: 100,
+      userId: authStore.userId,
+    } as any);
+
+    assignedEmployee.value = (employees ?? [])[0] ?? null;
+  } catch {
+    assignedEmployee.value = null;
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("inventory.messages.loadEmployeeError"),
+    });
+  } finally {
+    loadingEmployee.value = false;
+  }
 }
 
-const filteredInventory = computed(() => {
+async function loadInventory() {
+  loadingInventory.value = true;
+
+  try {
+    const sections = await Promise.all(
+      visibleBranches.value.map(async (branch) => {
+        const items = await BranchesService.browseInventoryByBranchId(
+          branch.branchId,
+        );
+
+        let filteredItems = items ?? [];
+
+        // Si luego tenés endpoint por warehouse, aquí es donde se reemplaza
+        // por una llamada real a inventario por almacén.
+        if (!isSuperAdminOrAdmin.value && assignedWarehouseId.value) {
+          filteredItems = filteredItems.filter(() => true);
+        }
+
+        return {
+          branch,
+          items: filteredItems,
+        };
+      }),
+    );
+
+    branchInventories.value = sections;
+  } catch {
+    branchInventories.value = [];
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("inventory.messages.loadInventoryError"),
+    });
+  } finally {
+    loadingInventory.value = false;
+  }
+}
+
+async function loadTransfers() {
+  loadingTransfers.value = true;
+
+  try {
+    transfers.value = await fetchTransfers();
+  } catch {
+    transfers.value = [];
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("inventory.messages.loadTransfersError"),
+    });
+  } finally {
+    loadingTransfers.value = false;
+  }
+}
+
+async function reloadInventoryEventually(options?: {
+  attempts?: number;
+  delayMs?: number;
+}) {
+  const attempts = options?.attempts ?? 10;
+  const delayMs = options?.delayMs ?? 500;
+
+  try {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      await loadInventory();
+
+      if (attempt < attempts - 1) {
+        await sleep(delayMs);
+      }
+    }
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("inventory.messages.loadInventoryError"),
+    });
+  }
+}
+
+async function reloadTransfersUntil(
+  predicate: (fetchedTransfers: InventoryTransfer[]) => boolean,
+  options?: {
+    attempts?: number;
+    delayMs?: number;
+  },
+) {
+  const attempts = options?.attempts ?? 10;
+  const delayMs = options?.delayMs ?? 500;
+
+  loadingTransfers.value = true;
+
+  try {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const fetchedTransfers = await fetchTransfers();
+
+      if (predicate(fetchedTransfers)) {
+        transfers.value = [...fetchedTransfers];
+        return;
+      }
+
+      if (attempt < attempts - 1) {
+        await sleep(delayMs);
+      }
+    }
+
+    transfers.value = await fetchTransfers();
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("inventory.messages.loadTransfersError"),
+    });
+  } finally {
+    loadingTransfers.value = false;
+  }
+}
+
+function patchTransferInList(payload: InventoryTransferSuccessPayload) {
+  const existingIndex = transfers.value.findIndex(
+    (transfer) => transfer.transferId === payload.transferId,
+  );
+
+  if (existingIndex >= 0) {
+    transfers.value = transfers.value.map((transfer) =>
+      transfer.transferId === payload.transferId
+        ? {
+            ...transfer,
+            transferId: payload.transferId,
+            status: payload.status,
+            notes: payload.notes,
+            createdAt: payload.createdAt,
+            lines: payload.lines as any[],
+          }
+        : transfer,
+    );
+    return;
+  }
+
+  transfers.value = [
+    {
+      id: `transfer:${payload.transferId}`,
+      transferId: payload.transferId,
+      status: payload.status,
+      notes: payload.notes,
+      createdAt: payload.createdAt,
+      lines: payload.lines as any[],
+    } as InventoryTransfer,
+    ...transfers.value,
+  ];
+}
+
+function removeTransferFromList(transferId: string) {
+  transfers.value = transfers.value.filter(
+    (transfer) => transfer.transferId !== transferId,
+  );
+}
+
+const filteredBranchInventories = computed(() => {
   const term = inventorySearch.value.trim().toLowerCase();
 
   if (!term) {
-    return inventoryItems.value;
+    return branchInventories.value;
   }
 
-  return inventoryItems.value.filter((item) => {
-    return (
-      String(item.productId ?? "")
-        .toLowerCase()
-        .includes(term) ||
-      String(item.productName ?? "")
-        .toLowerCase()
-        .includes(term)
-    );
-  });
+  return branchInventories.value
+    .map((section) => ({
+      branch: section.branch,
+      items: section.items.filter((item) => {
+        return (
+          String(item.productId ?? "")
+            .toLowerCase()
+            .includes(term) ||
+          String(item.productName ?? "")
+            .toLowerCase()
+            .includes(term)
+        );
+      }),
+    }))
+    .filter((section) => section.items.length > 0);
+});
+
+const flattenedInventory = computed(() => {
+  return filteredBranchInventories.value.flatMap((section) =>
+    section.items.map((item) => ({
+      branch: section.branch,
+      item,
+    })),
+  );
 });
 
 const paginatedInventory = computed(() => {
   const start = (inventoryPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return filteredInventory.value.slice(start, end);
+  return flattenedInventory.value.slice(start, end);
 });
 
 const inventoryPageNumbers = computed(() => {
@@ -126,162 +381,16 @@ const transferPageNumbers = computed(() => {
   return pages;
 });
 
-const lowStockItems = computed(() =>
-  inventoryItems.value.filter((item) => item.stock <= lowStockThreshold.value),
-);
-
-async function loadInventory() {
-  loadingInventory.value = true;
-
-  try {
-    replaceInventory(await fetchInventory());
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadInventoryError"),
-    });
-  } finally {
-    loadingInventory.value = false;
-  }
-}
-
-async function loadTransfers() {
-  loadingTransfers.value = true;
-
-  try {
-    replaceTransfers(await fetchTransfers());
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadTransfersError"),
-    });
-  } finally {
-    loadingTransfers.value = false;
-  }
-}
-
-async function reloadInventoryEventually(options?: {
-  attempts?: number;
-  delayMs?: number;
-}) {
-  const attempts = options?.attempts ?? 10;
-  const delayMs = options?.delayMs ?? 500;
-
-  loadingInventory.value = true;
-
-  try {
-    for (let attempt = 0; attempt < attempts; attempt += 1) {
-      replaceInventory(await fetchInventory());
-
-      if (attempt < attempts - 1) {
-        await sleep(delayMs);
-      }
-    }
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadInventoryError"),
-    });
-  } finally {
-    loadingInventory.value = false;
-  }
-}
-
-async function reloadTransfersUntil(
-  predicate: (fetchedTransfers: InventoryTransfer[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
-) {
-  const attempts = options?.attempts ?? 10;
-  const delayMs = options?.delayMs ?? 500;
-
-  loadingTransfers.value = true;
-
-  try {
-    for (let attempt = 0; attempt < attempts; attempt += 1) {
-      const fetchedTransfers = await fetchTransfers();
-
-      if (predicate(fetchedTransfers)) {
-        replaceTransfers(fetchedTransfers);
-        return;
-      }
-
-      if (attempt < attempts - 1) {
-        await sleep(delayMs);
-      }
-    }
-
-    replaceTransfers(await fetchTransfers());
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadTransfersError"),
-    });
-  } finally {
-    loadingTransfers.value = false;
-  }
-}
-
-function patchTransferInList(payload: InventoryTransferSuccessPayload) {
-  const existingIndex = transfers.value.findIndex(
-    (transfer) => transfer.transferId === payload.transferId,
+const lowStockItems = computed(() => {
+  return branchInventories.value.flatMap((section) =>
+    section.items
+      .filter((item) => item.stock <= lowStockThreshold.value)
+      .map((item) => ({
+        branch: section.branch,
+        item,
+      })),
   );
-
-  if (existingIndex >= 0) {
-    replaceTransfers(
-      transfers.value.map((transfer) =>
-        transfer.transferId === payload.transferId
-          ? {
-              ...transfer,
-              transferId: payload.transferId,
-              status: payload.status,
-              notes: payload.notes,
-              createdAt: payload.createdAt,
-              lines: payload.lines,
-            }
-          : transfer,
-      ),
-    );
-    return;
-  }
-
-  replaceTransfers([
-    {
-      id: `transfer:${payload.transferId}`,
-      transferId: payload.transferId,
-      status: payload.status,
-      notes: payload.notes,
-      createdAt: payload.createdAt,
-      lines: payload.lines,
-    } as InventoryTransfer,
-    ...transfers.value,
-  ]);
-}
-
-function patchTransferStatus(transferId: string, status: string) {
-  replaceTransfers(
-    transfers.value.map((transfer) =>
-      transfer.transferId === transferId
-        ? {
-            ...transfer,
-            status,
-          }
-        : transfer,
-    ),
-  );
-}
-
-function removeTransferFromList(transferId: string) {
-  replaceTransfers(
-    transfers.value.filter((transfer) => transfer.transferId !== transferId),
-  );
-}
+});
 
 function openTransferModal() {
   modalStore.open({
@@ -294,7 +403,7 @@ function openTransferModal() {
       toastStore.addToast({
         severity: "success",
         title: t("toast.success"),
-        message: t("inventory.messages.transferCreated"),
+        message: t("inventory.messages.reviewRequested"),
       });
 
       await Promise.all([
@@ -400,35 +509,6 @@ async function deleteTransfer(transfer: InventoryTransfer) {
   }
 }
 
-async function requestReview(transfer: InventoryTransfer) {
-  try {
-    await InventoryTransfersService.requestReviewInventoryTransfer(
-      transfer.transferId,
-    );
-
-    patchTransferStatus(transfer.transferId, "REVIEW_REQUESTED");
-
-    toastStore.addToast({
-      severity: "success",
-      title: t("toast.success"),
-      message: t("inventory.messages.reviewRequested"),
-    });
-
-    await reloadTransfersUntil((fetchedTransfers) => {
-      const fetched = fetchedTransfers.find(
-        (item) => item.transferId === transfer.transferId,
-      );
-      return fetched?.status !== transfer.status;
-    });
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.reviewRequestError"),
-    });
-  }
-}
-
 function goInventoryPage(targetPage: number) {
   if (targetPage < 1 || targetPage > MAX_PAGE) {
     return;
@@ -458,7 +538,7 @@ watch(transferSearch, async () => {
 });
 
 watch(
-  filteredInventory,
+  filteredBranchInventories,
   () => {
     inventoryPage.value = 1;
   },
@@ -466,6 +546,8 @@ watch(
 );
 
 onMounted(async () => {
+  await loadBranches();
+  await loadAssignedEmployee();
   await Promise.all([loadInventory(), loadTransfers()]);
 });
 </script>
@@ -575,17 +657,27 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="flex-1 min-h-0 overflow-auto">
-          <div
-            v-if="loadingInventory"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
-            {{ $t("common.loading") }}
-          </div>
+        <div
+          v-if="loadingBranches || loadingEmployee || loadingInventory"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
+        >
+          {{ $t("common.loading") }}
+        </div>
 
-          <table v-else class="w-full border-collapse min-w-[800px]">
+        <div v-else class="flex-1 min-h-0 overflow-auto">
+          <table class="w-full border-collapse min-w-[950px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("branches.fields.code") }}
+                </th>
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("branches.fields.name") }}
+                </th>
                 <th
                   class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
                 >
@@ -611,26 +703,32 @@ onMounted(async () => {
 
             <tbody>
               <tr
-                v-for="item in paginatedInventory"
-                :key="`${item.productId}-${item.productName}`"
+                v-for="entry in paginatedInventory"
+                :key="`${entry.branch.branchId}-${entry.item.productId}`"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ entry.branch.code }}
+                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ entry.branch.name }}
+                </td>
                 <td
                   class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
                 >
-                  {{ item.productId }}
+                  {{ entry.item.productId }}
                 </td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ item.productName ?? "-" }}
+                  {{ entry.item.productName ?? "-" }}
                 </td>
                 <td
                   class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
                 >
-                  {{ item.stock }}
+                  {{ entry.item.stock }}
                 </td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <span
-                    v-if="item.stock <= lowStockThreshold"
+                    v-if="entry.item.stock <= lowStockThreshold"
                     class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-warning-100 text-bt-warning-700"
                   >
                     {{ $t("inventory.alerts.lowStock") }}
@@ -646,7 +744,7 @@ onMounted(async () => {
 
               <tr v-if="!paginatedInventory.length">
                 <td
-                  colspan="4"
+                  colspan="6"
                   class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
                 >
                   {{ $t("inventory.stock.empty") }}
@@ -827,10 +925,6 @@ onMounted(async () => {
                         action: () => openTransferDrawer(transfer),
                       },
                       {
-                        label: t('inventory.actions.requestReview'),
-                        action: () => requestReview(transfer),
-                      },
-                      {
                         label: t('inventory.actions.delete'),
                         action: () => deleteTransfer(transfer),
                         danger: true,
@@ -937,6 +1031,16 @@ onMounted(async () => {
                 <th
                   class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
                 >
+                  {{ $t("branches.fields.code") }}
+                </th>
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("branches.fields.name") }}
+                </th>
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
                   {{ $t("inventory.alerts.table.productId") }}
                 </th>
                 <th
@@ -954,28 +1058,36 @@ onMounted(async () => {
 
             <tbody>
               <tr
-                v-for="item in lowStockItems"
-                :key="`${item.productId}-${item.productName}`"
+                v-for="entry in lowStockItems"
+                :key="`${entry.branch.branchId}-${entry.item.productId}`"
                 class="border-t border-bt-grey-200 bg-bt-warning-100/40"
               >
                 <td
                   class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
                 >
-                  {{ item.productId }}
+                  {{ entry.branch.code }}
                 </td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ item.productName ?? "-" }}
+                  {{ entry.branch.name }}
+                </td>
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ entry.item.productId }}
+                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ entry.item.productName ?? "-" }}
                 </td>
                 <td
                   class="px-bt-spacing-16 py-bt-spacing-12 text-bt-warning-700 font-bt-bold"
                 >
-                  {{ item.stock }}
+                  {{ entry.item.stock }}
                 </td>
               </tr>
 
               <tr v-if="!lowStockItems.length">
                 <td
-                  colspan="3"
+                  colspan="5"
                   class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
                 >
                   {{ $t("inventory.alerts.empty") }}

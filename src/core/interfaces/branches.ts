@@ -4,6 +4,7 @@ export interface BranchWarehouseSummary {
   warehouseId: string;
   code: string;
   name: string;
+  description?: string;
   isActive: boolean;
 }
 

@@ -1230,4 +1230,64 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/security/scopes",
     headers: { Accept: "application/json" },
   },
+  selectBranches: {
+    method: "GET",
+    path: "/api/branches/select",
+    headers: { Accept: "application/json" },
+  },
+  selectClients: {
+    method: "GET",
+    path: "/api/clients/select",
+    headers: { Accept: "application/json" },
+  },
+  selectEmployees: {
+    method: "GET",
+    path: "/api/employees/select",
+    headers: { Accept: "application/json" },
+  },
+  selectPaymentMethods: {
+    method: "GET",
+    path: "/api/payment-methods/select",
+    headers: { Accept: "application/json" },
+  },
+  selectProductCategories: {
+    method: "GET",
+    path: "/api/product-categories/select",
+    headers: { Accept: "application/json" },
+  },
+  selectProducts: {
+    method: "GET",
+    path: "/api/products/select",
+    headers: { Accept: "application/json" },
+  },
+  selectRoles: {
+    method: "GET",
+    path: "/api/roles/select",
+    headers: { Accept: "application/json" },
+  },
+  selectSuppliers: {
+    method: "GET",
+    path: "/api/suppliers/select",
+    headers: { Accept: "application/json" },
+  },
+  selectTaxes: {
+    method: "GET",
+    path: "/api/taxes/select",
+    headers: { Accept: "application/json" },
+  },
+  selectUnitsOfMeasure: {
+    method: "GET",
+    path: "/api/units-of-measure/select",
+    headers: { Accept: "application/json" },
+  },
+  selectUsers: {
+    method: "GET",
+    path: "/api/users/select",
+    headers: { Accept: "application/json" },
+  },
+  selectWarehouses: {
+    method: "GET",
+    path: "/api/warehouses/select",
+    headers: { Accept: "application/json" },
+  },
 };

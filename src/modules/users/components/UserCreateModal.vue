@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useModalStore } from "@/core/stores/modalStore";
 import { UsersService } from "@/core/services/usersService";
-import { RolesService } from "@/core/services/rolesService";
+import { SelectService } from "@/core/services/selectService";
 
 interface RoleOption {
   roleId: string;
@@ -36,12 +36,12 @@ function closeModal() {
   modalStore.close();
 }
 
-function normalizeRoleId(role: any): string {
-  return String(role?.roleId ?? "").trim();
+function normalizeSelectId(option: any): string {
+  return String(option?.id ?? "").trim();
 }
 
-function normalizeRoleName(role: any): string {
-  return String(role?.name ?? "").trim();
+function normalizeSelectLabel(option: any): string {
+  return String(option?.label ?? "").trim();
 }
 
 function normalizeCreatedUserId(created: any): string {
@@ -52,14 +52,21 @@ async function loadRoles() {
   loadingRoles.value = true;
 
   try {
-    const response = await RolesService.browse();
+    const response = await SelectService.selectRoles({
+      onlyActive: true,
+    });
 
     roles.value = (response ?? [])
-      .map((role: any) => ({
-        roleId: normalizeRoleId(role),
-        name: normalizeRoleName(role),
+      .map((option: any) => ({
+        roleId: normalizeSelectId(option),
+        name: normalizeSelectLabel(option),
       }))
       .filter((role: RoleOption) => role.roleId.length > 0);
+  } catch (error: any) {
+    modalStore.onError?.({
+      code: error?.status ?? 500,
+      message: error?.message ?? "Failed to load roles.",
+    });
   } finally {
     loadingRoles.value = false;
   }
@@ -139,9 +146,9 @@ onMounted(loadRoles);
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
       <div>
-        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
-          >Username</label
-        >
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          Username
+        </label>
         <input
           v-model="username"
           type="text"
@@ -150,9 +157,9 @@ onMounted(loadRoles);
       </div>
 
       <div>
-        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
-          >Email</label
-        >
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          Email
+        </label>
         <input
           v-model="email"
           type="email"
@@ -161,9 +168,9 @@ onMounted(loadRoles);
       </div>
 
       <div class="md:col-span-2">
-        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
-          >Password</label
-        >
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          Password
+        </label>
         <div class="relative">
           <input
             v-model="password"
@@ -181,9 +188,9 @@ onMounted(loadRoles);
       </div>
 
       <div class="md:col-span-2">
-        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
-          >Confirm password</label
-        >
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          Confirm password
+        </label>
         <div class="relative">
           <input
             v-model="confirmPassword"
@@ -208,18 +215,23 @@ onMounted(loadRoles);
       </div>
 
       <div class="md:col-span-2">
-        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
-          >Role</label
-        >
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          Role
+        </label>
         <select
           v-model="selectedRoleId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :disabled="loadingRoles"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
         >
           <option value="" disabled>Select a role</option>
           <option v-for="role in roles" :key="role.roleId" :value="role.roleId">
             {{ role.name }}
           </option>
         </select>
+
+        <div v-if="loadingRoles" class="mt-bt-spacing-8 text-bt-grey-500">
+          Loading roles...
+        </div>
       </div>
 
       <div class="md:col-span-2">

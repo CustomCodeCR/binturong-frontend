@@ -3,7 +3,7 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { UsersService } from "@/core/services/usersService";
-import { RolesService } from "@/core/services/rolesService";
+import { SelectService } from "@/core/services/selectService";
 import type { User } from "@/core/interfaces/users";
 
 interface RoleOption {
@@ -38,24 +38,26 @@ function closeModal() {
   modalStore.close();
 }
 
-function normalizeRoleId(role: any): string {
-  return String(role?.roleId ?? "").trim();
+function normalizeSelectId(option: any): string {
+  return String(option?.id ?? "").trim();
 }
 
-function normalizeRoleName(role: any): string {
-  return String(role?.name ?? "").trim();
+function normalizeSelectLabel(option: any): string {
+  return String(option?.label ?? "").trim();
 }
 
 async function loadRoles() {
   loadingRoles.value = true;
 
   try {
-    const response = await RolesService.browse();
+    const response = await SelectService.selectRoles({
+      onlyActive: true,
+    });
 
     roleOptions.value = (response ?? [])
-      .map((role: any) => ({
-        roleId: normalizeRoleId(role),
-        name: normalizeRoleName(role),
+      .map((option: any) => ({
+        roleId: normalizeSelectId(option),
+        name: normalizeSelectLabel(option),
       }))
       .filter((role: RoleOption) => role.roleId.length > 0);
   } catch (error: any) {
@@ -224,7 +226,8 @@ onMounted(async () => {
 
         <select
           v-model="selectedRoleId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :disabled="loadingRoles"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
         >
           <option value="">No role</option>
           <option

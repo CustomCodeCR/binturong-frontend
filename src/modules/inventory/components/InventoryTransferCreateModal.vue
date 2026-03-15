@@ -7,11 +7,11 @@ import { useToastStore } from "@/core/stores/toastStore";
 import { useAuthStore } from "@/core/stores/authStore";
 
 import { BranchesService } from "@/core/services/branchesService";
-import { ProductsService } from "@/core/services/productsService";
+import { SelectService } from "@/core/services/selectService";
 import { InventoryTransfersService } from "@/core/services/inventoryTransfersService";
 
 import type { Branch } from "@/core/interfaces/branches";
-import type { Product } from "@/core/interfaces/products";
+import type { SelectOption } from "@/core/interfaces/select";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
@@ -19,7 +19,7 @@ const toastStore = useToastStore();
 const authStore = useAuthStore();
 
 const branches = ref<Branch[]>([]);
-const products = ref<Product[]>([]);
+const products = ref<SelectOption[]>([]);
 
 const fromBranchId = ref("");
 const toBranchId = ref("");
@@ -28,7 +28,6 @@ const toWarehouseId = ref("");
 const productId = ref("");
 const quantity = ref<number | null>(null);
 const notes = ref("");
-const requireApproval = ref(true);
 
 const loading = ref(false);
 const loadingCatalogs = ref(false);
@@ -55,11 +54,16 @@ async function loadCatalogs() {
   try {
     const [branchesResponse, productsResponse] = await Promise.all([
       BranchesService.browse({ page: 1, pageSize: 100 }),
-      ProductsService.browse({ page: 1, pageSize: 100 }),
+      SelectService.selectProducts({ onlyActive: true }),
     ]);
 
-    branches.value = branchesResponse;
-    products.value = productsResponse;
+    branches.value = branchesResponse ?? [];
+    products.value = productsResponse ?? [];
+  } catch (error: any) {
+    modalStore.onError?.({
+      code: error?.status ?? 500,
+      message: error?.message ?? t("inventory.messages.loadCatalogsError"),
+    });
   } finally {
     loadingCatalogs.value = false;
   }
@@ -108,22 +112,21 @@ async function submit() {
       ],
     });
 
-    await InventoryTransfersService.confirmInventoryTransfer(
+    await InventoryTransfersService.requestReviewInventoryTransfer(
       created.transferId,
-      {
-        requireApproval: requireApproval.value,
-      },
     );
 
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
-      message: requireApproval.value
-        ? t("inventory.messages.transferPending")
-        : t("inventory.messages.transferConfirmed"),
+      message: t("inventory.messages.transferCreated"),
     });
 
-    modalStore.onSuccess?.(created);
+    modalStore.onSuccess?.({
+      ...created,
+      status: "REVIEW_REQUESTED",
+    });
+
     modalStore.close();
   } catch (error: any) {
     modalStore.onError?.({
@@ -252,10 +255,10 @@ onMounted(async () => {
           <option value="">{{ $t("inventory.transfer.selectProduct") }}</option>
           <option
             v-for="product in products"
-            :key="product.productId"
-            :value="product.productId"
+            :key="product.id"
+            :value="product.id"
           >
-            {{ product.sku }} - {{ product.name }}
+            {{ product.label }}
           </option>
         </select>
       </div>
@@ -282,13 +285,6 @@ onMounted(async () => {
           rows="4"
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
         />
-      </div>
-
-      <div class="md:col-span-2 flex items-center gap-bt-spacing-8">
-        <input v-model="requireApproval" type="checkbox" />
-        <span class="text-bt-primary-700">{{
-          $t("inventory.transfer.requireApproval")
-        }}</span>
       </div>
     </div>
 

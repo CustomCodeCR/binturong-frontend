@@ -31,10 +31,20 @@ export interface InventoryTransfersBrowseQuery {
 
 export interface InventoryTransferLine {
   lineId: string; // uuid
+
   productId: string; // uuid
+  productSku?: string | null;
+  productName?: string | null;
+
   quantity: number;
+
   fromWarehouseId: string; // uuid
+  fromWarehouseCode?: string | null;
+  fromWarehouseName?: string | null;
+
   toWarehouseId: string; // uuid
+  toWarehouseCode?: string | null;
+  toWarehouseName?: string | null;
 }
 
 export interface InventoryTransfer {
@@ -44,11 +54,23 @@ export interface InventoryTransfer {
   fromBranchId: string; // uuid
   toBranchId: string; // uuid
 
-  status: string; // "Draft" | etc (si luego querés lo tipamos)
-  notes: string;
+  fromBranchCode?: string | null;
+  fromBranchName?: string | null;
+
+  toBranchCode?: string | null;
+  toBranchName?: string | null;
+
+  status: string;
+  notes: string | null;
 
   createdByUserId: string; // uuid
+  createdByUsername?: string | null;
+  createdByEmail?: string | null;
+
   approvedByUserId: string | null; // uuid?
+  approvedByUsername?: string | null;
+  approvedByEmail?: string | null;
+
   rejectionReason: string | null;
 
   createdAt: string; // ISO datetime
@@ -65,7 +87,7 @@ export interface ApproveInventoryTransferRequest {
 }
 
 export interface ConfirmInventoryTransferRequest {
-  requireApproval: boolean;
+  receivedByUserId: string; // uuid
 }
 
 export interface RejectInventoryTransferRequest {

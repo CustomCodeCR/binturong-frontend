@@ -743,14 +743,18 @@
       }
     },
     "drawer": {
-      "title": "Detalle de transferencia",
-      "description": "Revise la transferencia {transferId}.",
-      "defaultRejectReason": "Rechazada desde revisión de inventario.",
+      "fields": {
+        "fromBranch": "Sucursal origen",
+        "toBranch": "Sucursal destino",
+        "createdBy": "Creado por",
+        "approvedBy": "Aprobado por",
+        "rejectionReason": "Motivo de rechazo"
+      },
       "lines": {
-        "productId": "Id producto",
-        "quantity": "Cantidad",
-        "fromWarehouseId": "Id almacén origen",
-        "toWarehouseId": "Id almacén destino"
+        "product": "Producto",
+        "fromWarehouse": "Almacén origen",
+        "toWarehouse": "Almacén destino",
+        "empty": "No se encontraron líneas."
       }
     }
   },

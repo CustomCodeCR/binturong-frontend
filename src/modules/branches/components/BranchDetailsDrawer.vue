@@ -8,7 +8,7 @@ import { useToastStore } from "@/core/stores/toastStore";
 import { useAuthStore } from "@/core/stores/authStore";
 
 import { BranchesService } from "@/core/services/branchesService";
-import { ProductsService } from "@/core/services/productsService";
+import { SelectService } from "@/core/services/selectService";
 import { WarehousesService } from "@/core/services/warehousesService";
 import { InventoryTransfersService } from "@/core/services/inventoryTransfersService";
 
@@ -21,12 +21,13 @@ import type {
   CompareBranchesResponse,
   BranchSalesReport,
 } from "@/core/interfaces/branches";
-import type { Product } from "@/core/interfaces/products";
+import type { SelectOption } from "@/core/interfaces/select";
 
 interface WarehouseSuccessPayload {
   warehouseId: string;
   code: string;
   name: string;
+  description?: string;
   isActive: boolean;
 }
 
@@ -57,7 +58,7 @@ const transferLoading = ref(false);
 
 const branch = ref<Branch | null>(null);
 const inventory = ref<BranchInventoryItem[]>([]);
-const products = ref<Product[]>([]);
+const products = ref<SelectOption[]>([]);
 const salesReport = ref<BranchSalesReport | null>(null);
 const compareReport = ref<CompareBranchesResponse | null>(null);
 const branchesForCompare = ref<Branch[]>([]);
@@ -77,7 +78,10 @@ const transferRequireApproval = ref(true);
 
 const filteredInventory = computed(() => {
   const term = inventorySearch.value.trim().toLowerCase();
-  if (!term) return inventory.value;
+
+  if (!term) {
+    return inventory.value;
+  }
 
   return inventory.value.filter((item) => {
     return (
@@ -138,9 +142,15 @@ async function loadProducts() {
   loadingProducts.value = true;
 
   try {
-    products.value = await ProductsService.browse({
-      page: 1,
-      pageSize: 100,
+    products.value = await SelectService.selectProducts({
+      onlyActive: true,
+    });
+  } catch {
+    products.value = [];
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("branches.messages.loadProductsError"),
     });
   } finally {
     loadingProducts.value = false;
@@ -181,7 +191,9 @@ async function loadSalesReport() {
 }
 
 async function loadCompareReport() {
-  if (!compareBranchId.value) return;
+  if (!compareBranchId.value) {
+    return;
+  }
 
   loadingCompare.value = true;
 
@@ -251,7 +263,9 @@ async function exportExcel() {
 }
 
 function patchWarehouseInBranch(payload: WarehouseSuccessPayload) {
-  if (!branch.value) return;
+  if (!branch.value) {
+    return;
+  }
 
   const currentWarehouses = [...(branch.value.warehouses ?? [])];
   const warehouseIndex = currentWarehouses.findIndex(
@@ -262,6 +276,7 @@ function patchWarehouseInBranch(payload: WarehouseSuccessPayload) {
     warehouseId: payload.warehouseId,
     code: payload.code,
     name: payload.name,
+    description: payload.description,
     isActive: payload.isActive,
   };
 
@@ -281,7 +296,9 @@ function patchWarehouseInBranch(payload: WarehouseSuccessPayload) {
 }
 
 function removeWarehouseFromBranch(warehouseId: string) {
-  if (!branch.value) return;
+  if (!branch.value) {
+    return;
+  }
 
   replaceBranch({
     ...branch.value,
@@ -295,17 +312,22 @@ function hasWarehouseReachedExpectedState(
   currentBranch: Branch | null,
   payload: WarehouseSuccessPayload,
 ): boolean {
-  if (!currentBranch) return false;
+  if (!currentBranch) {
+    return false;
+  }
 
   const warehouse = (currentBranch.warehouses ?? []).find(
     (item) => item.warehouseId === payload.warehouseId,
   );
 
-  if (!warehouse) return false;
+  if (!warehouse) {
+    return false;
+  }
 
   return (
     warehouse.code === payload.code &&
     warehouse.name === payload.name &&
+    warehouse.description === payload.description &&
     warehouse.isActive === payload.isActive
   );
 }
@@ -396,6 +418,7 @@ function openEditWarehouseModal(warehouse: Branch["warehouses"][number]) {
       warehouseId: warehouse.warehouseId,
       code: warehouse.code,
       name: warehouse.name,
+      description: warehouse.description,
       isActive: warehouse.isActive,
     },
     onSuccess: async (payload?: WarehouseSuccessPayload) => {
@@ -760,7 +783,7 @@ watch(
     </template>
 
     <template v-else-if="activeTab === 'transfer'">
-      <div v-if="!branch" class="text-bt-grey-500">
+      <div v-if="!branch || loadingProducts" class="text-bt-grey-500">
         {{ $t("common.loading") }}
       </div>
 
@@ -778,10 +801,10 @@ watch(
             </option>
             <option
               v-for="product in products"
-              :key="product.productId"
-              :value="product.productId"
+              :key="product.id"
+              :value="product.id"
             >
-              {{ product.sku }} - {{ product.name }}
+              {{ product.label }}
             </option>
           </select>
         </div>
@@ -823,7 +846,11 @@ watch(
               :key="warehouse.warehouseId"
               :value="warehouse.warehouseId"
             >
-              {{ warehouse.code }} - {{ warehouse.name }}
+              {{
+                warehouse.description
+                  ? `${warehouse.code} - ${warehouse.name} (${warehouse.description})`
+                  : `${warehouse.code} - ${warehouse.name}`
+              }}
             </option>
           </select>
         </div>
@@ -844,7 +871,11 @@ watch(
               :key="warehouse.warehouseId"
               :value="warehouse.warehouseId"
             >
-              {{ warehouse.code }} - {{ warehouse.name }}
+              {{
+                warehouse.description
+                  ? `${warehouse.code} - ${warehouse.name} (${warehouse.description})`
+                  : `${warehouse.code} - ${warehouse.name}`
+              }}
             </option>
           </select>
         </div>
@@ -923,6 +954,9 @@ watch(
                 {{ $t("branches.warehouses.table.name") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("branches.warehouses.table.description") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("branches.warehouses.table.status") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
@@ -941,6 +975,9 @@ watch(
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ warehouse.name }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ warehouse.description || "-" }}
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
@@ -981,7 +1018,7 @@ watch(
 
             <tr v-if="!branch?.warehouses?.length">
               <td
-                colspan="4"
+                colspan="5"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
               >
                 {{ $t("branches.warehouses.empty") }}

@@ -94,7 +94,9 @@ async function loadBranches() {
 }
 
 async function loadStock() {
-  if (!product.value) return;
+  if (!product.value) {
+    return;
+  }
 
   loadingStock.value = true;
 
@@ -104,6 +106,7 @@ async function loadStock() {
         const items = await BranchesService.browseInventoryByBranchId(
           branch.branchId,
         );
+
         const productStock = items.find(
           (item: BranchInventoryItem) =>
             item.productId === product.value?.productId,
@@ -528,14 +531,16 @@ watch(
     <template v-else-if="activeTab === 'transfer'">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.transfer.fromBranch")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.transfer.fromBranch") }}
+          </label>
           <select
             v-model="fromBranchId"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            <option value="">{{ $t("products.transfer.selectBranch") }}</option>
+            <option value="">
+              {{ $t("products.transfer.selectBranch") }}
+            </option>
             <option
               v-for="branch in branches"
               :key="branch.branchId"
@@ -547,14 +552,16 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.transfer.toBranch")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.transfer.toBranch") }}
+          </label>
           <select
             v-model="toBranchId"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            <option value="">{{ $t("products.transfer.selectBranch") }}</option>
+            <option value="">
+              {{ $t("products.transfer.selectBranch") }}
+            </option>
             <option
               v-for="branch in branches"
               :key="branch.branchId"
@@ -566,9 +573,9 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.transfer.fromWarehouse")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.transfer.fromWarehouse") }}
+          </label>
           <select
             v-model="fromWarehouseId"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -587,9 +594,9 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.transfer.toWarehouse")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.transfer.toWarehouse") }}
+          </label>
           <select
             v-model="toWarehouseId"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -608,9 +615,9 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.transfer.quantity")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.transfer.quantity") }}
+          </label>
           <input
             v-model.number="transferQuantity"
             type="number"
@@ -622,15 +629,15 @@ watch(
 
         <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">
           <input v-model="requireApproval" type="checkbox" />
-          <span class="text-bt-primary-700">{{
-            $t("products.transfer.requireApproval")
-          }}</span>
+          <span class="text-bt-primary-700">
+            {{ $t("products.transfer.requireApproval") }}
+          </span>
         </div>
 
         <div class="md:col-span-2">
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.transfer.notes")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.transfer.notes") }}
+          </label>
           <textarea
             v-model="transferNotes"
             rows="4"
@@ -658,9 +665,9 @@ watch(
     <template v-else>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.adjustment.branch")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.adjustment.branch") }}
+          </label>
           <select
             v-model="adjustmentBranchId"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -679,9 +686,9 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.adjustment.warehouse")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.adjustment.warehouse") }}
+          </label>
           <select
             v-model="adjustmentWarehouseId"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -700,9 +707,9 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.adjustment.countedStock")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.adjustment.countedStock") }}
+          </label>
           <input
             v-model.number="countedStock"
             type="number"
@@ -713,9 +720,9 @@ watch(
         </div>
 
         <div>
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.adjustment.unitCost")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.adjustment.unitCost") }}
+          </label>
           <input
             v-model.number="adjustmentUnitCost"
             type="number"
@@ -726,9 +733,9 @@ watch(
         </div>
 
         <div class="md:col-span-2">
-          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">{{
-            $t("products.adjustment.justification")
-          }}</label>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("products.adjustment.justification") }}
+          </label>
           <textarea
             v-model="adjustmentJustification"
             rows="4"

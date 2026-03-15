@@ -743,14 +743,18 @@
       }
     },
     "drawer": {
-      "title": "Transfer Details",
-      "description": "Review transfer {transferId}.",
-      "defaultRejectReason": "Rejected from inventory review.",
+      "fields": {
+        "fromBranch": "From branch",
+        "toBranch": "To branch",
+        "createdBy": "Created by",
+        "approvedBy": "Approved by",
+        "rejectionReason": "Rejection reason"
+      },
       "lines": {
-        "productId": "Product Id",
-        "quantity": "Quantity",
-        "fromWarehouseId": "From Warehouse Id",
-        "toWarehouseId": "To Warehouse Id"
+        "product": "Product",
+        "fromWarehouse": "From warehouse",
+        "toWarehouse": "To warehouse",
+        "empty": "No lines found."
       }
     }
   },

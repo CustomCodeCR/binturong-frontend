@@ -69,15 +69,22 @@
     }
   },
   "users": {
-    "title": "Usuarios",
-    "subtitle": "Administre usuarios del sistema, roles y estado de cuenta.",
-    "searchPlaceholder": "Buscar por nombre de usuario o correo",
-    "empty": "No se encontraron usuarios.",
-    "never": "Nunca",
-    "status": {
-      "active": "Activo",
-      "inactive": "Inactivo"
-    },
+  "title": "Usuarios",
+  "subtitle": "Administre usuarios del sistema, roles y estado de cuenta.",
+  "searchPlaceholder": "Buscar por nombre de usuario o correo",
+  "empty": "No se encontraron usuarios.",
+  "never": "Nunca",
+  
+  "filtered": "resultados",
+  "filters": {
+    "allStatus": "Todos los estados",
+    "active": "Activos",
+    "inactive": "Inactivos"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
     "table": {
       "username": "Usuario",
       "email": "Correo",

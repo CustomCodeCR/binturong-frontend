@@ -42,7 +42,34 @@ const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
 
+// ← NUEVO: Filtro de estado
+const statusFilter = ref<"all" | "active" | "inactive">("all");
+
 const MAX_PAGE = 100;
+
+// ← NUEVO: Usuarios filtrados localmente
+const filteredUsers = computed(() => {
+  let result = users.value;
+
+  // Filtrar por estado
+  if (statusFilter.value === "active") {
+    result = result.filter((u) => u.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((u) => !u.isActive);
+  }
+
+  // Filtrar por búsqueda (en tiempo real)
+  if (search.value.trim()) {
+    const query = search.value.toLowerCase().trim();
+    result = result.filter(
+      (u) =>
+        u.username.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query),
+    );
+  }
+
+  return result;
+});
 
 const pageNumbers = computed(() => {
   const current = page.value;
@@ -98,7 +125,8 @@ async function fetchUsers(): Promise<User[]> {
   return await UsersService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    search: search.value.trim() || undefined,
+    // ← REMOVIDO: search del backend, ahora filtramos localmente
+    // search: search.value.trim() || undefined,
   });
 }
 
@@ -369,10 +397,7 @@ async function goNext() {
   await goToPage(page.value + 1);
 }
 
-async function onSearch() {
-  page.value = 1;
-  await loadUsers();
-}
+//onSearch ya no es necesario porque se filtra  en tiempo real
 
 watch(pageSize, async () => {
   page.value = 1;
@@ -404,21 +429,24 @@ onMounted(async () => {
         <div
           class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
         >
+          <!-- ← MEJORADO: Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('users.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            @keyup.enter="onSearch"
           />
 
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-            @click="onSearch"
+          <!-- ← NUEVO: Filtro de estado -->
+          <!-- ← Filtro de estado -->
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            {{ $t("users.actions.search") }}
-          </button>
+            <option value="all">{{ $t("users.filters.allStatus") }}</option>
+            <option value="active">{{ $t("users.filters.active") }}</option>
+            <option value="inactive">{{ $t("users.filters.inactive") }}</option>
+          </select>
 
           <button
             type="button"
@@ -485,8 +513,9 @@ onMounted(async () => {
           </thead>
 
           <tbody>
+            <!-- ← CAMBIADO: Usar filteredUsers en lugar de users -->
             <tr
-              v-for="user in users"
+              v-for="user in filteredUsers"
               :key="user.userId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
@@ -563,7 +592,8 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!users.length && !loading">
+            <!-- ← CAMBIADO: Usar filteredUsers.length -->
+            <tr v-if="!filteredUsers.length && !loading">
               <td
                 colspan="6"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -581,6 +611,10 @@ onMounted(async () => {
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
           {{ MAX_PAGE }}
+          <!-- ← NUEVO: Mostrar cantidad filtrada -->
+          <span class="text-bt-grey-500">
+            ({{ filteredUsers.length }} {{ $t("users.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">

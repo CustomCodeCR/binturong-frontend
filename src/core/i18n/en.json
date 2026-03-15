@@ -68,16 +68,22 @@
       "network": "A network error occurred. Please try again."
     }
   },
-  "users": {
-    "title": "Users",
-    "subtitle": "Manage system users, roles, and account status.",
-    "searchPlaceholder": "Search by username or email",
-    "empty": "No users found.",
-    "never": "Never",
-    "status": {
-      "active": "Active",
-      "inactive": "Inactive"
-    },
+ "users": {
+  "title": "Users",
+  "subtitle": "Manage system users, roles, and account status.",
+  "searchPlaceholder": "Search by username or email",
+  "empty": "No users found.",
+  "never": "Never",
+  "filtered": "results",
+  "filters": {
+    "allStatus": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
     "table": {
       "username": "Username",
       "email": "Email",

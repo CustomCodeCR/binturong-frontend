@@ -421,5 +421,66 @@
       "title": "Detalle de categoría",
       "description": "Revise los detalles de la categoría {name}."
     }
+  },
+  "paymentMethods": {
+    "title": "Métodos de Pago",
+    "subtitle": "Administre el catálogo de métodos de pago y su estado.",
+    "searchPlaceholder": "Buscar por código o descripción",
+    "empty": "No se encontraron métodos de pago.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "code": "Código",
+      "description": "Descripción",
+      "status": "Estado",
+      "updatedAt": "Fecha de actualización",
+      "options": "Opciones"
+    },
+    "fields": {
+      "code": "Código",
+      "description": "Descripción",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newPaymentMethod": "Nuevo método de pago",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los métodos de pago.",
+      "createSuccess": "Método de pago creado correctamente.",
+      "createError": "No se pudo crear el método de pago.",
+      "updateSuccess": "Método de pago actualizado correctamente.",
+      "updateError": "No se pudo actualizar el método de pago.",
+      "deactivateSuccess": "Método de pago desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el método de pago.",
+      "reactivateSuccess": "Método de pago reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el método de pago.",
+      "deleteSuccess": "Método de pago eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el método de pago."
+    },
+    "validation": {
+      "requiredCreate": "Código y descripción son obligatorios.",
+      "requiredUpdate": "Código y descripción son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear método de pago",
+      "createDescription": "Registre un nuevo método de pago.",
+      "editTitle": "Editar método de pago",
+      "editDescription": "Actualice la información del método de pago."
+    },
+    "drawer": {
+      "title": "Detalle de método de pago",
+      "description": "Revise los detalles del método de pago {description}."
+    }
   }
 }

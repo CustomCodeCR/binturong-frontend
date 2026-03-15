@@ -421,5 +421,66 @@
       "title": "Category Details",
       "description": "Review category details for {name}."
     }
+  },
+  "paymentMethods": {
+    "title": "Payment Methods",
+    "subtitle": "Manage payment method catalog and status.",
+    "searchPlaceholder": "Search by code or description",
+    "empty": "No payment methods found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "code": "Code",
+      "description": "Description",
+      "status": "Status",
+      "updatedAt": "Updated At",
+      "options": "Options"
+    },
+    "fields": {
+      "code": "Code",
+      "description": "Description",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newPaymentMethod": "New Payment Method",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load payment methods.",
+      "createSuccess": "Payment method created successfully.",
+      "createError": "Could not create payment method.",
+      "updateSuccess": "Payment method updated successfully.",
+      "updateError": "Could not update payment method.",
+      "deactivateSuccess": "Payment method deactivated successfully.",
+      "deactivateError": "Could not deactivate payment method.",
+      "reactivateSuccess": "Payment method reactivated successfully.",
+      "reactivateError": "Could not reactivate payment method.",
+      "deleteSuccess": "Payment method deleted successfully.",
+      "deleteError": "Could not delete payment method."
+    },
+    "validation": {
+      "requiredCreate": "Code and description are required.",
+      "requiredUpdate": "Code and description are required."
+    },
+    "modal": {
+      "createTitle": "Create Payment Method",
+      "createDescription": "Register a new payment method.",
+      "editTitle": "Edit Payment Method",
+      "editDescription": "Update payment method information."
+    },
+    "drawer": {
+      "title": "Payment Method Details",
+      "description": "Review payment method details for {description}."
+    }
   }
 }

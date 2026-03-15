@@ -123,6 +123,12 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
             to: "/inventory/products",
             name: "products",
           },
+          {
+            labelKey: "sidebar.inventory",
+            icon: Boxes,
+            to: "/inventory/inventory-transfer",
+            name: "inventory-transfer",
+          },
         ],
       },
       {

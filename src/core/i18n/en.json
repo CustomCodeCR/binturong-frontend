@@ -606,5 +606,321 @@
       "selectUom": "Select a unit of measure",
       "selectTax": "Select a tax"
     }
+  },
+  "inventory": {
+    "title": "Inventory",
+    "subtitle": "Manage stock movements, transfers, and low stock alerts.",
+    "tabs": {
+      "stock": "Stock",
+      "transfers": "Transfers",
+      "alerts": "Low Stock Alerts"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newTransfer": "New Transfer",
+      "purchaseIn": "Purchase In",
+      "serviceOut": "Service Out",
+      "physicalAdjustment": "Physical Adjustment",
+      "viewDetails": "View Details",
+      "requestReview": "Request Review",
+      "delete": "Delete",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "messages": {
+      "loadInventoryError": "Could not load inventory.",
+      "loadTransfersError": "Could not load transfers.",
+      "transferCreated": "Transfer created successfully.",
+      "transferCreateError": "Could not create transfer.",
+      "transferDeleted": "Transfer deleted successfully.",
+      "transferDeleteError": "Could not delete transfer.",
+      "reviewRequested": "Review requested successfully.",
+      "reviewRequestError": "Could not request review.",
+      "purchaseInSuccess": "Purchase entry registered successfully.",
+      "purchaseInError": "Could not register purchase entry.",
+      "serviceOutSuccess": "Service output registered successfully.",
+      "serviceOutError": "Could not register service output.",
+      "adjustmentSuccess": "Physical adjustment registered successfully.",
+      "adjustmentError": "Could not register physical adjustment.",
+      "transferPending": "Transfer registered as pending review.",
+      "transferConfirmed": "Transfer confirmed successfully.",
+      "transferApproved": "Transfer approved successfully.",
+      "transferApproveError": "Could not approve transfer.",
+      "transferRejected": "Transfer rejected successfully.",
+      "transferRejectError": "Could not reject transfer."
+    },
+    "modal": {
+      "transferTitle": "Create Inventory Transfer",
+      "transferDescription": "Transfer stock between branches and warehouses.",
+      "purchaseInTitle": "Register Purchase Entry",
+      "purchaseInDescription": "Register incoming stock from a purchase.",
+      "serviceOutTitle": "Register Service Output",
+      "serviceOutDescription": "Register stock consumption for a service.",
+      "adjustmentTitle": "Register Physical Adjustment",
+      "adjustmentDescription": "Adjust stock after a physical count."
+    },
+    "fields": {
+      "branch": "Branch",
+      "warehouse": "Warehouse",
+      "product": "Product",
+      "quantity": "Quantity",
+      "unitCost": "Unit Cost",
+      "sourceId": "Source Id",
+      "notes": "Notes",
+      "countedStock": "Counted Stock",
+      "justification": "Justification"
+    },
+    "placeholders": {
+      "selectBranch": "Select a branch",
+      "selectWarehouse": "Select a warehouse",
+      "selectProduct": "Select a product"
+    },
+    "stock": {
+      "searchPlaceholder": "Search by product id or product name",
+      "empty": "No inventory records found.",
+      "table": {
+        "productId": "Product Id",
+        "productName": "Product Name",
+        "stock": "Stock",
+        "alert": "Alert"
+      }
+    },
+    "alerts": {
+      "threshold": "Low stock threshold",
+      "lowStock": "Low stock",
+      "normalStock": "Normal stock",
+      "empty": "No low stock alerts found.",
+      "note": "Visual alerts are generated in the UI based on the selected threshold. Purchase notifications require a backend endpoint.",
+      "table": {
+        "productId": "Product Id",
+        "productName": "Product Name",
+        "stock": "Stock"
+      }
+    },
+    "transfer": {
+      "fromBranch": "From Branch",
+      "toBranch": "To Branch",
+      "fromWarehouse": "From Warehouse",
+      "toWarehouse": "To Warehouse",
+      "product": "Product",
+      "quantity": "Quantity",
+      "notes": "Notes",
+      "requireApproval": "Require approval",
+      "submit": "Create Transfer",
+      "selectBranch": "Select a branch",
+      "selectWarehouse": "Select a warehouse",
+      "selectProduct": "Select a product",
+      "validation": {
+        "required": "All transfer fields are required.",
+        "userRequired": "A logged-in user is required to create a transfer."
+      }
+    },
+    "movements": {
+      "validation": {
+        "purchaseInRequired": "All purchase entry fields are required.",
+        "serviceOutRequired": "All service output fields are required."
+      }
+    },
+    "adjustment": {
+      "validation": {
+        "required": "All physical adjustment fields are required."
+      }
+    },
+    "transfers": {
+      "searchPlaceholder": "Search by transfer id, status, or notes",
+      "empty": "No transfers found.",
+      "table": {
+        "transferId": "Transfer Id",
+        "status": "Status",
+        "notes": "Notes",
+        "createdAt": "Created At",
+        "lines": "Lines",
+        "options": "Options"
+      },
+      "fields": {
+        "updatedAt": "Updated At"
+      }
+    },
+    "drawer": {
+      "title": "Transfer Details",
+      "description": "Review transfer {transferId}.",
+      "defaultRejectReason": "Rejected from inventory review.",
+      "lines": {
+        "productId": "Product Id",
+        "quantity": "Quantity",
+        "fromWarehouseId": "From Warehouse Id",
+        "toWarehouseId": "To Warehouse Id"
+      }
+    }
+  },
+  "branches": {
+    "title": "Branches",
+    "subtitle": "Manage branches, warehouse structure, inventory, transfers, and branch reports.",
+    "searchPlaceholder": "Search by code, name, address, or phone",
+    "empty": "No branches found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "code": "Code",
+      "name": "Name",
+      "address": "Address",
+      "phone": "Phone",
+      "warehouses": "Warehouses",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "address": "Address",
+      "phone": "Phone",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newBranch": "New Branch",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load branches.",
+      "createSuccess": "Branch created successfully.",
+      "createError": "Could not create branch.",
+      "updateSuccess": "Branch updated successfully.",
+      "updateError": "Could not update branch.",
+      "deactivateSuccess": "Branch deactivated successfully.",
+      "deactivateError": "Could not deactivate branch.",
+      "reactivateSuccess": "Branch reactivated successfully.",
+      "reactivateError": "Could not reactivate branch.",
+      "deleteSuccess": "Branch deleted successfully.",
+      "deleteError": "Could not delete branch.",
+      "transferSuccess": "Transfer created successfully.",
+      "transferPending": "Transfer registered as pending approval.",
+      "transferError": "Could not create transfer."
+    },
+    "validation": {
+      "requiredCreate": "Code, name, address, and phone are required.",
+      "requiredUpdate": "Code, name, address, and phone are required."
+    },
+    "modal": {
+      "createTitle": "Create Branch",
+      "createDescription": "Register a new branch.",
+      "editTitle": "Edit Branch",
+      "editDescription": "Update branch information."
+    },
+    "drawer": {
+      "title": "Branch Details",
+      "description": "Review information, inventory, transfers, warehouses, and reports for {name}.",
+      "tabs": {
+        "details": "Details",
+        "inventory": "Inventory",
+        "transfer": "Transfers",
+        "warehouses": "Warehouses",
+        "reports": "Reports"
+      }
+    },
+    "inventory": {
+      "searchPlaceholder": "Search by product id or product name",
+      "empty": "No inventory records found.",
+      "table": {
+        "productId": "Product Id",
+        "productName": "Product Name",
+        "stock": "Stock"
+      }
+    },
+    "transfer": {
+      "product": "Product",
+      "toBranch": "Destination Branch",
+      "fromWarehouse": "Source Warehouse",
+      "toWarehouse": "Destination Warehouse",
+      "quantity": "Quantity",
+      "notes": "Notes",
+      "requireApproval": "Require approval",
+      "submit": "Create Transfer",
+      "selectProduct": "Select a product",
+      "selectBranch": "Select a branch",
+      "selectWarehouse": "Select a warehouse",
+      "validation": {
+        "required": "All transfer fields are required.",
+        "userRequired": "A logged-in user is required to create a transfer."
+      }
+    },
+    "warehouses": {
+      "empty": "No warehouses found.",
+      "table": {
+        "code": "Code",
+        "name": "Name",
+        "status": "Status",
+        "options": "Options"
+      },
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "description": "Description",
+        "isActive": "Active"
+      },
+      "actions": {
+        "newWarehouse": "New Warehouse"
+      },
+      "messages": {
+        "createSuccess": "Warehouse created successfully.",
+        "createError": "Could not create warehouse.",
+        "updateSuccess": "Warehouse updated successfully.",
+        "updateError": "Could not update warehouse.",
+        "deleteSuccess": "Warehouse deleted successfully.",
+        "deleteError": "Could not delete warehouse.",
+        "editDescriptionWarning": "The current API does not return warehouse description. Please enter it again before saving."
+      },
+      "validation": {
+        "requiredCreate": "Code, name, and description are required.",
+        "requiredUpdate": "Code, name, and description are required."
+      },
+      "modal": {
+        "createTitle": "Create Warehouse",
+        "createDescription": "Register a new warehouse for this branch.",
+        "editTitle": "Edit Warehouse",
+        "editDescription": "Update warehouse information."
+      }
+    },
+    "reports": {
+      "fields": {
+        "from": "From",
+        "to": "To",
+        "compareBranch": "Compare With"
+      },
+      "placeholders": {
+        "selectBranch": "Select a branch"
+      },
+      "actions": {
+        "loadReport": "Load Report",
+        "compare": "Compare",
+        "exportPdf": "Export PDF",
+        "exportExcel": "Export Excel"
+      },
+      "messages": {
+        "loadError": "Could not load sales report.",
+        "compareError": "Could not load compare report.",
+        "exportPdfError": "Could not export PDF report.",
+        "exportExcelError": "Could not export Excel report."
+      },
+      "metrics": {
+        "ordersCount": "Orders Count",
+        "totalSales": "Total Sales",
+        "averageOrder": "Average Order"
+      },
+      "compare": {
+        "totalSalesDiff": "Total Sales Difference",
+        "ordersCountDiff": "Orders Count Difference"
+      }
+    }
   }
 }

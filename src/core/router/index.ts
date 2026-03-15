@@ -53,8 +53,7 @@ export const router = createRouter({
         {
           path: "branches",
           name: "branches",
-          component: () =>
-            import("@/modules/branches/views/SucursalesView.vue"),
+          component: () => import("@/modules/branches/views/BranchesView.vue"),
         },
         {
           path: "employees",
@@ -94,6 +93,12 @@ export const router = createRouter({
           path: "inventory/products",
           name: "products",
           component: () => import("@/modules/products/views/ProductsView.vue"),
+        },
+        {
+          path: "inventory/inventory-transfer",
+          name: "inventory-trnasfer",
+          component: () =>
+            import("@/modules/inventory/views/InventoryView.vue"),
         },
       ],
     },

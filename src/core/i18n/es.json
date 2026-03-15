@@ -606,5 +606,321 @@
       "selectUom": "Seleccione una unidad de medida",
       "selectTax": "Seleccione un impuesto"
     }
+  },
+  "inventory": {
+    "title": "Inventario",
+    "subtitle": "Administre movimientos de stock, transferencias y alertas de inventario bajo.",
+    "tabs": {
+      "stock": "Stock",
+      "transfers": "Transferencias",
+      "alerts": "Alertas"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newTransfer": "Nueva transferencia",
+      "purchaseIn": "Entrada por compra",
+      "serviceOut": "Salida por servicio",
+      "physicalAdjustment": "Ajuste físico",
+      "viewDetails": "Ver detalle",
+      "requestReview": "Solicitar revisión",
+      "delete": "Eliminar",
+      "approve": "Aprobar",
+      "reject": "Rechazar"
+    },
+    "messages": {
+      "loadInventoryError": "No se pudo cargar el inventario.",
+      "loadTransfersError": "No se pudieron cargar las transferencias.",
+      "transferCreated": "Transferencia creada correctamente.",
+      "transferCreateError": "No se pudo crear la transferencia.",
+      "transferDeleted": "Transferencia eliminada correctamente.",
+      "transferDeleteError": "No se pudo eliminar la transferencia.",
+      "reviewRequested": "Revisión solicitada correctamente.",
+      "reviewRequestError": "No se pudo solicitar la revisión.",
+      "purchaseInSuccess": "Entrada por compra registrada correctamente.",
+      "purchaseInError": "No se pudo registrar la entrada por compra.",
+      "serviceOutSuccess": "Salida por servicio registrada correctamente.",
+      "serviceOutError": "No se pudo registrar la salida por servicio.",
+      "adjustmentSuccess": "Ajuste físico registrado correctamente.",
+      "adjustmentError": "No se pudo registrar el ajuste físico.",
+      "transferPending": "La transferencia quedó registrada como pendiente de revisión.",
+      "transferConfirmed": "Transferencia confirmada correctamente.",
+      "transferApproved": "Transferencia aprobada correctamente.",
+      "transferApproveError": "No se pudo aprobar la transferencia.",
+      "transferRejected": "Transferencia rechazada correctamente.",
+      "transferRejectError": "No se pudo rechazar la transferencia."
+    },
+    "modal": {
+      "transferTitle": "Crear transferencia de inventario",
+      "transferDescription": "Transfiera stock entre sucursales y almacenes.",
+      "purchaseInTitle": "Registrar entrada por compra",
+      "purchaseInDescription": "Registre ingreso de stock por compra.",
+      "serviceOutTitle": "Registrar salida por servicio",
+      "serviceOutDescription": "Registre consumo de stock por servicio.",
+      "adjustmentTitle": "Registrar ajuste físico",
+      "adjustmentDescription": "Ajuste el stock después de un conteo físico."
+    },
+    "fields": {
+      "branch": "Sucursal",
+      "warehouse": "Almacén",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitCost": "Costo unitario",
+      "sourceId": "Id origen",
+      "notes": "Notas",
+      "countedStock": "Stock contado",
+      "justification": "Justificación"
+    },
+    "placeholders": {
+      "selectBranch": "Seleccione una sucursal",
+      "selectWarehouse": "Seleccione un almacén",
+      "selectProduct": "Seleccione un producto"
+    },
+    "stock": {
+      "searchPlaceholder": "Buscar por id de producto o nombre",
+      "empty": "No se encontraron registros de inventario.",
+      "table": {
+        "productId": "Id producto",
+        "productName": "Nombre producto",
+        "stock": "Stock",
+        "alert": "Alerta"
+      }
+    },
+    "alerts": {
+      "threshold": "Límite de inventario bajo",
+      "lowStock": "Inventario bajo",
+      "normalStock": "Inventario normal",
+      "empty": "No se encontraron alertas de inventario bajo.",
+      "note": "Las alertas visuales se generan en la interfaz según el límite seleccionado. Las notificaciones a compras requieren un endpoint en backend.",
+      "table": {
+        "productId": "Id producto",
+        "productName": "Nombre producto",
+        "stock": "Stock"
+      }
+    },
+    "transfer": {
+      "fromBranch": "Sucursal origen",
+      "toBranch": "Sucursal destino",
+      "fromWarehouse": "Almacén origen",
+      "toWarehouse": "Almacén destino",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "notes": "Notas",
+      "requireApproval": "Requiere aprobación",
+      "submit": "Crear transferencia",
+      "selectBranch": "Seleccione una sucursal",
+      "selectWarehouse": "Seleccione un almacén",
+      "selectProduct": "Seleccione un producto",
+      "validation": {
+        "required": "Todos los campos de transferencia son obligatorios.",
+        "userRequired": "Se requiere un usuario autenticado para crear la transferencia."
+      }
+    },
+    "movements": {
+      "validation": {
+        "purchaseInRequired": "Todos los campos de entrada por compra son obligatorios.",
+        "serviceOutRequired": "Todos los campos de salida por servicio son obligatorios."
+      }
+    },
+    "adjustment": {
+      "validation": {
+        "required": "Todos los campos del ajuste físico son obligatorios."
+      }
+    },
+    "transfers": {
+      "searchPlaceholder": "Buscar por id de transferencia, estado o notas",
+      "empty": "No se encontraron transferencias.",
+      "table": {
+        "transferId": "Id transferencia",
+        "status": "Estado",
+        "notes": "Notas",
+        "createdAt": "Fecha creación",
+        "lines": "Líneas",
+        "options": "Opciones"
+      },
+      "fields": {
+        "updatedAt": "Fecha actualización"
+      }
+    },
+    "drawer": {
+      "title": "Detalle de transferencia",
+      "description": "Revise la transferencia {transferId}.",
+      "defaultRejectReason": "Rechazada desde revisión de inventario.",
+      "lines": {
+        "productId": "Id producto",
+        "quantity": "Cantidad",
+        "fromWarehouseId": "Id almacén origen",
+        "toWarehouseId": "Id almacén destino"
+      }
+    }
+  },
+  "branches": {
+    "title": "Sucursales",
+    "subtitle": "Administre sucursales, estructura de almacenes, inventario, transferencias y reportes por sucursal.",
+    "searchPlaceholder": "Buscar por código, nombre, dirección o teléfono",
+    "empty": "No se encontraron sucursales.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "code": "Código",
+      "name": "Nombre",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "warehouses": "Almacenes",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newBranch": "Nueva sucursal",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las sucursales.",
+      "createSuccess": "Sucursal creada correctamente.",
+      "createError": "No se pudo crear la sucursal.",
+      "updateSuccess": "Sucursal actualizada correctamente.",
+      "updateError": "No se pudo actualizar la sucursal.",
+      "deactivateSuccess": "Sucursal desactivada correctamente.",
+      "deactivateError": "No se pudo desactivar la sucursal.",
+      "reactivateSuccess": "Sucursal reactivada correctamente.",
+      "reactivateError": "No se pudo reactivar la sucursal.",
+      "deleteSuccess": "Sucursal eliminada correctamente.",
+      "deleteError": "No se pudo eliminar la sucursal.",
+      "transferSuccess": "Transferencia creada correctamente.",
+      "transferPending": "La transferencia quedó registrada como pendiente de aprobación.",
+      "transferError": "No se pudo crear la transferencia."
+    },
+    "validation": {
+      "requiredCreate": "Código, nombre, dirección y teléfono son obligatorios.",
+      "requiredUpdate": "Código, nombre, dirección y teléfono son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear sucursal",
+      "createDescription": "Registre una nueva sucursal.",
+      "editTitle": "Editar sucursal",
+      "editDescription": "Actualice la información de la sucursal."
+    },
+    "drawer": {
+      "title": "Detalle de sucursal",
+      "description": "Revise información, inventario, transferencias, almacenes y reportes de {name}.",
+      "tabs": {
+        "details": "Detalle",
+        "inventory": "Inventario",
+        "transfer": "Transferencias",
+        "warehouses": "Almacenes",
+        "reports": "Reportes"
+      }
+    },
+    "inventory": {
+      "searchPlaceholder": "Buscar por id de producto o nombre",
+      "empty": "No se encontraron registros de inventario.",
+      "table": {
+        "productId": "Id producto",
+        "productName": "Nombre producto",
+        "stock": "Stock"
+      }
+    },
+    "transfer": {
+      "product": "Producto",
+      "toBranch": "Sucursal destino",
+      "fromWarehouse": "Almacén origen",
+      "toWarehouse": "Almacén destino",
+      "quantity": "Cantidad",
+      "notes": "Notas",
+      "requireApproval": "Requiere aprobación",
+      "submit": "Crear transferencia",
+      "selectProduct": "Seleccione un producto",
+      "selectBranch": "Seleccione una sucursal",
+      "selectWarehouse": "Seleccione un almacén",
+      "validation": {
+        "required": "Todos los campos de transferencia son obligatorios.",
+        "userRequired": "Se requiere un usuario autenticado para crear la transferencia."
+      }
+    },
+    "warehouses": {
+      "empty": "No se encontraron almacenes.",
+      "table": {
+        "code": "Código",
+        "name": "Nombre",
+        "status": "Estado",
+        "options": "Opciones"
+      },
+      "fields": {
+        "code": "Código",
+        "name": "Nombre",
+        "description": "Descripción",
+        "isActive": "Activo"
+      },
+      "actions": {
+        "newWarehouse": "Nuevo almacén"
+      },
+      "messages": {
+        "createSuccess": "Almacén creado correctamente.",
+        "createError": "No se pudo crear el almacén.",
+        "updateSuccess": "Almacén actualizado correctamente.",
+        "updateError": "No se pudo actualizar el almacén.",
+        "deleteSuccess": "Almacén eliminado correctamente.",
+        "deleteError": "No se pudo eliminar el almacén.",
+        "editDescriptionWarning": "La API actual no devuelve la descripción del almacén. Debe ingresarla nuevamente antes de guardar."
+      },
+      "validation": {
+        "requiredCreate": "Código, nombre y descripción son obligatorios.",
+        "requiredUpdate": "Código, nombre y descripción son obligatorios."
+      },
+      "modal": {
+        "createTitle": "Crear almacén",
+        "createDescription": "Registre un nuevo almacén para esta sucursal.",
+        "editTitle": "Editar almacén",
+        "editDescription": "Actualice la información del almacén."
+      }
+    },
+    "reports": {
+      "fields": {
+        "from": "Desde",
+        "to": "Hasta",
+        "compareBranch": "Comparar con"
+      },
+      "placeholders": {
+        "selectBranch": "Seleccione una sucursal"
+      },
+      "actions": {
+        "loadReport": "Cargar reporte",
+        "compare": "Comparar",
+        "exportPdf": "Exportar PDF",
+        "exportExcel": "Exportar Excel"
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el reporte de ventas.",
+        "compareError": "No se pudo cargar el reporte comparativo.",
+        "exportPdfError": "No se pudo exportar el reporte PDF.",
+        "exportExcelError": "No se pudo exportar el reporte Excel."
+      },
+      "metrics": {
+        "ordersCount": "Cantidad de órdenes",
+        "totalSales": "Ventas totales",
+        "averageOrder": "Promedio por orden"
+      },
+      "compare": {
+        "totalSalesDiff": "Diferencia de ventas totales",
+        "ordersCountDiff": "Diferencia en cantidad de órdenes"
+      }
+    }
   }
 }

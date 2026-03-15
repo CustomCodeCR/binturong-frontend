@@ -8,7 +8,7 @@ import type {
   RoleCreateResponse,
   RolesBrowseQuery,
   RoleUpdateRequest,
-  RoleAddScopesRequest,
+  RoleSetScopesRequest,
 } from "@/core/interfaces/roles";
 
 type NoContent = Record<string, never>;
@@ -51,8 +51,8 @@ export const RolesService = {
     });
   },
 
-  addScopes(id: string, payload: RoleAddScopesRequest): Promise<NoContent> {
-    return callEndpoint<NoContent, RoleAddScopesRequest>(
+  setScopes(id: string, payload: RoleSetScopesRequest): Promise<NoContent> {
+    return callEndpoint<NoContent, RoleSetScopesRequest>(
       Endpoints.addScopesToRole,
       {
         params: { id },

@@ -1225,4 +1225,9 @@ export const Endpoints: Record<string, Endpoint> = {
         "application/vnd.ms-excel, application/octet-stream, application/xls",
     },
   },
+  getScopes: {
+    method: "GET",
+    path: "/api/security/scopes",
+    headers: { Accept: "application/json" },
+  },
 };

@@ -158,5 +158,82 @@
     "of": "de",
     "previous": "Anterior",
     "next": "Siguiente"
+  },
+  "roles": {
+    "title": "Roles",
+    "subtitle": "Administre roles, permisos y trazabilidad de permisos.",
+    "searchPlaceholder": "Buscar por nombre del rol",
+    "empty": "No se encontraron roles.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "status": "Estado",
+      "scopes": "Permisos",
+      "options": "Opciones"
+    },
+    "fields": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "isActive": "Activo",
+      "scopes": "Permisos"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newRole": "Nuevo rol",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios",
+      "exportPdf": "Exportar PDF",
+      "exportExcel": "Exportar Excel"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los roles.",
+      "createSuccess": "Rol creado correctamente.",
+      "createError": "No se pudo crear el rol.",
+      "updateSuccess": "Rol actualizado correctamente.",
+      "updateError": "No se pudo actualizar el rol.",
+      "deactivateSuccess": "Rol desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el rol.",
+      "reactivateSuccess": "Rol reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el rol."
+    },
+    "validation": {
+      "requiredCreate": "Nombre y descripción son obligatorios.",
+      "requiredUpdate": "Nombre y descripción son obligatorios.",
+      "scopesHint": "Seleccione uno o más permisos existentes.",
+      "loadingScopes": "Cargando permisos..."
+    },
+    "modal": {
+      "createTitle": "Crear rol",
+      "createDescription": "Cree un nuevo rol y asigne permisos por acción.",
+      "editTitle": "Editar rol",
+      "editDescription": "Actualice la información del rol y los permisos asignados."
+    },
+    "drawer": {
+      "title": "Detalle de rol",
+      "description": "Revise permisos y trazabilidad de auditoría para {role}.",
+      "tabs": {
+        "details": "Detalle",
+        "audit": "Bitácora"
+      }
+    },
+    "audit": {
+      "empty": "No se encontraron registros de auditoría.",
+      "module": "Módulo",
+      "entity": "Entidad",
+      "dataBefore": "Datos antes",
+      "dataAfter": "Datos después",
+      "ip": "IP",
+      "userAgent": "Navegador / Agente",
+      "noData": "Sin datos"
+    }
   }
 }

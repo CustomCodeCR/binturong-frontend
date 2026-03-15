@@ -1,11 +1,6 @@
-// -------------------- Models --------------------
+import type { Scope } from "@/core/interfaces/scopes";
 
-export interface Scope {
-  id: string | null;
-  scopeId: string;
-  code: string;
-  description: string | null;
-}
+// -------------------- Models --------------------
 
 export interface Role {
   id: string; // e.g. "role:<uuid>"
@@ -42,6 +37,6 @@ export interface RoleUpdateRequest {
 
 // -------------------- Scopes --------------------
 
-export interface RoleAddScopesRequest {
+export interface RoleSetScopesRequest {
   scopeIds: string[];
 }

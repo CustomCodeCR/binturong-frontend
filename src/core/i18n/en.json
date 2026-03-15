@@ -158,5 +158,82 @@
     "of": "of",
     "previous": "Previous",
     "next": "Next"
+  },
+  "roles": {
+    "title": "Roles",
+    "subtitle": "Manage roles, permissions, and permission traceability.",
+    "searchPlaceholder": "Search by role name",
+    "empty": "No roles found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "name": "Name",
+      "description": "Description",
+      "status": "Status",
+      "scopes": "Permissions",
+      "options": "Options"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "isActive": "Active",
+      "scopes": "Permissions"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newRole": "New Role",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "close": "Close",
+      "saveChanges": "Save Changes",
+      "exportPdf": "Export PDF",
+      "exportExcel": "Export Excel"
+    },
+    "messages": {
+      "loadError": "Could not load roles.",
+      "createSuccess": "Role created successfully.",
+      "createError": "Could not create role.",
+      "updateSuccess": "Role updated successfully.",
+      "updateError": "Could not update role.",
+      "deactivateSuccess": "Role deactivated successfully.",
+      "deactivateError": "Could not deactivate role.",
+      "reactivateSuccess": "Role reactivated successfully.",
+      "reactivateError": "Could not reactivate role."
+    },
+    "validation": {
+      "requiredCreate": "Name and description are required.",
+      "requiredUpdate": "Name and description are required.",
+      "scopesHint": "Select one or more existing permissions.",
+      "loadingScopes": "Loading permissions..."
+    },
+    "modal": {
+      "createTitle": "Create Role",
+      "createDescription": "Create a new role and assign action permissions.",
+      "editTitle": "Edit Role",
+      "editDescription": "Update role information and assigned permissions."
+    },
+    "drawer": {
+      "title": "Role Details",
+      "description": "Review permissions and audit traceability for {role}.",
+      "tabs": {
+        "details": "Details",
+        "audit": "Audit Log"
+      }
+    },
+    "audit": {
+      "empty": "No audit entries found.",
+      "module": "Module",
+      "entity": "Entity",
+      "dataBefore": "Data Before",
+      "dataAfter": "Data After",
+      "ip": "IP",
+      "userAgent": "User Agent",
+      "noData": "No data"
+    }
   }
 }

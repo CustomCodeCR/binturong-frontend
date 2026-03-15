@@ -1,386 +1,653 @@
-<!-- src/modules/roles/views/RolesView.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import BTButton from '@/shared/components/ui/BTButton.vue';
-import BTHeader from '@/shared/components/ui/BTHeader.vue';
-import BTModal from '@/shared/components/ui/BTModal.vue';
-import BTInput from '@/shared/components/ui/BTInput.vue';
-import BTTextArea from '@/shared/components/ui/BTTextArea.vue';
-import BTCheckBox from '@/shared/components/ui/BTCheckBox.vue';
+import { computed, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
-import { useRoleList } from '../composables/useRoleList';
-import { useRoleForm } from '../composables/useRoleForm';
-import { useRolePermissions } from '../composables/useRolePermissions';
+import { RolesService } from "@/core/services/rolesService";
+import { useModalStore } from "@/core/stores/modalStore";
+import { useDrawerStore } from "@/core/stores/drawerStore";
+import { useToastStore } from "@/core/stores/toastStore";
 
-import type { Role } from '@/core/interfaces/roles';
+import RoleCreateModal from "@/modules/roles/components/RoleCreateModal.vue";
+import RoleEditModal from "@/modules/roles/components/RoleEditModal.vue";
+import RoleDetailsDrawer from "@/modules/roles/components/RoleDetailsDrawer.vue";
+import RoleActionMenu from "@/modules/roles/components/RoleActionMenu.vue";
 
-// Composables
-const {
-  filteredRoles,
-  isLoading,
-  searchQuery,
-  statusFilter,
-  fetchRoles,
-  deleteRole,
-} = useRoleList();
+import type { Role } from "@/core/interfaces/roles";
+import type { Scope } from "@/core/interfaces/scopes";
 
-const {
-  formData,
-  isSubmitting,
-  createRole,
-  updateRole,
-  resetForm,
-  loadRole,
-  getError,
-  markAsTouched,
-} = useRoleForm();
+interface RoleSuccessPayload {
+  roleId: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  scopes: Scope[];
+}
 
-const {
-  scopesByModule,
-  isLoading: isLoadingScopes,
-  isSaving: isSavingScopes,
-  fetchAvailableScopes,
-  loadRoleScopes,
-  toggleScope,
-  isScopeSelected,
-  saveRoleScopes,
-} = useRolePermissions();
+const { t } = useI18n();
 
-// Local state
-const showFormModal = ref(false);
-const showPermissionsModal = ref(false);
-const showDeleteModal = ref(false);
-const isEditing = ref(false);
-const selectedRoleId = ref<string | null>(null);
-const roleToDelete = ref<string | null>(null);
+const modalStore = useModalStore();
+const drawerStore = useDrawerStore();
+const toastStore = useToastStore();
 
-// Init
-onMounted(async () => {
-  await Promise.all([fetchRoles(), fetchAvailableScopes()]);
+const roles = ref<Role[]>([]);
+const loading = ref(false);
+const search = ref("");
+const page = ref(1);
+const pageSize = ref(10);
+
+const MAX_PAGE = 100;
+
+const pageNumbers = computed(() => {
+  const current = page.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(MAX_PAGE, current + 2);
+
+  const pages: number[] = [];
+  for (let i = start; i <= end; i += 1) {
+    pages.push(i);
+  }
+
+  return pages;
 });
 
-// Actions - Form
-function openCreate() {
-  isEditing.value = false;
-  selectedRoleId.value = null;
-  resetForm();
-  showFormModal.value = true;
+const canGoPrevious = computed(() => page.value > 1);
+const canGoNext = computed(() => page.value < MAX_PAGE);
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function openEdit(role: Role) {
-  isEditing.value = true;
-  selectedRoleId.value = role.id;
-  loadRole(role);
-  showFormModal.value = true;
+function normalizeScopeIds(scopes?: Scope[]): string[] {
+  return (scopes ?? [])
+    .map((scope) => String(scope.scopeId ?? "").trim())
+    .filter((scopeId) => scopeId.length > 0)
+    .sort();
 }
 
-async function handleSubmit() {
-  const success = isEditing.value
-    ? await updateRole(selectedRoleId.value!)
-    : await createRole();
+function sameScopes(left?: Scope[], right?: Scope[]): boolean {
+  const a = normalizeScopeIds(left);
+  const b = normalizeScopeIds(right);
 
-  if (success) {
-    showFormModal.value = false;
-    await fetchRoles();
+  if (a.length !== b.length) {
+    return false;
   }
+
+  return a.every((value, index) => value === b[index]);
 }
 
-// Actions - Permissions
-function openPermissions(role: Role) {
-  selectedRoleId.value = role.id;
-  loadRoleScopes(role.scopes);
-  showPermissionsModal.value = true;
+async function fetchRoles(): Promise<Role[]> {
+  return await RolesService.browse({
+    page: page.value,
+    pageSize: pageSize.value,
+    search: search.value.trim() || undefined,
+  });
 }
 
-async function handleSavePermissions() {
-  if (!selectedRoleId.value) return;
-
-  const success = await saveRoleScopes(selectedRoleId.value);
-
-  if (success) {
-    showPermissionsModal.value = false;
-    await fetchRoles();
-  }
+function replaceRoles(nextRoles: Role[]) {
+  roles.value = [...nextRoles];
 }
 
-// Actions - Delete
-function openDeleteConfirm(roleId: string) {
-  roleToDelete.value = roleId;
-  showDeleteModal.value = true;
-}
-
-async function handleDelete() {
-  if (!roleToDelete.value) return;
+async function loadRoles() {
+  loading.value = true;
 
   try {
-    await deleteRole(roleToDelete.value);
-    showDeleteModal.value = false;
-    roleToDelete.value = null;
-  } catch (err) {
-    // Error handled by composable
+    replaceRoles(await fetchRoles());
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("roles.messages.loadError"),
+    });
+  } finally {
+    loading.value = false;
   }
 }
+
+function patchRoleInList(payload: RoleSuccessPayload) {
+  const existingIndex = roles.value.findIndex(
+    (role) => role.roleId === payload.roleId,
+  );
+
+  if (existingIndex >= 0) {
+    replaceRoles(
+      roles.value.map((role) =>
+        role.roleId === payload.roleId
+          ? {
+              ...role,
+              roleId: payload.roleId,
+              name: payload.name,
+              description: payload.description,
+              isActive: payload.isActive,
+              scopes: payload.scopes,
+            }
+          : role,
+      ),
+    );
+
+    return;
+  }
+
+  replaceRoles([
+    {
+      id: `role:${payload.roleId}`,
+      roleId: payload.roleId,
+      name: payload.name,
+      description: payload.description,
+      isActive: payload.isActive,
+      scopes: payload.scopes,
+    },
+    ...roles.value,
+  ]);
+}
+
+function patchRoleStatusInList(roleId: string, isActive: boolean) {
+  replaceRoles(
+    roles.value.map((role) =>
+      role.roleId === roleId
+        ? {
+            ...role,
+            isActive,
+          }
+        : role,
+    ),
+  );
+}
+
+function hasRoleReachedExpectedState(
+  fetchedRoles: Role[],
+  expected: RoleSuccessPayload,
+): boolean {
+  const fetchedRole = fetchedRoles.find(
+    (role) => role.roleId === expected.roleId,
+  );
+  if (!fetchedRole) {
+    return false;
+  }
+
+  return (
+    fetchedRole.name === expected.name &&
+    fetchedRole.description === expected.description &&
+    fetchedRole.isActive === expected.isActive &&
+    sameScopes(fetchedRole.scopes, expected.scopes)
+  );
+}
+
+async function reloadRolesUntil(
+  predicate: (fetchedRoles: Role[]) => boolean,
+  options?: {
+    attempts?: number;
+    delayMs?: number;
+  },
+) {
+  const attempts = options?.attempts ?? 12;
+  const delayMs = options?.delayMs ?? 500;
+
+  loading.value = true;
+
+  try {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const fetchedRoles = await fetchRoles();
+
+      if (predicate(fetchedRoles)) {
+        replaceRoles(fetchedRoles);
+        return;
+      }
+
+      if (attempt < attempts - 1) {
+        await sleep(delayMs);
+      }
+    }
+
+    replaceRoles(await fetchRoles());
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("roles.messages.loadError"),
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function openCreateModal() {
+  modalStore.open({
+    component: RoleCreateModal,
+    onSuccess: async (payload?: RoleSuccessPayload) => {
+      if (payload?.roleId) {
+        patchRoleInList(payload);
+      }
+
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("roles.messages.createSuccess"),
+      });
+
+      if (payload?.roleId) {
+        await reloadRolesUntil(
+          (fetchedRoles) =>
+            fetchedRoles.some((role) => role.roleId === payload.roleId),
+          {
+            attempts: 12,
+            delayMs: 500,
+          },
+        );
+        return;
+      }
+
+      await loadRoles();
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("roles.messages.createError"),
+      });
+    },
+  });
+}
+
+function openEditModal(role: Role) {
+  modalStore.open({
+    component: RoleEditModal,
+    props: {
+      roleId: role.roleId,
+    },
+    onSuccess: async (payload?: RoleSuccessPayload) => {
+      if (!payload?.roleId) {
+        await loadRoles();
+        return;
+      }
+
+      patchRoleInList(payload);
+
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("roles.messages.updateSuccess"),
+      });
+
+      await reloadRolesUntil(
+        (fetchedRoles) => hasRoleReachedExpectedState(fetchedRoles, payload),
+        {
+          attempts: 12,
+          delayMs: 500,
+        },
+      );
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("roles.messages.updateError"),
+      });
+    },
+  });
+}
+
+function openDetailsDrawer(role: Role) {
+  drawerStore.openDrawer({
+    component: RoleDetailsDrawer,
+    props: {
+      roleId: role.roleId,
+    },
+    title: t("roles.drawer.title"),
+    description: t("roles.drawer.description", { role: role.name }),
+    direction: "right",
+    size: "xl",
+  });
+}
+
+async function toggleRoleStatus(role: Role) {
+  const nextIsActive = !role.isActive;
+
+  try {
+    await RolesService.update(role.roleId, {
+      name: role.name,
+      description: role.description,
+      isActive: nextIsActive,
+    });
+
+    patchRoleStatusInList(role.roleId, nextIsActive);
+
+    toastStore.addToast({
+      severity: "success",
+      title: t("toast.success"),
+      message: role.isActive
+        ? t("roles.messages.deactivateSuccess")
+        : t("roles.messages.reactivateSuccess"),
+    });
+
+    await reloadRolesUntil(
+      (fetchedRoles) => {
+        const fetchedRole = fetchedRoles.find(
+          (item) => item.roleId === role.roleId,
+        );
+        return fetchedRole?.isActive === nextIsActive;
+      },
+      {
+        attempts: 12,
+        delayMs: 500,
+      },
+    );
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: role.isActive
+        ? t("roles.messages.deactivateError")
+        : t("roles.messages.reactivateError"),
+    });
+  }
+}
+
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
+    return;
+  }
+
+  page.value = targetPage;
+  await loadRoles();
+}
+
+async function goPrevious() {
+  if (!canGoPrevious.value) return;
+  await goToPage(page.value - 1);
+}
+
+async function goNext() {
+  if (!canGoNext.value) return;
+  await goToPage(page.value + 1);
+}
+
+async function onSearch() {
+  page.value = 1;
+  await loadRoles();
+}
+
+watch(pageSize, async () => {
+  page.value = 1;
+  await loadRoles();
+});
+
+onMounted(async () => {
+  await loadRoles();
+});
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- HEADER -->
-    <BTHeader>
-      <template #title>Control de Roles</template>
-      <template #description>Administra roles y permisos del sistema</template>
-      <template #action>
-        <BTButton variant="blue" size="md" shape="rounded" @click="openCreate">
-          + Nuevo Rol
-        </BTButton>
-      </template>
-    </BTHeader>
-
-    <!-- FILTERS -->
-    <div class="bg-white p-4 rounded-xl border flex gap-4">
-      <input
-        v-model="searchQuery"
-        placeholder="Buscar rol..."
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-      />
-
-      <select
-        v-model="statusFilter"
-        class="px-4 py-2 border border-gray-300 rounded-lg"
-      >
-        <option value="all">Todos los estados</option>
-        <option value="active">Activos</option>
-        <option value="inactive">Inactivos</option>
-      </select>
+  <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
+    <div class="mb-bt-spacing-24 shrink-0">
+      <h1 class="text-2xl font-bt-bold text-bt-primary-700">
+        {{ $t("roles.title") }}
+      </h1>
+      <p class="text-bt-grey-600 mt-bt-spacing-8">
+        {{ $t("roles.subtitle") }}
+      </p>
     </div>
 
-    <!-- LOADING -->
-    <div v-if="isLoading" class="text-center py-12">
-      <div
-        class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"
-      />
-    </div>
-
-    <!-- EMPTY STATE -->
     <div
-      v-else-if="filteredRoles.length === 0"
-      class="text-center py-12 text-gray-500"
-    >
-      No se encontraron roles
-    </div>
-
-    <!-- ROLES GRID -->
-    <div
-      v-else
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
       <div
-        v-for="role in filteredRoles"
-        :key="role.id"
-        class="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-shadow"
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div class="flex items-start justify-between mb-3">
-          <h3 class="text-lg font-bold text-gray-900">{{ role.name }}</h3>
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+        >
+          <input
+            v-model="search"
+            type="text"
+            :placeholder="$t('roles.searchPlaceholder')"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
+          />
+
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("roles.actions.search") }}
+          </button>
+
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+            @click="loadRoles"
+          >
+            {{ $t("roles.actions.refresh") }}
+          </button>
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openCreateModal"
+          >
+            {{ $t("roles.actions.newRole") }}
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 min-h-0 overflow-auto">
+        <div
+          v-if="loading"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
+        >
+          {{ $t("common.loading") }}
+        </div>
+
+        <table v-else class="w-full border-collapse min-w-[900px]">
+          <thead class="sticky top-0 z-10">
+            <tr class="bg-bt-primary-50 text-left">
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("roles.table.name") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("roles.table.description") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("roles.table.status") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("roles.table.scopes") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("roles.table.options") }}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              v-for="role in roles"
+              :key="role.roleId"
+              class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
+            >
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
+              >
+                {{ role.name }}
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ role.description }}
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <span
+                  :class="[
+                    'inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold',
+                    role.isActive
+                      ? 'bg-bt-success-100 text-bt-success-700'
+                      : 'bg-bt-error-100 text-bt-error-700',
+                  ]"
+                >
+                  {{
+                    role.isActive
+                      ? $t("roles.status.active")
+                      : $t("roles.status.inactive")
+                  }}
+                </span>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <div class="flex flex-wrap gap-bt-spacing-8">
+                  <span
+                    v-for="scope in role.scopes.slice(0, 4)"
+                    :key="scope.scopeId"
+                    class="px-bt-spacing-8 py-bt-spacing-4 rounded-full bg-bt-primary-100 text-bt-primary-700 text-xs"
+                  >
+                    {{ scope.code }}
+                  </span>
+
+                  <span
+                    v-if="role.scopes.length > 4"
+                    class="px-bt-spacing-8 py-bt-spacing-4 rounded-full bg-bt-grey-200 text-bt-grey-700 text-xs"
+                  >
+                    +{{ role.scopes.length - 4 }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <RoleActionMenu
+                  :items="[
+                    {
+                      label: t('roles.actions.viewDetails'),
+                      action: () => openDetailsDrawer(role),
+                    },
+                    {
+                      label: t('roles.actions.edit'),
+                      action: () => openEditModal(role),
+                    },
+                    {
+                      label: role.isActive
+                        ? t('roles.actions.deactivate')
+                        : t('roles.actions.reactivate'),
+                      action: () => toggleRoleStatus(role),
+                      danger: role.isActive,
+                    },
+                  ]"
+                >
+                  <template #trigger>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center w-10 h-10 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition"
+                    >
+                      <MoreHorizontal :size="18" />
+                    </button>
+                  </template>
+                </RoleActionMenu>
+              </td>
+            </tr>
+
+            <tr v-if="!roles.length && !loading">
+              <td
+                colspan="5"
+                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+              >
+                {{ $t("roles.empty") }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
+        <div class="text-sm text-bt-grey-600">
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+          <button
+            type="button"
+            :disabled="!canGoPrevious"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goPrevious"
+          >
+            <ChevronLeft :size="16" />
+            <span>{{ $t("pagination.previous") }}</span>
+          </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
           <span
-            :class="[
-              'px-2 py-1 rounded text-xs font-semibold',
-              role.isActive
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-600',
-            ]"
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
           >
-            {{ role.isActive ? 'Activo' : 'Inactivo' }}
+            ...
           </span>
-        </div>
 
-        <p class="text-sm text-gray-600 mb-4">
-          {{ role.description || 'Sin descripción' }}
-        </p>
-
-        <div class="text-xs text-gray-500 mb-4">
-          {{ role.scopes.length }} permiso(s) asignado(s)
-        </div>
-
-        <div class="flex gap-2">
           <button
-            @click="openEdit(role)"
-            class="text-blue-600 hover:text-blue-800 font-semibold text-sm"
+            v-for="pageNumber in pageNumbers"
+            :key="pageNumber"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
+            @click="goToPage(pageNumber)"
           >
-            Editar
+            {{ pageNumber }}
           </button>
-          <button
-            @click="openPermissions(role)"
-            class="text-violet-600 hover:text-violet-800 font-semibold text-sm"
+
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
           >
-            Permisos
+            ...
+          </span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
           </button>
+
           <button
-            @click="openDeleteConfirm(role.id)"
-            class="text-red-600 hover:text-red-800 font-semibold text-sm"
+            type="button"
+            :disabled="!canGoNext"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goNext"
           >
-            Eliminar
+            <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
           </button>
         </div>
       </div>
     </div>
-
-    <!-- FORM MODAL -->
-    <BTModal
-      v-model="showFormModal"
-      :title="isEditing ? 'Editar Rol' : 'Nuevo Rol'"
-      size="medium"
-    >
-      <template #default>
-        <div class="space-y-4">
-          <BTInput
-            v-model:inputValue="formData.name"
-            :error="!!getError('name')"
-            :errorMsg="getError('name')"
-            @blur="markAsTouched('name')"
-          >
-            <template #label>Nombre del rol</template>
-          </BTInput>
-
-          <BTTextArea
-            v-model:textValue="formData.description"
-            :error="!!getError('description')"
-            :errorMsg="getError('description')"
-            @blur="markAsTouched('description')"
-            :rows="3"
-          >
-            <template #label>Descripción</template>
-          </BTTextArea>
-
-          <BTCheckBox v-model:checked="formData.isActive">
-            <template #label>Rol activo</template>
-          </BTCheckBox>
-        </div>
-      </template>
-
-      <template #footer>
-        <BTButton
-          variant="secondary"
-          size="md"
-          shape="rounded"
-          @click="showFormModal = false"
-        >
-          Cancelar
-        </BTButton>
-
-        <BTButton
-          variant="blue"
-          size="md"
-          shape="rounded"
-          :loading="isSubmitting"
-          :disabled="isSubmitting"
-          @click="handleSubmit"
-        >
-          {{ isEditing ? 'Actualizar' : 'Crear' }}
-        </BTButton>
-      </template>
-    </BTModal>
-
-    <!-- PERMISSIONS MODAL -->
-    <BTModal
-      v-model="showPermissionsModal"
-      title="Configurar Permisos"
-      size="large"
-    >
-      <template #default>
-        <div v-if="isLoadingScopes" class="text-center py-8">
-          <div
-            class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
-          />
-        </div>
-
-        <div v-else class="space-y-6">
-          <div
-            v-for="(scopes, module) in scopesByModule"
-            :key="module"
-            class="border rounded-lg p-4"
-          >
-            <h4 class="font-bold text-gray-900 mb-3 capitalize">
-              {{ module }}
-            </h4>
-
-            <div class="space-y-2">
-              <label
-                v-for="scope in scopes"
-                :key="scope.scopeId"
-                class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  :checked="isScopeSelected(scope.scopeId)"
-                  @change="toggleScope(scope.scopeId)"
-                  class="rounded"
-                />
-                <div class="flex-1">
-                  <div class="font-medium text-sm">{{ scope.code }}</div>
-                  <div v-if="scope.description" class="text-xs text-gray-500">
-                    {{ scope.description }}
-                  </div>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <template #footer>
-        <BTButton
-          variant="secondary"
-          size="md"
-          shape="rounded"
-          @click="showPermissionsModal = false"
-        >
-          Cancelar
-        </BTButton>
-
-        <BTButton
-          variant="blue"
-          size="md"
-          shape="rounded"
-          :loading="isSavingScopes"
-          :disabled="isSavingScopes"
-          @click="handleSavePermissions"
-        >
-          Guardar Permisos
-        </BTButton>
-      </template>
-    </BTModal>
-
-    <!-- DELETE CONFIRMATION MODAL -->
-    <BTModal
-      v-model="showDeleteModal"
-      title="Confirmar Eliminación"
-      size="small"
-    >
-      <template #default>
-        <p class="text-gray-700">
-          ¿Estás seguro de que deseas eliminar este rol? Esta acción no se puede
-          deshacer.
-        </p>
-      </template>
-
-      <template #footer>
-        <BTButton
-          variant="secondary"
-          size="md"
-          shape="rounded"
-          @click="showDeleteModal = false"
-        >
-          Cancelar
-        </BTButton>
-
-        <BTButton
-          variant="destructive"
-          size="md"
-          shape="rounded"
-          @click="handleDelete"
-        >
-          Eliminar
-        </BTButton>
-      </template>
-    </BTModal>
-  </div>
+  </section>
 </template>
+

@@ -90,6 +90,11 @@ export const router = createRouter({
           component: () =>
             import("@/modules/paymentMethods/views/PaymentMehodsView.vue"),
         },
+        {
+          path: "inventory/products",
+          name: "products",
+          component: () => import("@/modules/products/views/ProductsView.vue"),
+        },
       ],
     },
   ],

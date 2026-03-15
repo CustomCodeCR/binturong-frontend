@@ -482,5 +482,129 @@
       "title": "Payment Method Details",
       "description": "Review payment method details for {description}."
     }
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Manage product catalog, stock visibility, transfers, and physical adjustments.",
+    "searchPlaceholder": "Search by SKU, barcode, or product name",
+    "empty": "No products found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "sku": "SKU",
+      "name": "Name",
+      "category": "Category",
+      "uom": "UOM",
+      "tax": "Tax",
+      "basePrice": "Base Price",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "sku": "SKU",
+      "barcode": "Barcode",
+      "name": "Name",
+      "description": "Description",
+      "category": "Category",
+      "uom": "Unit of Measure",
+      "tax": "Tax",
+      "basePrice": "Base Price",
+      "averageCost": "Average Cost",
+      "isService": "Is Service",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newProduct": "New Product",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load products.",
+      "createSuccess": "Product created successfully.",
+      "createError": "Could not create product.",
+      "updateSuccess": "Product updated successfully.",
+      "updateError": "Could not update product.",
+      "deactivateSuccess": "Product deactivated successfully.",
+      "deactivateError": "Could not deactivate product.",
+      "reactivateSuccess": "Product reactivated successfully.",
+      "reactivateError": "Could not reactivate product.",
+      "deleteSuccess": "Product deleted successfully.",
+      "deleteError": "Could not delete product.",
+      "transferSuccess": "Inventory transfer created successfully.",
+      "transferError": "Could not create inventory transfer.",
+      "adjustmentSuccess": "Physical adjustment registered successfully.",
+      "adjustmentError": "Could not register physical adjustment."
+    },
+    "validation": {
+      "requiredCreate": "All product fields are required.",
+      "requiredUpdate": "All product fields are required."
+    },
+    "modal": {
+      "createTitle": "Create Product",
+      "createDescription": "Register a new product in the catalog.",
+      "editTitle": "Edit Product",
+      "editDescription": "Update product information."
+    },
+    "drawer": {
+      "title": "Product Details",
+      "description": "Review product information, stock, transfers, and physical adjustments for {name}.",
+      "tabs": {
+        "details": "Details",
+        "stock": "Stock",
+        "transfer": "Transfers",
+        "adjustment": "Physical Adjustment"
+      }
+    },
+    "stock": {
+      "branch": "Branch",
+      "branchCode": "Branch Code",
+      "stock": "Stock",
+      "warehouses": "Warehouses",
+      "empty": "No stock records found.",
+      "note": "Current services provide stock by branch. Warehouse-level stock detail is not available with the current API."
+    },
+    "transfer": {
+      "fromBranch": "From Branch",
+      "toBranch": "To Branch",
+      "fromWarehouse": "From Warehouse",
+      "toWarehouse": "To Warehouse",
+      "quantity": "Quantity",
+      "notes": "Notes",
+      "requireApproval": "Require approval",
+      "submit": "Create Transfer",
+      "selectBranch": "Select a branch",
+      "selectWarehouse": "Select a warehouse",
+      "validation": {
+        "required": "All transfer fields are required.",
+        "userRequired": "A logged-in user is required to create a transfer."
+      }
+    },
+    "adjustment": {
+      "branch": "Branch",
+      "warehouse": "Warehouse",
+      "countedStock": "Counted Stock",
+      "unitCost": "Unit Cost",
+      "justification": "Justification",
+      "submit": "Register Adjustment",
+      "selectBranch": "Select a branch",
+      "selectWarehouse": "Select a warehouse",
+      "validation": {
+        "required": "All physical adjustment fields are required."
+      }
+    },
+    "placeholders": {
+      "selectCategory": "Select a category",
+      "selectUom": "Select a unit of measure",
+      "selectTax": "Select a tax"
+    }
   }
 }

@@ -115,8 +115,15 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
       {
         labelKey: "sidebar.inventory",
         icon: Boxes,
-        to: "/inventory",
         name: "inventory",
+        children: [
+          {
+            labelKey: "sidebar.products",
+            icon: Package,
+            to: "/inventory/products",
+            name: "products",
+          },
+        ],
       },
       {
         labelKey: "sidebar.contracts",
@@ -170,12 +177,6 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
             icon: Tags,
             to: "/data/categories",
             name: "categories",
-          },
-          {
-            labelKey: "sidebar.products",
-            icon: Package,
-            to: "/data/products",
-            name: "products",
           },
           {
             labelKey: "sidebar.paymentMethods",

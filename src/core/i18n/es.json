@@ -482,5 +482,129 @@
       "title": "Detalle de método de pago",
       "description": "Revise los detalles del método de pago {description}."
     }
+  },
+  "products": {
+    "title": "Productos",
+    "subtitle": "Administre el catálogo de productos, visibilidad de stock, transferencias y ajustes físicos.",
+    "searchPlaceholder": "Buscar por SKU, código de barras o nombre",
+    "empty": "No se encontraron productos.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "sku": "SKU",
+      "name": "Nombre",
+      "category": "Categoría",
+      "uom": "Unidad",
+      "tax": "Impuesto",
+      "basePrice": "Precio Base",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "sku": "SKU",
+      "barcode": "Código de barras",
+      "name": "Nombre",
+      "description": "Descripción",
+      "category": "Categoría",
+      "uom": "Unidad de medida",
+      "tax": "Impuesto",
+      "basePrice": "Precio base",
+      "averageCost": "Costo promedio",
+      "isService": "Es servicio",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newProduct": "Nuevo producto",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los productos.",
+      "createSuccess": "Producto creado correctamente.",
+      "createError": "No se pudo crear el producto.",
+      "updateSuccess": "Producto actualizado correctamente.",
+      "updateError": "No se pudo actualizar el producto.",
+      "deactivateSuccess": "Producto desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el producto.",
+      "reactivateSuccess": "Producto reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el producto.",
+      "deleteSuccess": "Producto eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el producto.",
+      "transferSuccess": "Transferencia de inventario creada correctamente.",
+      "transferError": "No se pudo crear la transferencia de inventario.",
+      "adjustmentSuccess": "Ajuste físico registrado correctamente.",
+      "adjustmentError": "No se pudo registrar el ajuste físico."
+    },
+    "validation": {
+      "requiredCreate": "Todos los campos del producto son obligatorios.",
+      "requiredUpdate": "Todos los campos del producto son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear producto",
+      "createDescription": "Registre un nuevo producto en el catálogo.",
+      "editTitle": "Editar producto",
+      "editDescription": "Actualice la información del producto."
+    },
+    "drawer": {
+      "title": "Detalle de producto",
+      "description": "Revise información del producto, stock, transferencias y ajustes físicos de {name}.",
+      "tabs": {
+        "details": "Detalle",
+        "stock": "Stock",
+        "transfer": "Transferencias",
+        "adjustment": "Ajuste físico"
+      }
+    },
+    "stock": {
+      "branch": "Sucursal",
+      "branchCode": "Código sucursal",
+      "stock": "Stock",
+      "warehouses": "Almacenes",
+      "empty": "No se encontraron registros de stock.",
+      "note": "Los servicios actuales devuelven stock por sucursal. El detalle por almacén no está disponible con la API actual."
+    },
+    "transfer": {
+      "fromBranch": "Sucursal origen",
+      "toBranch": "Sucursal destino",
+      "fromWarehouse": "Almacén origen",
+      "toWarehouse": "Almacén destino",
+      "quantity": "Cantidad",
+      "notes": "Notas",
+      "requireApproval": "Requiere aprobación",
+      "submit": "Crear transferencia",
+      "selectBranch": "Seleccione una sucursal",
+      "selectWarehouse": "Seleccione un almacén",
+      "validation": {
+        "required": "Todos los campos de transferencia son obligatorios.",
+        "userRequired": "Se requiere un usuario autenticado para crear una transferencia."
+      }
+    },
+    "adjustment": {
+      "branch": "Sucursal",
+      "warehouse": "Almacén",
+      "countedStock": "Stock contado",
+      "unitCost": "Costo unitario",
+      "justification": "Justificación",
+      "submit": "Registrar ajuste",
+      "selectBranch": "Seleccione una sucursal",
+      "selectWarehouse": "Seleccione un almacén",
+      "validation": {
+        "required": "Todos los campos del ajuste físico son obligatorios."
+      }
+    },
+    "placeholders": {
+      "selectCategory": "Seleccione una categoría",
+      "selectUom": "Seleccione una unidad de medida",
+      "selectTax": "Seleccione un impuesto"
+    }
   }
 }

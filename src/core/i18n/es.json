@@ -758,6 +758,7 @@
         "rejectionReason": "Motivo de rechazo"
       },
       "lines": {
+        "quantity": "Cantidad",
         "product": "Producto",
         "fromWarehouse": "Almacén origen",
         "toWarehouse": "Almacén destino",

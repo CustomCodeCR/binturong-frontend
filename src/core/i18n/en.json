@@ -757,6 +757,7 @@
         "rejectionReason": "Rejection reason"
       },
       "lines": {
+        "quantity": "Quantity",
         "product": "Product",
         "fromWarehouse": "From warehouse",
         "toWarehouse": "To warehouse",

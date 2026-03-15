@@ -29,7 +29,7 @@
     "taxes": "Impuestos",
     "categories": "Categorías",
     "products": "Productos",
-    "warehouses": "Almacenes"
+    "paymentMethods": "Metodos de Pagos"
   },
   "common": {
     "loading": "Cargando...",
@@ -234,6 +234,70 @@
       "ip": "IP",
       "userAgent": "Navegador / Agente",
       "noData": "Sin datos"
+    }
+  },
+  "taxes": {
+    "title": "Impuestos",
+    "subtitle": "Administre el catálogo de impuestos, porcentajes y estado.",
+    "searchPlaceholder": "Buscar por nombre o código del impuesto",
+    "empty": "No se encontraron impuestos.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "name": "Nombre",
+      "code": "Código",
+      "percentage": "Porcentaje",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "name": "Nombre",
+      "code": "Código",
+      "percentage": "Porcentaje",
+      "isActive": "Activo",
+      "createdAt": "Fecha de creación",
+      "updatedAt": "Fecha de actualización"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newTax": "Nuevo impuesto",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los impuestos.",
+      "createSuccess": "Impuesto creado correctamente.",
+      "createError": "No se pudo crear el impuesto.",
+      "updateSuccess": "Impuesto actualizado correctamente.",
+      "updateError": "No se pudo actualizar el impuesto.",
+      "deactivateSuccess": "Impuesto desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el impuesto.",
+      "reactivateSuccess": "Impuesto reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el impuesto.",
+      "deleteSuccess": "Impuesto eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el impuesto."
+    },
+    "validation": {
+      "requiredCreate": "Nombre, código y porcentaje son obligatorios.",
+      "requiredUpdate": "Nombre, código y porcentaje son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear impuesto",
+      "createDescription": "Registre un nuevo impuesto en el catálogo.",
+      "editTitle": "Editar impuesto",
+      "editDescription": "Actualice la información del impuesto."
+    },
+    "drawer": {
+      "title": "Detalle de impuesto",
+      "description": "Revise los detalles del impuesto {name}."
     }
   }
 }

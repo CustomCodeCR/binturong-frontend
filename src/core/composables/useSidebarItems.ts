@@ -24,7 +24,6 @@ import {
   BadgePercent,
   Tags,
   Package,
-  Archive,
 } from "lucide-vue-next";
 
 export interface SidebarItem {
@@ -179,10 +178,10 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
             name: "products",
           },
           {
-            labelKey: "sidebar.warehouses",
-            icon: Archive,
-            to: "/data/warehouses",
-            name: "warehouses",
+            labelKey: "sidebar.paymentMethods",
+            icon: CreditCard,
+            to: "/data/payment-methods",
+            name: "payment-methods",
           },
         ],
       },

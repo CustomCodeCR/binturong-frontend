@@ -67,6 +67,11 @@ export const router = createRouter({
           name: "audits",
           component: () => import("@/modules/auditlog/views/AuditoriaView.vue"),
         },
+        {
+          path: "data/taxes",
+          name: "taxes",
+          component: () => import("@/modules/taxes/views/TaxesView.vue"),
+        },
       ],
     },
   ],

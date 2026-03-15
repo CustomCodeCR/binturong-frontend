@@ -29,7 +29,7 @@
     "taxes": "Taxes",
     "categories": "Categories",
     "products": "Products",
-    "warehouses": "Warehouses"
+    "paymentMethods": "Payment Methods"
   },
   "common": {
     "loading": "Loading...",
@@ -234,6 +234,70 @@
       "ip": "IP",
       "userAgent": "User Agent",
       "noData": "No data"
+    }
+  },
+  "taxes": {
+    "title": "Taxes",
+    "subtitle": "Manage tax catalog, percentages, and status.",
+    "searchPlaceholder": "Search by tax name or code",
+    "empty": "No taxes found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "name": "Name",
+      "code": "Code",
+      "percentage": "Percentage",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "percentage": "Percentage",
+      "isActive": "Active",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newTax": "New Tax",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load taxes.",
+      "createSuccess": "Tax created successfully.",
+      "createError": "Could not create tax.",
+      "updateSuccess": "Tax updated successfully.",
+      "updateError": "Could not update tax.",
+      "deactivateSuccess": "Tax deactivated successfully.",
+      "deactivateError": "Could not deactivate tax.",
+      "reactivateSuccess": "Tax reactivated successfully.",
+      "reactivateError": "Could not reactivate tax.",
+      "deleteSuccess": "Tax deleted successfully.",
+      "deleteError": "Could not delete tax."
+    },
+    "validation": {
+      "requiredCreate": "Name, code, and percentage are required.",
+      "requiredUpdate": "Name, code, and percentage are required."
+    },
+    "modal": {
+      "createTitle": "Create Tax",
+      "createDescription": "Register a new tax in the catalog.",
+      "editTitle": "Edit Tax",
+      "editDescription": "Update tax information."
+    },
+    "drawer": {
+      "title": "Tax Details",
+      "description": "Review tax details for {name}."
     }
   }
 }

@@ -72,6 +72,18 @@ export const router = createRouter({
           name: "taxes",
           component: () => import("@/modules/taxes/views/TaxesView.vue"),
         },
+        {
+          path: "data/unit-of-measure",
+          name: "unit-of-measure",
+          component: () =>
+            import("@/modules/unitOfMeasure/views/UnitOfMeasureView.vue"),
+        },
+        {
+          path: "data/categories",
+          name: "categories",
+          component: () =>
+            import("@/modules/categories/views/CategoriesView.vue"),
+        },
       ],
     },
   ],

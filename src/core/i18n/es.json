@@ -299,5 +299,127 @@
       "title": "Detalle de impuesto",
       "description": "Revise los detalles del impuesto {name}."
     }
+  },
+  "unitsOfMeasure": {
+    "title": "Unidades de Medida",
+    "subtitle": "Administre el catálogo de unidades de medida y su estado.",
+    "searchPlaceholder": "Buscar por código o nombre",
+    "empty": "No se encontraron unidades de medida.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "code": "Código",
+      "name": "Nombre",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "isActive": "Activo",
+      "createdAt": "Fecha de creación",
+      "updatedAt": "Fecha de actualización"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newUnit": "Nueva unidad",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las unidades de medida.",
+      "createSuccess": "Unidad de medida creada correctamente.",
+      "createError": "No se pudo crear la unidad de medida.",
+      "updateSuccess": "Unidad de medida actualizada correctamente.",
+      "updateError": "No se pudo actualizar la unidad de medida.",
+      "deactivateSuccess": "Unidad de medida desactivada correctamente.",
+      "deactivateError": "No se pudo desactivar la unidad de medida.",
+      "reactivateSuccess": "Unidad de medida reactivada correctamente.",
+      "reactivateError": "No se pudo reactivar la unidad de medida.",
+      "deleteSuccess": "Unidad de medida eliminada correctamente.",
+      "deleteError": "No se pudo eliminar la unidad de medida."
+    },
+    "validation": {
+      "requiredCreate": "Código y nombre son obligatorios.",
+      "requiredUpdate": "Código y nombre son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear unidad de medida",
+      "createDescription": "Registre una nueva unidad de medida.",
+      "editTitle": "Editar unidad de medida",
+      "editDescription": "Actualice la información de la unidad de medida."
+    },
+    "drawer": {
+      "title": "Detalle de unidad de medida",
+      "description": "Revise los detalles de la unidad de medida {name}."
+    }
+  },
+  "categories": {
+    "title": "Categorías",
+    "subtitle": "Administre el catálogo de categorías de productos y su estado.",
+    "searchPlaceholder": "Buscar por nombre de categoría",
+    "empty": "No se encontraron categorías.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newCategory": "Nueva categoría",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las categorías.",
+      "createSuccess": "Categoría creada correctamente.",
+      "createError": "No se pudo crear la categoría.",
+      "updateSuccess": "Categoría actualizada correctamente.",
+      "updateError": "No se pudo actualizar la categoría.",
+      "deactivateSuccess": "Categoría desactivada correctamente.",
+      "deactivateError": "No se pudo desactivar la categoría.",
+      "reactivateSuccess": "Categoría reactivada correctamente.",
+      "reactivateError": "No se pudo reactivar la categoría.",
+      "deleteSuccess": "Categoría eliminada correctamente.",
+      "deleteError": "No se pudo eliminar la categoría."
+    },
+    "validation": {
+      "requiredCreate": "Nombre y descripción son obligatorios.",
+      "requiredUpdate": "Nombre y descripción son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear categoría",
+      "createDescription": "Registre una nueva categoría de producto.",
+      "editTitle": "Editar categoría",
+      "editDescription": "Actualice la información de la categoría."
+    },
+    "drawer": {
+      "title": "Detalle de categoría",
+      "description": "Revise los detalles de la categoría {name}."
+    }
   }
 }

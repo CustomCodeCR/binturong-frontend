@@ -299,5 +299,127 @@
       "title": "Tax Details",
       "description": "Review tax details for {name}."
     }
+  },
+  "unitsOfMeasure": {
+    "title": "Units of Measure",
+    "subtitle": "Manage unit of measure catalog and status.",
+    "searchPlaceholder": "Search by code or name",
+    "empty": "No units of measure found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "code": "Code",
+      "name": "Name",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "isActive": "Active",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newUnit": "New Unit",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load units of measure.",
+      "createSuccess": "Unit of measure created successfully.",
+      "createError": "Could not create unit of measure.",
+      "updateSuccess": "Unit of measure updated successfully.",
+      "updateError": "Could not update unit of measure.",
+      "deactivateSuccess": "Unit of measure deactivated successfully.",
+      "deactivateError": "Could not deactivate unit of measure.",
+      "reactivateSuccess": "Unit of measure reactivated successfully.",
+      "reactivateError": "Could not reactivate unit of measure.",
+      "deleteSuccess": "Unit of measure deleted successfully.",
+      "deleteError": "Could not delete unit of measure."
+    },
+    "validation": {
+      "requiredCreate": "Code and name are required.",
+      "requiredUpdate": "Code and name are required."
+    },
+    "modal": {
+      "createTitle": "Create Unit of Measure",
+      "createDescription": "Register a new unit of measure.",
+      "editTitle": "Edit Unit of Measure",
+      "editDescription": "Update unit of measure information."
+    },
+    "drawer": {
+      "title": "Unit of Measure Details",
+      "description": "Review unit of measure details for {name}."
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "subtitle": "Manage product category catalog and status.",
+    "searchPlaceholder": "Search by category name",
+    "empty": "No categories found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "name": "Name",
+      "description": "Description",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newCategory": "New Category",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load categories.",
+      "createSuccess": "Category created successfully.",
+      "createError": "Could not create category.",
+      "updateSuccess": "Category updated successfully.",
+      "updateError": "Could not update category.",
+      "deactivateSuccess": "Category deactivated successfully.",
+      "deactivateError": "Could not deactivate category.",
+      "reactivateSuccess": "Category reactivated successfully.",
+      "reactivateError": "Could not reactivate category.",
+      "deleteSuccess": "Category deleted successfully.",
+      "deleteError": "Could not delete category."
+    },
+    "validation": {
+      "requiredCreate": "Name and description are required.",
+      "requiredUpdate": "Name and description are required."
+    },
+    "modal": {
+      "createTitle": "Create Category",
+      "createDescription": "Register a new product category.",
+      "editTitle": "Edit Category",
+      "editDescription": "Update category information."
+    },
+    "drawer": {
+      "title": "Category Details",
+      "description": "Review category details for {name}."
+    }
   }
 }

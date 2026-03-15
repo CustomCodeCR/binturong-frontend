@@ -1,470 +1,657 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
-import BTButton from "@/shared/components/ui/BTButton.vue"
-import BTHeader from "@/shared/components/ui/BTHeader.vue"
-import BTModal from "@/shared/components/ui/BTModal.vue"
-import BTInput from "@/shared/components/ui/BTInput.vue"
-import BTCheckBox from "@/shared/components/ui/BTCheckBox.vue"
+import { computed, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
-import { useUserList } from "../composables/useUserList"
-import { useUserForm } from "../composables/useUserForm"
-import { useRoles } from "../composables/useRoles"
+import { UsersService } from "@/core/services/usersService";
+import { useModalStore } from "@/core/stores/modalStore";
+import { useDrawerStore } from "@/core/stores/drawerStore";
+import { useToastStore } from "@/core/stores/toastStore";
 
-import type { User } from "@/core/interfaces/users"
+import UserCreateModal from "@/modules/users/components/UserCreateModal.vue";
+import UserEditModal from "@/modules/users/components/UserEditModal.vue";
+import UserDetailsDrawer from "@/modules/users/components/UserDetailsDrawer.vue";
+import UserActionMenu from "@/modules/users/components/UserActionMenu.vue";
 
+import type { User } from "@/core/interfaces/users";
 
-/* -------------------------
-COMPOSABLES
---------------------------*/
+interface UserEditSuccessPayload {
+  userId: string;
+  username: string;
+  email: string;
+  isActive: boolean;
+  lastLogin: string | null;
+  mustChangePassword: boolean;
+  failedAttempts: number;
+  lockedUntil: string | null;
+  roles: Array<{
+    roleId: string;
+    name: string;
+  }>;
+}
 
-const {
-  filteredUsers,
-  isLoading,
-  searchQuery,
-  statusFilter,
-  roleFilter,
-  fetchUsers,
-} = useUserList()
+const { t } = useI18n();
 
-const {
-  formData,
-  isSubmitting,
-  passwordsMatch,
-  createUser,
-  updateUser,
-  resetForm,
-  loadUser,
-  getError,
-  markAsTouched,
-} = useUserForm()
+const modalStore = useModalStore();
+const drawerStore = useDrawerStore();
+const toastStore = useToastStore();
 
-const { roles, fetchRoles } = useRoles()
+const users = ref<User[]>([]);
+const loading = ref(false);
+const search = ref("");
+const page = ref(1);
+const pageSize = ref(10);
 
+const MAX_PAGE = 100;
 
-/* -------------------------
-LOCAL STATE
---------------------------*/
+const pageNumbers = computed(() => {
+  const current = page.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(MAX_PAGE, current + 2);
 
-const showModal = ref(false)
-const isEditing = ref(false)
-const selectedUserId = ref<string | null>(null)
+  const pages: number[] = [];
+  for (let index = start; index <= end; index += 1) {
+    pages.push(index);
+  }
 
+  return pages;
+});
 
-/* -------------------------
-INIT
---------------------------*/
+const canGoPrevious = computed(() => page.value > 1);
+const canGoNext = computed(() => page.value < MAX_PAGE);
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeRoleIds(
+  roles?: Array<{ roleId: string; name: string }>,
+): string[] {
+  return (roles ?? [])
+    .map((role) => String(role.roleId ?? "").trim())
+    .filter((roleId) => roleId.length > 0)
+    .sort();
+}
+
+function sameRoles(
+  left?: Array<{ roleId: string; name: string }>,
+  right?: Array<{ roleId: string; name: string }>,
+): boolean {
+  const a = normalizeRoleIds(left);
+  const b = normalizeRoleIds(right);
+
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return a.every((value, index) => value === b[index]);
+}
+
+function sameNullableDate(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean {
+  return String(left ?? "") === String(right ?? "");
+}
+
+async function fetchUsers(): Promise<User[]> {
+  return await UsersService.browse({
+    page: page.value,
+    pageSize: pageSize.value,
+    search: search.value.trim() || undefined,
+  });
+}
+
+async function loadUsers() {
+  loading.value = true;
+
+  try {
+    users.value = await fetchUsers();
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("users.messages.loadError"),
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function replaceUsers(nextUsers: User[]) {
+  users.value = [...nextUsers];
+}
+
+function patchUserInList(payload: UserEditSuccessPayload) {
+  replaceUsers(
+    users.value.map((user) =>
+      user.userId === payload.userId
+        ? {
+            ...user,
+            userId: payload.userId,
+            username: payload.username,
+            email: payload.email,
+            isActive: payload.isActive,
+            lastLogin: payload.lastLogin,
+            mustChangePassword: payload.mustChangePassword,
+            failedAttempts: payload.failedAttempts,
+            lockedUntil: payload.lockedUntil,
+            roles: payload.roles,
+          }
+        : user,
+    ),
+  );
+}
+
+function patchUserStatusInList(userId: string, isActive: boolean) {
+  replaceUsers(
+    users.value.map((user) =>
+      user.userId === userId
+        ? {
+            ...user,
+            isActive,
+          }
+        : user,
+    ),
+  );
+}
+
+function hasUserReachedExpectedState(
+  fetchedUsers: User[],
+  expected: UserEditSuccessPayload,
+): boolean {
+  const fetchedUser = fetchedUsers.find(
+    (user) => user.userId === expected.userId,
+  );
+  if (!fetchedUser) {
+    return false;
+  }
+
+  return (
+    fetchedUser.username === expected.username &&
+    fetchedUser.email === expected.email &&
+    fetchedUser.isActive === expected.isActive &&
+    fetchedUser.mustChangePassword === expected.mustChangePassword &&
+    fetchedUser.failedAttempts === expected.failedAttempts &&
+    sameNullableDate(fetchedUser.lastLogin, expected.lastLogin) &&
+    sameNullableDate(fetchedUser.lockedUntil, expected.lockedUntil) &&
+    sameRoles(fetchedUser.roles, expected.roles)
+  );
+}
+
+async function reloadUsersUntil(
+  predicate: (fetchedUsers: User[]) => boolean,
+  options?: {
+    attempts?: number;
+    delayMs?: number;
+  },
+) {
+  const attempts = options?.attempts ?? 10;
+  const delayMs = options?.delayMs ?? 500;
+
+  loading.value = true;
+
+  try {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const fetchedUsers = await fetchUsers();
+
+      if (predicate(fetchedUsers)) {
+        replaceUsers(fetchedUsers);
+        return;
+      }
+
+      if (attempt < attempts - 1) {
+        await sleep(delayMs);
+      }
+    }
+
+    replaceUsers(await fetchUsers());
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("users.messages.loadError"),
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function openCreateModal() {
+  modalStore.open({
+    component: UserCreateModal,
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("users.messages.createSuccess"),
+      });
+
+      await loadUsers();
+      await reloadUsersUntil(
+        (fetchedUsers) => fetchedUsers.length >= users.value.length,
+        {
+          attempts: 10,
+          delayMs: 500,
+        },
+      );
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("users.messages.createError"),
+      });
+    },
+  });
+}
+
+function openEditModal(user: User) {
+  modalStore.open({
+    component: UserEditModal,
+    props: {
+      userId: user.userId,
+    },
+    onSuccess: async (payload?: UserEditSuccessPayload) => {
+      if (!payload?.userId) {
+        await loadUsers();
+        return;
+      }
+
+      patchUserInList(payload);
+
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("users.messages.updateSuccess"),
+      });
+
+      await reloadUsersUntil(
+        (fetchedUsers) => hasUserReachedExpectedState(fetchedUsers, payload),
+        {
+          attempts: 12,
+          delayMs: 500,
+        },
+      );
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("users.messages.updateError"),
+      });
+    },
+  });
+}
+
+function openDetailsDrawer(user: User) {
+  drawerStore.openDrawer({
+    component: UserDetailsDrawer,
+    props: {
+      userId: user.userId,
+    },
+    title: t("users.drawer.title"),
+    description: t("users.drawer.description", { username: user.username }),
+    direction: "right",
+    size: "xl",
+  });
+}
+
+async function toggleUserStatus(user: User) {
+  const nextIsActive = !user.isActive;
+
+  try {
+    await UsersService.update(user.userId, {
+      username: user.username,
+      email: user.email,
+      isActive: nextIsActive,
+      lastLogin: user.lastLogin,
+      mustChangePassword: user.mustChangePassword,
+      failedAttempts: user.failedAttempts,
+      lockedUntil: user.lockedUntil,
+    });
+
+    patchUserStatusInList(user.userId, nextIsActive);
+
+    toastStore.addToast({
+      severity: "success",
+      title: t("toast.success"),
+      message: user.isActive
+        ? t("users.messages.deactivateSuccess")
+        : t("users.messages.reactivateSuccess"),
+    });
+
+    await reloadUsersUntil(
+      (fetchedUsers) => {
+        const fetchedUser = fetchedUsers.find(
+          (item) => item.userId === user.userId,
+        );
+        return fetchedUser?.isActive === nextIsActive;
+      },
+      {
+        attempts: 12,
+        delayMs: 500,
+      },
+    );
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: user.isActive
+        ? t("users.messages.deactivateError")
+        : t("users.messages.reactivateError"),
+    });
+  }
+}
+
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
+    return;
+  }
+
+  page.value = targetPage;
+  await loadUsers();
+}
+
+async function goPrevious() {
+  if (!canGoPrevious.value) {
+    return;
+  }
+
+  await goToPage(page.value - 1);
+}
+
+async function goNext() {
+  if (!canGoNext.value) {
+    return;
+  }
+
+  await goToPage(page.value + 1);
+}
+
+async function onSearch() {
+  page.value = 1;
+  await loadUsers();
+}
+
+watch(pageSize, async () => {
+  page.value = 1;
+  await loadUsers();
+});
 
 onMounted(async () => {
-  await Promise.all([
-    fetchUsers(),
-    fetchRoles()
-  ])
-})
-
-
-/* -------------------------
-ACTIONS
---------------------------*/
-
-function openCreate() {
-
-  isEditing.value = false
-  selectedUserId.value = null
-
-  resetForm()
-
-  showModal.value = true
-}
-
-
-function openEdit(user: User) {
-
-  isEditing.value = true
-  selectedUserId.value = user.id
-
-  loadUser(user)
-
-  showModal.value = true
-}
-
-
-async function handleSubmit() {
-
-  let success = false
-
-  if (isEditing.value) {
-
-    if (!selectedUserId.value) return
-
-    success = await updateUser(selectedUserId.value)
-
-  } else {
-
-    success = await createUser()
-
-  }
-
-  if (success) {
-
-    showModal.value = false
-
-    await fetchUsers()
-
-  }
-
-}
-
-
-/* -------------------------
-TABLE CONFIG
---------------------------*/
-
-const tableHeaders = [
-  { key: "username", label: "Username", sortable: true },
-  { key: "email", label: "Email", sortable: true },
-  { key: "roles", label: "Roles", sortable: false },
-  { key: "status", label: "Status", sortable: false },
-  { key: "actions", label: "Actions", sortable: false },
-]
-
-const tableRows = computed(() => filteredUsers.value)
-
+  await loadUsers();
+});
 </script>
 
-
 <template>
-  <div class="space-y-6">
-
-    <!-- HEADER -->
-
-    <BTHeader>
-
-      <template #title>
-        Users
-      </template>
-
-      <template #description>
-        Manage system users and roles
-      </template>
-
-      <template #action>
-
-        <BTButton
-          variant="blue"
-          size="md"
-          shape="rounded"
-          @click="openCreate"
-        >
-          + New User
-        </BTButton>
-
-      </template>
-
-    </BTHeader>
-
-
-    <!-- FILTERS -->
-
-    <div class="bg-white p-4 rounded-xl border flex gap-4">
-
-      <input
-        v-model="searchQuery"
-        placeholder="Search username or email..."
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-      />
-
-      <select
-        v-model="statusFilter"
-        class="px-4 py-2 border border-gray-300 rounded-lg"
-      >
-        <option value="all">All Status</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-      </select>
-
-      <select
-        v-model="roleFilter"
-        class="px-4 py-2 border border-gray-300 rounded-lg"
-      >
-        <option value="all">All Roles</option>
-
-        <option
-          v-for="r in roles"
-          :key="r.roleId"
-          :value="r.name"
-        >
-          {{ r.name }}
-        </option>
-
-      </select>
-
+  <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
+    <div class="mb-bt-spacing-24 shrink-0">
+      <h1 class="text-2xl font-bt-bold text-bt-primary-700">
+        {{ $t("users.title") }}
+      </h1>
+      <p class="text-bt-grey-600 mt-bt-spacing-8">
+        {{ $t("users.subtitle") }}
+      </p>
     </div>
 
-
-    <!-- TABLE -->
-
-    <div class="bg-white rounded-xl border overflow-hidden">
-
-      <!-- loading -->
-
-      <div
-        v-if="isLoading"
-        class="text-center py-12"
-      >
-        <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"/>
-      </div>
-
-
-      <!-- empty -->
-
-      <div
-        v-else-if="tableRows.length === 0"
-        class="text-center py-12 text-gray-500"
-      >
-        No users found
-      </div>
-
-
-      <!-- table -->
-
-      <table
-        v-else
-        class="w-full text-left"
-      >
-
-        <thead>
-
-          <tr class="bg-gray-50 border-b text-xs uppercase text-gray-600">
-
-            <th class="p-4 font-semibold">Username</th>
-            <th class="p-4 font-semibold">Email</th>
-            <th class="p-4 font-semibold">Roles</th>
-            <th class="p-4 font-semibold">Status</th>
-            <th class="p-4 font-semibold text-right">Actions</th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody>
-
-          <tr
-            v-for="user in tableRows"
-            :key="user.id"
-            class="border-b hover:bg-gray-50 transition-colors"
-          >
-
-            <td class="p-4 font-semibold text-gray-900">
-              {{ user.username }}
-            </td>
-
-            <td class="p-4 text-gray-600">
-              {{ user.email }}
-            </td>
-
-
-            <td class="p-4">
-
-              <span
-                v-for="r in user.roles || []"
-                :key="r.roleId"
-                class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold mr-1"
-              >
-                {{ r.name }}
-              </span>
-
-            </td>
-
-
-            <td class="p-4">
-
-              <span
-                :class="[
-                  'inline-block px-2 py-1 rounded text-xs font-semibold',
-                  user.isActive
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-600'
-                ]"
-              >
-                {{ user.isActive ? "Active" : "Inactive" }}
-              </span>
-
-            </td>
-
-
-            <td class="p-4 text-right">
-
-              <button
-                @click="openEdit(user)"
-                class="text-blue-600 hover:text-blue-800 font-semibold text-sm"
-              >
-                Edit
-              </button>
-
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-
-    <!-- MODAL -->
-
-    <BTModal
-      v-model="showModal"
-      :title="isEditing ? 'Edit User' : 'Create User'"
-      size="medium"
+    <div
+      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <div
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+      >
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+        >
+          <input
+            v-model="search"
+            type="text"
+            :placeholder="$t('users.searchPlaceholder')"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
+          />
 
-      <template #default>
-
-        <div class="space-y-4">
-
-
-          <BTInput
-            v-model:inputValue="formData.username"
-            :error="!!getError('username')"
-            :errorMsg="getError('username')"
-            @blur="markAsTouched('username')"
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
           >
-            <template #label>
-              Username
-            </template>
-          </BTInput>
+            {{ $t("users.actions.search") }}
+          </button>
 
-
-          <BTInput
-            v-model:inputValue="formData.email"
-            inputType="email"
-            :error="!!getError('email')"
-            :errorMsg="getError('email')"
-            @blur="markAsTouched('email')"
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+            @click="loadUsers"
           >
-            <template #label>
-              Email
-            </template>
-          </BTInput>
-
-
-          <!-- PASSWORDS -->
-
-          <template v-if="!isEditing">
-
-            <BTInput
-              v-model:inputValue="formData.password"
-              inputType="password"
-              :error="!!getError('password')"
-              :errorMsg="getError('password')"
-              @blur="markAsTouched('password')"
-            >
-              <template #label>
-                Password
-              </template>
-            </BTInput>
-
-
-            <BTInput
-              v-model:inputValue="formData.confirmPassword"
-              inputType="password"
-              :error="!passwordsMatch"
-              :errorMsg="!passwordsMatch ? 'Passwords do not match' : ''"
-              @blur="markAsTouched('confirmPassword')"
-            >
-              <template #label>
-                Confirm Password
-              </template>
-            </BTInput>
-
-          </template>
-
-
-          <!-- ROLES -->
-
-          <div class="border border-gray-300 p-4 rounded-lg">
-
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-              Roles *
-            </label>
-
-            <div class="space-y-2">
-
-              <label
-                v-for="role in roles"
-                :key="role.roleId"
-                class="flex items-center gap-2 text-sm"
-              >
-
-                <input
-                  type="checkbox"
-                  :value="role"
-                  v-model="formData.roles"
-                  class="rounded"
-                />
-
-                <span>{{ role.name }}</span>
-
-              </label>
-
-            </div>
-
-          </div>
-
-
-          <BTCheckBox v-model:checked="formData.isActive">
-
-            <template #label>
-              Account active
-            </template>
-
-          </BTCheckBox>
-
-
-          <BTCheckBox v-model:checked="formData.mustChangePassword">
-
-            <template #label>
-              Require password change on first login
-            </template>
-
-          </BTCheckBox>
-
+            {{ $t("users.actions.refresh") }}
+          </button>
         </div>
 
-      </template>
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
 
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openCreateModal"
+          >
+            {{ $t("users.actions.newUser") }}
+          </button>
+        </div>
+      </div>
 
-      <!-- FOOTER -->
-
-      <template #footer>
-
-        <BTButton
-          variant="secondary"
-          size="md"
-          shape="rounded"
-          @click="showModal = false"
+      <div class="flex-1 min-h-0 overflow-auto">
+        <div
+          v-if="loading"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
         >
-          Cancel
-        </BTButton>
+          {{ $t("common.loading") }}
+        </div>
 
+        <table v-else class="w-full border-collapse min-w-[900px]">
+          <thead class="sticky top-0 z-10">
+            <tr class="bg-bt-primary-50 text-left">
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("users.table.username") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("users.table.email") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("users.table.status") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("users.table.roles") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("users.table.lastLogin") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("users.table.options") }}
+              </th>
+            </tr>
+          </thead>
 
-        <BTButton
-          variant="blue"
-          size="md"
-          shape="rounded"
-          :loading="isSubmitting"
-          :disabled="isSubmitting"
-          @click="handleSubmit"
-        >
-          {{ isEditing ? "Update" : "Create" }}
-        </BTButton>
+          <tbody>
+            <tr
+              v-for="user in users"
+              :key="user.userId"
+              class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
+            >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ user.username }}
+              </td>
 
-      </template>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ user.email }}
+              </td>
 
-    </BTModal>
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <span
+                  :class="[
+                    'inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold',
+                    user.isActive
+                      ? 'bg-bt-success-100 text-bt-success-700'
+                      : 'bg-bt-error-100 text-bt-error-700',
+                  ]"
+                >
+                  {{
+                    user.isActive
+                      ? $t("users.status.active")
+                      : $t("users.status.inactive")
+                  }}
+                </span>
+              </td>
 
-  </div>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <div class="flex flex-wrap gap-bt-spacing-8">
+                  <span
+                    v-for="role in user.roles"
+                    :key="role.roleId"
+                    class="px-bt-spacing-8 py-bt-spacing-4 rounded-full bg-bt-primary-100 text-bt-primary-700 text-xs"
+                  >
+                    {{ role.name }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ user.lastLogin ?? $t("users.never") }}
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <UserActionMenu
+                  :items="[
+                    {
+                      label: t('users.actions.viewDetails'),
+                      action: () => openDetailsDrawer(user),
+                    },
+                    {
+                      label: t('users.actions.edit'),
+                      action: () => openEditModal(user),
+                    },
+                    {
+                      label: user.isActive
+                        ? t('users.actions.deactivate')
+                        : t('users.actions.reactivate'),
+                      action: () => toggleUserStatus(user),
+                      danger: user.isActive,
+                    },
+                  ]"
+                >
+                  <template #trigger>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center w-10 h-10 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition"
+                    >
+                      <MoreHorizontal :size="18" />
+                    </button>
+                  </template>
+                </UserActionMenu>
+              </td>
+            </tr>
+
+            <tr v-if="!users.length && !loading">
+              <td
+                colspan="6"
+                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+              >
+                {{ $t("users.empty") }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
+        <div class="text-sm text-bt-grey-600">
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+          <button
+            type="button"
+            :disabled="!canGoPrevious"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goPrevious"
+          >
+            <ChevronLeft :size="16" />
+            <span>{{ $t("pagination.previous") }}</span>
+          </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >
+            ...
+          </span>
+
+          <button
+            v-for="pageNumber in pageNumbers"
+            :key="pageNumber"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
+            @click="goToPage(pageNumber)"
+          >
+            {{ pageNumber }}
+          </button>
+
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >
+            ...
+          </span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
+
+          <button
+            type="button"
+            :disabled="!canGoNext"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goNext"
+          >
+            <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 </template>

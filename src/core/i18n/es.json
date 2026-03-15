@@ -6,5 +6,157 @@
   "password": "Contraseña",
   "email": "Correo Electrónico",
   "businessName": "Cerrajería Calderón",
-  "acceso": "Acceso al sistema"
+  "acceso": "Acceso al sistema",
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "users": "Usuarios",
+    "roles": "Roles",
+    "purchases": "Compras",
+    "sales": "Ventas",
+    "branches": "Sucursales",
+    "clients": "Clientes",
+    "suppliers": "Proveedores",
+    "employees": "Empleados",
+    "payroll": "Planillas",
+    "inventory": "Inventario",
+    "contracts": "Contratos",
+    "billing": "Facturación",
+    "payments": "Pagos",
+    "quotes": "Cotizaciones",
+    "audits": "Auditorías",
+    "data": "Datos",
+    "unitOfMeasure": "Unidad de Medida",
+    "taxes": "Impuestos",
+    "categories": "Categorías",
+    "products": "Productos",
+    "warehouses": "Almacenes"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "yes": "Sí",
+    "no": "No",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "edit": "Editar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "search": "Buscar",
+    "refresh": "Recargar",
+    "actions": "Acciones",
+    "status": "Estado",
+    "details": "Detalle",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "required": "Requerido"
+  },
+  "toast": {
+    "success": "Éxito",
+    "error": "Error",
+    "warning": "Advertencia",
+    "info": "Información"
+  },
+  "auth": {
+    "messages": {
+      "loginSuccess": "Inicio de sesión exitoso."
+    },
+    "errors": {
+      "requiredFields": "Todos los campos son obligatorios.",
+      "loginFailed": "No se pudo iniciar sesión.",
+      "invalidCredentials": "Credenciales inválidas.",
+      "sessionExpired": "La sesión ha expirado.",
+      "network": "Ocurrió un error de red. Inténtelo nuevamente."
+    }
+  },
+  "users": {
+    "title": "Usuarios",
+    "subtitle": "Administre usuarios del sistema, roles y estado de cuenta.",
+    "searchPlaceholder": "Buscar por nombre de usuario o correo",
+    "empty": "No se encontraron usuarios.",
+    "never": "Nunca",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "username": "Usuario",
+      "email": "Correo",
+      "status": "Estado",
+      "roles": "Roles",
+      "lastLogin": "Último acceso",
+      "options": "Opciones"
+    },
+    "fields": {
+      "username": "Usuario",
+      "email": "Correo",
+      "password": "Contraseña",
+      "roles": "Roles",
+      "isActive": "Activo",
+      "mustChangePassword": "Debe cambiar contraseña",
+      "failedAttempts": "Intentos fallidos",
+      "lockedUntil": "Bloqueado hasta",
+      "createdAt": "Fecha de creación",
+      "updatedAt": "Fecha de actualización",
+      "scopes": "Scopes"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newUser": "Nuevo usuario",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "close": "Cerrar",
+      "save": "Guardar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los usuarios.",
+      "createSuccess": "Usuario creado correctamente.",
+      "createError": "No se pudo crear el usuario.",
+      "updateSuccess": "Usuario actualizado correctamente.",
+      "updateError": "No se pudo actualizar el usuario.",
+      "deactivateSuccess": "Usuario desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el usuario.",
+      "reactivateSuccess": "Usuario reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el usuario."
+    },
+    "validation": {
+      "requiredCreate": "Usuario, correo y contraseña son obligatorios.",
+      "requiredUpdate": "Usuario y correo son obligatorios.",
+      "rolesHint": "Solo se pueden asignar roles existentes.",
+      "loadingRoles": "Cargando roles..."
+    },
+    "modal": {
+      "createTitle": "Crear usuario",
+      "createDescription": "Registre un nuevo usuario y asigne uno o más roles existentes.",
+      "editTitle": "Editar usuario",
+      "editDescription": "Actualice la información del usuario y los roles asignados."
+    },
+    "drawer": {
+      "title": "Detalle de usuario",
+      "description": "Revise perfil, roles, scopes y bitácora de {username}.",
+      "tabs": {
+        "details": "Detalle",
+        "audit": "Bitácora"
+      }
+    },
+    "audit": {
+      "empty": "No se encontraron registros de auditoría.",
+      "module": "Módulo",
+      "entity": "Entidad",
+      "dataBefore": "Datos antes",
+      "dataAfter": "Datos después",
+      "ip": "IP",
+      "userAgent": "Navegador / Agente",
+      "noData": "Sin datos"
+    }
+  },
+  "pagination": {
+    "page": "Página",
+    "of": "de",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  }
 }

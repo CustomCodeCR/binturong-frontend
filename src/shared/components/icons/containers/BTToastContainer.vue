@@ -3,7 +3,7 @@ import {
   type Toast,
   type ToastLocation,
   useToastStore,
-} from "@/core/stores/toast";
+} from "@/core/stores/toastStore";
 import { computed } from "vue";
 import BTAlert from "@/shared/components/ui/BTAlert.vue";
 import {

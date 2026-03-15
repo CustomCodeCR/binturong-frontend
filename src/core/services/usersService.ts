@@ -25,14 +25,10 @@ export const UsersService = {
   },
 
   browse(query?: UsersBrowseQuery): Promise<User[]> {
-    // Tu fetchClient recibe endpoint string; para query params
-    // anexamos "?page=...&pageSize=...&search=..."
     const endpointWithQuery =
       Endpoints.browseUsers.path +
       (query ? toQueryString(query as Record<string, unknown>) : "");
 
-    // callEndpoint usa Endpoint, pero aquí necesitamos path ya modificado.
-    // Solución: llamar fetchClient directamente o clonar endpoint con path modificado.
     return callEndpoint<User[]>({
       ...Endpoints.browseUsers,
       path: endpointWithQuery,

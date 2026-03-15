@@ -1,104 +1,150 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import BTButton from "@/shared/components/ui/BTButton.vue";
-import BTInput from "@/shared/components/ui/BTInput.vue";
-import { AuthService } from "@/core/services/authService";
+import { useI18n } from "vue-i18n";
+
+import { useAuthStore } from "@/core/stores/authStore";
+import { useToastStore } from "@/core/stores/toastStore";
+
 import type { LoginRequest } from "@/core/interfaces/auth";
 
 const router = useRouter();
-const auth = AuthService;
+const { t } = useI18n();
 
-const email = ref("admin@system.local");
-const password = ref("Admin123!");
+const authStore = useAuthStore();
+const toastStore = useToastStore();
+
+const email = ref("");
+const password = ref("");
+const showPassword = ref(false);
 const loading = ref(false);
-const error = ref("");
 
-const login = async () => {
-  error.value = "";
+async function login() {
+  const normalizedEmail = email.value.trim();
+  const normalizedPassword = password.value.trim();
 
-  if (!email.value || !password.value) {
-    error.value = "Todos los campos son obligatorios";
+  if (!normalizedEmail || !normalizedPassword) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("auth.errors.requiredFields"),
+    });
     return;
   }
 
   loading.value = true;
+
   try {
     const payload: LoginRequest = {
-      usernameOrEmail: email.value,
-      password: password.value,
+      usernameOrEmail: normalizedEmail,
+      password: normalizedPassword,
     };
 
-    await auth.login(payload);
+    await authStore.login(payload);
+
+    toastStore.addToast({
+      severity: "success",
+      title: t("toast.success"),
+      message: t("auth.messages.loginSuccess"),
+    });
 
     router.push("/home");
-  } catch (e: any) {
-    error.value = e?.message ?? "No se pudo iniciar sesión";
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("auth.errors.loginFailed"),
+    });
   } finally {
     loading.value = false;
   }
-};
+}
 </script>
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-bt-primary-700 to-bt-primary-900"
   >
     <div
-      class="w-full max-w-md bg-slate-900/90 backdrop-blur rounded-2xl shadow-2xl p-8 border border-slate-700"
+      class="w-full max-w-md bg-bt-primary-600/90 backdrop-blur rounded-l shadow-bt-elevation-400 p-bt-spacing-32 border border-bt-primary-400"
     >
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-white">{{ $t("businessName") }}</h1>
-        <p class="text-slate-400 mt-2">{{ $t("acceso") }}</p>
+      <!-- header -->
+
+      <div class="text-center mb-bt-spacing-32">
+        <h1 class="text-3xl font-bt-bold text-bt-white">
+          {{ $t("businessName") }}
+        </h1>
+
+        <p class="text-bt-grey-300 mt-bt-spacing-8">
+          {{ $t("acceso") }}
+        </p>
       </div>
 
-      <div
-        v-if="error"
-        class="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg p-3"
-      >
-        {{ error }}
-      </div>
+      <!-- form -->
 
-      <form @submit.prevent="login" class="space-y-5">
+      <form @submit.prevent="login" class="space-y-bt-spacing-24">
+        <!-- email -->
+
         <div>
-          <label class="block text-sm text-slate-300 mb-1">{{
-            $t("email")
-          }}</label>
-          <BTInput
+          <label class="block text-sm text-bt-grey-200 mb-bt-spacing-8">
+            {{ $t("email") }}
+          </label>
+
+          <input
             v-model="email"
             type="text"
-            variant="login"
+            placeholder="admin@system.local"
             :disabled="loading"
-            :error="!!error"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-800 border border-bt-primary-400 text-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           />
         </div>
 
-        <div>
-          <label class="block text-sm text-slate-300 mb-1">{{
-            $t("password")
-          }}</label>
-          <BTInput
+        <!-- password -->
+
+        <div class="relative">
+          <label class="block text-sm text-bt-grey-200 mb-bt-spacing-8">
+            {{ $t("password") }}
+          </label>
+
+          <input
             v-model="password"
-            type="password"
-            variant="login"
+            :type="showPassword ? 'text' : 'password'"
             :disabled="loading"
-            :error="!!error"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 pr-12 rounded-m bg-bt-primary-800 border border-bt-primary-400 text-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           />
+
+          <!-- toggle -->
+
+          <button
+            type="button"
+            @click="showPassword = !showPassword"
+            class="absolute right-3 top-9 text-bt-grey-400 hover:text-bt-white"
+          >
+            <span v-if="showPassword">🙈</span>
+            <span v-else>👁</span>
+          </button>
         </div>
 
-        <BTButton
-          variant="blue"
-          size="cta"
-          fullWidth
+        <!-- button -->
+
+        <button
           type="submit"
           :disabled="loading"
+          class="w-full py-bt-spacing-12 rounded-m font-bt-semibold bg-bt-accent-500 hover:bg-bt-accent-600 transition-colors text-bt-white disabled:bg-bt-disabled disabled:cursor-not-allowed"
         >
-          <span v-if="!loading">{{ $t("login") }}</span>
-          <span v-else>Cargando...</span>
-        </BTButton>
+          <span v-if="!loading">
+            {{ $t("login") }}
+          </span>
+
+          <span v-else>
+            {{ $t("common.loading") }}
+          </span>
+        </button>
       </form>
 
-      <div class="text-center text-xs text-slate-500 mt-6">
+      <!-- footer -->
+
+      <div class="text-center text-xs text-bt-grey-400 mt-bt-spacing-32">
         {{ $t("copyRigth") }}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import MainLayout from "@/shared/components/layouts/MainLayout.vue";
+import { useAuthStore } from "../stores/authStore";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -8,11 +9,25 @@ export const router = createRouter({
       path: "/login",
       name: "login",
       component: () => import("@/modules/auth/views/LoginView.vue"),
+      meta: {
+        public: true,
+      },
+    },
+
+    {
+      path: "/",
+      redirect: () => {
+        const authStore = useAuthStore();
+        return authStore.hasValidSession() ? "/home" : "/login";
+      },
     },
 
     {
       path: "/",
       component: MainLayout,
+      meta: {
+        requiresAuth: true,
+      },
       children: [
         {
           path: "home",
@@ -31,54 +46,9 @@ export const router = createRouter({
           component: () => import("@/modules/roles/views/RolesView.vue"),
         },
         {
-          path: "clientes",
-          name: "clientes",
+          path: "clients",
+          name: "clients",
           component: () => import("@/modules/clients/views/ClientesView.vue"),
-        },
-        {
-          path: "proveedores",
-          name: "proveedores",
-          component: () =>
-            import("@/modules/suppliers/views/ProveedoresView.vue"),
-        },
-        {
-          path: "sucursales",
-          name: "sucursales",
-          component: () =>
-            import("@/modules/branches/views/SucursalesView.vue"),
-        },
-        {
-          path: "empleados",
-          name: "empleados",
-          component: () =>
-            import("@/modules/employees/views/EmpleadosView.vue"),
-        },
-        {
-          path: "Categoria",
-          name: "Categoria",
-          component: () =>
-            import("@/modules/inventory/views/InventarioView.vue"),
-        },
-        {
-          path: "auditoria",
-          name: "auditoria",
-          component: () => import("@/modules/auditlog/views/AuditoriaView.vue"),
-        },
-        {
-          path: "unidad-medida",
-          name: "unidad-medida",
-          component: () =>
-            import("@/modules/unitOfMeasure/views/unitOfMeasure.vue"),
-        },
-        {
-          path: "impuestos",
-          name: "impuestos",
-          component: () => import("@/modules/taxes/views/taxes.vue"),
-        },
-        {
-          path: "productos",
-          name: "productos",
-          component: () => import("@/modules/products/views/product.vue"),
         },
         {
           path: "branches",
@@ -87,31 +57,38 @@ export const router = createRouter({
             import("@/modules/branches/views/SucursalesView.vue"),
         },
         {
-          path: "almacenes",
-          name: "almacenes",
-          component: () => import("@/modules/warehouses/views/warehouse.vue"),
+          path: "employees",
+          name: "employees",
+          component: () =>
+            import("@/modules/employees/views/EmpleadosView.vue"),
+        },
+        {
+          path: "audits",
+          name: "audits",
+          component: () => import("@/modules/auditlog/views/AuditoriaView.vue"),
         },
       ],
     },
   ],
 });
 
-// import { useAuthStore } from "@/core/stores/auth";
+router.beforeEach((to) => {
+  const authStore = useAuthStore();
 
-// router.beforeEach((to, from, next) => {
-//   const token = localStorage.getItem("token")
+  authStore.initialize();
 
-//   // Deja pasar siempre a login
-//   if (to.path === "/login") {
-//     // Si ya hay token, no debería volver al login
-//     if (token) return next("/home")
-//     return next()
-//   }
+  const isPublic = to.meta.public === true;
+  const hasSession = authStore.hasValidSession();
 
-//   // Todo lo demás requiere token
-//   if (!token) return next("/login")
+  if (to.path === "/login" && hasSession) {
+    return "/home";
+  }
 
-//   next()
-// })
+  if (!isPublic && !hasSession) {
+    return "/login";
+  }
+
+  return true;
+});
 
 export default router;

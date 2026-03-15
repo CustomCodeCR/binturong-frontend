@@ -2,9 +2,161 @@
   "copyRigth": "© 2026 Cerrajería Calderón",
   "login": "Login",
   "register": "Register",
-  "welcome": "welcome, ",
+  "welcome": "Welcome, ",
   "password": "Password",
   "email": "Email",
   "businessName": "Cerrajería Calderón",
-  "acceso": "System Access"
+  "acceso": "System Access",
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "roles": "Roles",
+    "purchases": "Purchases",
+    "sales": "Sales",
+    "branches": "Branches",
+    "clients": "Clients",
+    "suppliers": "Suppliers",
+    "employees": "Employees",
+    "payroll": "Payroll",
+    "inventory": "Inventory",
+    "contracts": "Contracts",
+    "billing": "Billing",
+    "payments": "Payments",
+    "quotes": "Quotes",
+    "audits": "Audits",
+    "data": "Data",
+    "unitOfMeasure": "Unit of Measure",
+    "taxes": "Taxes",
+    "categories": "Categories",
+    "products": "Products",
+    "warehouses": "Warehouses"
+  },
+  "common": {
+    "loading": "Loading...",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "refresh": "Refresh",
+    "actions": "Actions",
+    "status": "Status",
+    "details": "Details",
+    "active": "Active",
+    "inactive": "Inactive",
+    "required": "Required"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "messages": {
+      "loginSuccess": "Login successful."
+    },
+    "errors": {
+      "requiredFields": "All fields are required.",
+      "loginFailed": "Login could not be completed.",
+      "invalidCredentials": "Invalid credentials.",
+      "sessionExpired": "The session has expired.",
+      "network": "A network error occurred. Please try again."
+    }
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage system users, roles, and account status.",
+    "searchPlaceholder": "Search by username or email",
+    "empty": "No users found.",
+    "never": "Never",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "username": "Username",
+      "email": "Email",
+      "status": "Status",
+      "roles": "Roles",
+      "lastLogin": "Last Login",
+      "options": "Options"
+    },
+    "fields": {
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "roles": "Roles",
+      "isActive": "Active",
+      "mustChangePassword": "Must Change Password",
+      "failedAttempts": "Failed Attempts",
+      "lockedUntil": "Locked Until",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "scopes": "Scopes"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newUser": "New User",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "close": "Close",
+      "save": "Save",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load users.",
+      "createSuccess": "User created successfully.",
+      "createError": "Could not create user.",
+      "updateSuccess": "User updated successfully.",
+      "updateError": "Could not update user.",
+      "deactivateSuccess": "User deactivated successfully.",
+      "deactivateError": "Could not deactivate user.",
+      "reactivateSuccess": "User reactivated successfully.",
+      "reactivateError": "Could not reactivate user."
+    },
+    "validation": {
+      "requiredCreate": "Username, email, and password are required.",
+      "requiredUpdate": "Username and email are required.",
+      "rolesHint": "Only existing roles can be assigned.",
+      "loadingRoles": "Loading roles..."
+    },
+    "modal": {
+      "createTitle": "Create User",
+      "createDescription": "Register a new user and assign one or more existing roles.",
+      "editTitle": "Edit User",
+      "editDescription": "Update user information and assigned roles."
+    },
+    "drawer": {
+      "title": "User Details",
+      "description": "Review profile, roles, scopes, and audit log for {username}.",
+      "tabs": {
+        "details": "Details",
+        "audit": "Audit Log"
+      }
+    },
+    "audit": {
+      "empty": "No audit entries found.",
+      "module": "Module",
+      "entity": "Entity",
+      "dataBefore": "Data Before",
+      "dataAfter": "Data After",
+      "ip": "IP",
+      "userAgent": "User Agent",
+      "noData": "No data"
+    }
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "of",
+    "previous": "Previous",
+    "next": "Next"
+  }
 }

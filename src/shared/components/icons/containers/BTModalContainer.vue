@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from "vue";
-import { useModalStore } from "@/core/stores/modal";
+import { useModalStore } from "@/core/stores/modalStore";
 const store = useModalStore();
 
 function handleSuccess(payload: any) {

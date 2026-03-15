@@ -3,7 +3,7 @@ import {
   useDrawerStore,
   type DrawerDirection,
   type DrawerSize,
-} from "@/core/stores/drawer";
+} from "@/core/stores/drawerStore";
 import { computed, watch } from "vue";
 import { X } from "lucide-vue-next";
 import BTButton from "@/shared/components/ui/BTButton.vue";

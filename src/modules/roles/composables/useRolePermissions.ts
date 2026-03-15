@@ -1,10 +1,10 @@
 // src/modules/roles/composables/useRolePermissions.ts
 
-import { ref, computed } from 'vue';
-import { RolesService } from '@/core/services/rolesService';
-import { ScopesService } from '@/core/services/scopesService';
-import { useToastStore } from '@/core/stores/toast';
-import type { Scope } from '@/core/interfaces/roles';  // ← CAMBIO: importar de roles
+import { ref, computed } from "vue";
+import { RolesService } from "@/core/services/rolesService";
+import { ScopesService } from "@/core/services/scopesService";
+import { useToastStore } from "@/core/stores/toastStore";
+import type { Scope } from "@/core/interfaces/roles"; // ← CAMBIO: importar de roles
 
 export function useRolePermissions() {
   const availableScopes = ref<Scope[]>([]);
@@ -19,8 +19,8 @@ export function useRolePermissions() {
 
     availableScopes.value.forEach((scope) => {
       // Extract module from scope code (e.g., "users:read" -> "users")
-      const parts = scope.code.split(':');
-      const module = parts[0] || 'General';
+      const parts = scope.code.split(":");
+      const module = parts[0] || "General";
 
       if (!grouped[module]) {
         grouped[module] = [];
@@ -39,9 +39,9 @@ export function useRolePermissions() {
       availableScopes.value = await ScopesService.browse();
     } catch (err) {
       toastStore.addToast({
-        severity: 'error',
-        title: 'Error',
-        message: 'No se pudieron cargar los permisos disponibles',
+        severity: "error",
+        title: "Error",
+        message: "No se pudieron cargar los permisos disponibles",
         duration: 3000,
       });
     } finally {
@@ -52,8 +52,8 @@ export function useRolePermissions() {
   function loadRoleScopes(roleScopes: Scope[]) {
     // Filter out nulls from id field and map to scopeId
     selectedScopeIds.value = roleScopes
-      .filter(s => s.scopeId) // ← Asegurarse que existe scopeId
-      .map(s => s.scopeId);
+      .filter((s) => s.scopeId) // ← Asegurarse que existe scopeId
+      .map((s) => s.scopeId);
   }
 
   function toggleScope(scopeId: string) {
@@ -79,18 +79,18 @@ export function useRolePermissions() {
       });
 
       toastStore.addToast({
-        severity: 'success',
-        title: 'Permisos actualizados',
-        message: 'Los permisos del rol se actualizaron correctamente',
+        severity: "success",
+        title: "Permisos actualizados",
+        message: "Los permisos del rol se actualizaron correctamente",
         duration: 3000,
       });
 
       return true;
     } catch (err: any) {
       toastStore.addToast({
-        severity: 'error',
-        title: 'Error',
-        message: 'No se pudieron actualizar los permisos',
+        severity: "error",
+        title: "Error",
+        message: "No se pudieron actualizar los permisos",
         duration: 3000,
       });
       return false;
@@ -112,3 +112,4 @@ export function useRolePermissions() {
     saveRoleScopes,
   };
 }
+

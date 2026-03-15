@@ -1,153 +1,386 @@
+<!-- src/modules/roles/views/RolesView.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { RolesService } from "@/core/services/rolesService";
-import type { Role, RoleCreateRequest } from "@/core/interfaces/roles";
+import { ref, onMounted } from 'vue';
+import BTButton from '@/shared/components/ui/BTButton.vue';
+import BTHeader from '@/shared/components/ui/BTHeader.vue';
+import BTModal from '@/shared/components/ui/BTModal.vue';
+import BTInput from '@/shared/components/ui/BTInput.vue';
+import BTTextArea from '@/shared/components/ui/BTTextArea.vue';
+import BTCheckBox from '@/shared/components/ui/BTCheckBox.vue';
 
-const roles = ref<Role[]>([]);
-const loading = ref(true);
-const processing = ref(false);
-const error = ref("");
-const showModal = ref(false);
+import { useRoleList } from '../composables/useRoleList';
+import { useRoleForm } from '../composables/useRoleForm';
+import { useRolePermissions } from '../composables/useRolePermissions';
+
+import type { Role } from '@/core/interfaces/roles';
+
+// Composables
+const {
+  filteredRoles,
+  isLoading,
+  searchQuery,
+  statusFilter,
+  fetchRoles,
+  deleteRole,
+} = useRoleList();
+
+const {
+  formData,
+  isSubmitting,
+  createRole,
+  updateRole,
+  resetForm,
+  loadRole,
+  getError,
+  markAsTouched,
+} = useRoleForm();
+
+const {
+  scopesByModule,
+  isLoading: isLoadingScopes,
+  isSaving: isSavingScopes,
+  fetchAvailableScopes,
+  loadRoleScopes,
+  toggleScope,
+  isScopeSelected,
+  saveRoleScopes,
+} = useRolePermissions();
+
+// Local state
+const showFormModal = ref(false);
+const showPermissionsModal = ref(false);
+const showDeleteModal = ref(false);
 const isEditing = ref(false);
-const selectedId = ref<string | null>(null);
+const selectedRoleId = ref<string | null>(null);
+const roleToDelete = ref<string | null>(null);
 
-const form = ref<RoleCreateRequest>({
-  name: "",
-  description: "",
-  isActive: true,
+// Init
+onMounted(async () => {
+  await Promise.all([fetchRoles(), fetchAvailableScopes()]);
 });
 
-const fetchRoles = async () => {
-  try {
-    loading.value = true;
-    roles.value = await RolesService.browse();
-  } catch (e: any) {
-    error.value = "Error al cargar los roles";
-  } finally {
-    loading.value = false;
-  }
-};
-
-const openCreate = () => {
+// Actions - Form
+function openCreate() {
   isEditing.value = false;
-  selectedId.value = null;
-  form.value = { name: "", description: "", isActive: true };
-  showModal.value = true;
-};
+  selectedRoleId.value = null;
+  resetForm();
+  showFormModal.value = true;
+}
 
-const openEdit = (item: Role) => {
+function openEdit(role: Role) {
   isEditing.value = true;
-  selectedId.value = item.id;
-  form.value = {
-    name: item.name,
-    description: item.description,
-    isActive: item.isActive,
-  };
-  showModal.value = true;
-};
+  selectedRoleId.value = role.id;
+  loadRole(role);
+  showFormModal.value = true;
+}
 
-const handleSubmit = async () => {
-  try {
-    processing.value = true;
-    if (isEditing.value && selectedId.value) {
-      await RolesService.update(selectedId.value, form.value);
-    } else {
-      await RolesService.create(form.value);
-    }
+async function handleSubmit() {
+  const success = isEditing.value
+    ? await updateRole(selectedRoleId.value!)
+    : await createRole();
+
+  if (success) {
+    showFormModal.value = false;
     await fetchRoles();
-    showModal.value = false;
-  } catch (e: any) {
-    error.value = "Error al guardar el rol";
-  } finally {
-    processing.value = false;
   }
-};
+}
 
-const handleDelete = async (id: string) => {
-  if (!confirm("¿Eliminar este rol?")) return;
+// Actions - Permissions
+function openPermissions(role: Role) {
+  selectedRoleId.value = role.id;
+  loadRoleScopes(role.scopes);
+  showPermissionsModal.value = true;
+}
+
+async function handleSavePermissions() {
+  if (!selectedRoleId.value) return;
+
+  const success = await saveRoleScopes(selectedRoleId.value);
+
+  if (success) {
+    showPermissionsModal.value = false;
+    await fetchRoles();
+  }
+}
+
+// Actions - Delete
+function openDeleteConfirm(roleId: string) {
+  roleToDelete.value = roleId;
+  showDeleteModal.value = true;
+}
+
+async function handleDelete() {
+  if (!roleToDelete.value) return;
+
   try {
-    await RolesService.delete(id);
-    roles.value = roles.value.filter((r) => r.id !== id);
-  } catch (e: any) {
-    error.value = "No se pudo eliminar el rol";
+    await deleteRole(roleToDelete.value);
+    showDeleteModal.value = false;
+    roleToDelete.value = null;
+  } catch (err) {
+    // Error handled by composable
   }
-};
-
-onMounted(fetchRoles);
+}
 </script>
 
 <template>
-  <div class="p-8 space-y-8 bg-slate-50 min-h-screen">
-    <div class="flex justify-between items-center max-w-7xl mx-auto">
-      <h1 class="text-3xl font-black text-slate-900">Control de Roles</h1>
-      <button
-        @click="openCreate"
-        class="bg-violet-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-violet-700"
+  <div class="space-y-6">
+    <!-- HEADER -->
+    <BTHeader>
+      <template #title>Control de Roles</template>
+      <template #description>Administra roles y permisos del sistema</template>
+      <template #action>
+        <BTButton variant="blue" size="md" shape="rounded" @click="openCreate">
+          + Nuevo Rol
+        </BTButton>
+      </template>
+    </BTHeader>
+
+    <!-- FILTERS -->
+    <div class="bg-white p-4 rounded-xl border flex gap-4">
+      <input
+        v-model="searchQuery"
+        placeholder="Buscar rol..."
+        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+
+      <select
+        v-model="statusFilter"
+        class="px-4 py-2 border border-gray-300 rounded-lg"
       >
-        + Nuevo Rol
-      </button>
+        <option value="all">Todos los estados</option>
+        <option value="active">Activos</option>
+        <option value="inactive">Inactivos</option>
+      </select>
     </div>
 
+    <!-- LOADING -->
+    <div v-if="isLoading" class="text-center py-12">
+      <div
+        class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"
+      />
+    </div>
+
+    <!-- EMPTY STATE -->
     <div
-      v-if="!loading"
-      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      v-else-if="filteredRoles.length === 0"
+      class="text-center py-12 text-gray-500"
+    >
+      No se encontraron roles
+    </div>
+
+    <!-- ROLES GRID -->
+    <div
+      v-else
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
     >
       <div
-        v-for="item in roles"
-        :key="item.id"
-        class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm"
+        v-for="role in filteredRoles"
+        :key="role.id"
+        class="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-shadow"
       >
-        <h3 class="font-black text-lg">{{ item.name }}</h3>
-        <p class="text-sm text-slate-500 mb-4">{{ item.description }}</p>
+        <div class="flex items-start justify-between mb-3">
+          <h3 class="text-lg font-bold text-gray-900">{{ role.name }}</h3>
+          <span
+            :class="[
+              'px-2 py-1 rounded text-xs font-semibold',
+              role.isActive
+                ? 'bg-green-100 text-green-700'
+                : 'bg-gray-100 text-gray-600',
+            ]"
+          >
+            {{ role.isActive ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <p class="text-sm text-gray-600 mb-4">
+          {{ role.description || 'Sin descripción' }}
+        </p>
+
+        <div class="text-xs text-gray-500 mb-4">
+          {{ role.scopes.length }} permiso(s) asignado(s)
+        </div>
+
         <div class="flex gap-2">
           <button
-            @click="handleDelete(item.id)"
-            class="text-red-500 font-bold text-xs uppercase"
-          >
-            Eliminar
-          </button>
-          <button
-            @click="openEdit(item)"
-            class="text-violet-600 font-bold text-xs uppercase"
+            @click="openEdit(role)"
+            class="text-blue-600 hover:text-blue-800 font-semibold text-sm"
           >
             Editar
+          </button>
+          <button
+            @click="openPermissions(role)"
+            class="text-violet-600 hover:text-violet-800 font-semibold text-sm"
+          >
+            Permisos
+          </button>
+          <button
+            @click="openDeleteConfirm(role.id)"
+            class="text-red-600 hover:text-red-800 font-semibold text-sm"
+          >
+            Eliminar
           </button>
         </div>
       </div>
     </div>
 
-    <div
-      v-if="showModal"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+    <!-- FORM MODAL -->
+    <BTModal
+      v-model="showFormModal"
+      :title="isEditing ? 'Editar Rol' : 'Nuevo Rol'"
+      size="medium"
     >
-      <div class="bg-white p-8 rounded-[2rem] w-full max-w-md">
-        <h2 class="text-2xl font-black mb-6">
-          {{ isEditing ? "Editar Rol" : "Nuevo Rol" }}
-        </h2>
-        <form @submit.prevent="handleSubmit" class="space-y-4">
-          <input
-            v-model="form.name"
-            placeholder="Nombre del Rol"
-            required
-            class="w-full p-3 bg-slate-50 border rounded-xl"
+      <template #default>
+        <div class="space-y-4">
+          <BTInput
+            v-model:inputValue="formData.name"
+            :error="!!getError('name')"
+            :errorMsg="getError('name')"
+            @blur="markAsTouched('name')"
+          >
+            <template #label>Nombre del rol</template>
+          </BTInput>
+
+          <BTTextArea
+            v-model:textValue="formData.description"
+            :error="!!getError('description')"
+            :errorMsg="getError('description')"
+            @blur="markAsTouched('description')"
+            :rows="3"
+          >
+            <template #label>Descripción</template>
+          </BTTextArea>
+
+          <BTCheckBox v-model:checked="formData.isActive">
+            <template #label>Rol activo</template>
+          </BTCheckBox>
+        </div>
+      </template>
+
+      <template #footer>
+        <BTButton
+          variant="secondary"
+          size="md"
+          shape="rounded"
+          @click="showFormModal = false"
+        >
+          Cancelar
+        </BTButton>
+
+        <BTButton
+          variant="blue"
+          size="md"
+          shape="rounded"
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
+          @click="handleSubmit"
+        >
+          {{ isEditing ? 'Actualizar' : 'Crear' }}
+        </BTButton>
+      </template>
+    </BTModal>
+
+    <!-- PERMISSIONS MODAL -->
+    <BTModal
+      v-model="showPermissionsModal"
+      title="Configurar Permisos"
+      size="large"
+    >
+      <template #default>
+        <div v-if="isLoadingScopes" class="text-center py-8">
+          <div
+            class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
           />
-          <textarea
-            v-model="form.description"
-            placeholder="Descripción"
-            class="w-full p-3 bg-slate-50 border rounded-xl"
-          ></textarea>
-          <label
-            ><input type="checkbox" v-model="form.isActive" /> ¿Rol
-            activo?</label
+        </div>
+
+        <div v-else class="space-y-6">
+          <div
+            v-for="(scopes, module) in scopesByModule"
+            :key="module"
+            class="border rounded-lg p-4"
           >
-          <button
-            type="submit"
-            class="w-full py-3 bg-violet-600 text-white rounded-xl font-bold"
-          >
-            Guardar
-          </button>
-        </form>
-      </div>
-    </div>
+            <h4 class="font-bold text-gray-900 mb-3 capitalize">
+              {{ module }}
+            </h4>
+
+            <div class="space-y-2">
+              <label
+                v-for="scope in scopes"
+                :key="scope.scopeId"
+                class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :checked="isScopeSelected(scope.scopeId)"
+                  @change="toggleScope(scope.scopeId)"
+                  class="rounded"
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-sm">{{ scope.code }}</div>
+                  <div v-if="scope.description" class="text-xs text-gray-500">
+                    {{ scope.description }}
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template #footer>
+        <BTButton
+          variant="secondary"
+          size="md"
+          shape="rounded"
+          @click="showPermissionsModal = false"
+        >
+          Cancelar
+        </BTButton>
+
+        <BTButton
+          variant="blue"
+          size="md"
+          shape="rounded"
+          :loading="isSavingScopes"
+          :disabled="isSavingScopes"
+          @click="handleSavePermissions"
+        >
+          Guardar Permisos
+        </BTButton>
+      </template>
+    </BTModal>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <BTModal
+      v-model="showDeleteModal"
+      title="Confirmar Eliminación"
+      size="small"
+    >
+      <template #default>
+        <p class="text-gray-700">
+          ¿Estás seguro de que deseas eliminar este rol? Esta acción no se puede
+          deshacer.
+        </p>
+      </template>
+
+      <template #footer>
+        <BTButton
+          variant="secondary"
+          size="md"
+          shape="rounded"
+          @click="showDeleteModal = false"
+        >
+          Cancelar
+        </BTButton>
+
+        <BTButton
+          variant="destructive"
+          size="md"
+          shape="rounded"
+          @click="handleDelete"
+        >
+          Eliminar
+        </BTButton>
+      </template>
+    </BTModal>
   </div>
 </template>

@@ -81,7 +81,7 @@ export async function fetchClient<T>(
       return (await response.blob()) as unknown as T;
     }
 
-    // ✅ JSON => safeJsonParse (tu lógica actual)
+    // ✅ JSON => safeJsonParse (tu lógica actual) 
     if (isJsonContentType(contentType)) {
       const data = await safeJsonParse(response);
       return (data ?? ({} as unknown)) as T;

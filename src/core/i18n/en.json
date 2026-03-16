@@ -632,11 +632,13 @@
       "requestReview": "Request Review",
       "delete": "Delete",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "confirmReceived": "Confirm Received"
     },
     "messages": {
       "loadInventoryError": "Could not load inventory.",
       "loadTransfersError": "Could not load transfers.",
+      "loadCatalogsError": "Could not load catalogs.",
       "transferCreated": "Transfer created successfully.",
       "transferCreateError": "Could not create transfer.",
       "transferDeleted": "Transfer deleted successfully.",
@@ -651,6 +653,7 @@
       "adjustmentError": "Could not register physical adjustment.",
       "transferPending": "Transfer registered as pending review.",
       "transferConfirmed": "Transfer confirmed successfully.",
+      "transferConfirmError": "Could not confirm transfer reception.",
       "transferApproved": "Transfer approved successfully.",
       "transferApproveError": "Could not approve transfer.",
       "transferRejected": "Transfer rejected successfully.",

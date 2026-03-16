@@ -24,17 +24,17 @@ const actionLoading = ref(false);
 
 const transfer = ref<InventoryTransfer | null>(null);
 
-const canApprove = computed(() => {
-  return transfer.value?.status === "REVIEW_REQUESTED";
-});
+const normalizedStatus = computed(() =>
+  (transfer.value?.status ?? "").trim().toUpperCase(),
+);
 
-const canReject = computed(() => {
-  return transfer.value?.status === "REVIEW_REQUESTED";
-});
-
-const canConfirmReceived = computed(() => {
-  return transfer.value?.status === "APPROVED";
-});
+const canApprove = computed(
+  () => normalizedStatus.value === "REVIEW_REQUESTED",
+);
+const canReject = computed(() => normalizedStatus.value === "REVIEW_REQUESTED");
+const canConfirmReceived = computed(
+  () => normalizedStatus.value === "APPROVED",
+);
 
 function formatDateTime(value?: string | null): string {
   if (!value) {
@@ -137,13 +137,20 @@ async function loadTransfer() {
     transfer.value = await InventoryTransfersService.getInventoryTransferById(
       props.transferId,
     );
+  } catch (error: any) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: error?.message ?? t("inventory.messages.loadTransfersError"),
+    });
+    transfer.value = null;
   } finally {
     loadingTransfer.value = false;
   }
 }
 
 async function approveTransfer() {
-  if (!authStore.userId || !transfer.value) {
+  if (!authStore.userId || !transfer.value || actionLoading.value) {
     return;
   }
 
@@ -164,11 +171,11 @@ async function approveTransfer() {
     });
 
     await loadTransfer();
-  } catch {
+  } catch (error: any) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("inventory.messages.transferApproveError"),
+      message: error?.message ?? t("inventory.messages.transferApproveError"),
     });
   } finally {
     actionLoading.value = false;
@@ -176,7 +183,7 @@ async function approveTransfer() {
 }
 
 async function rejectTransfer() {
-  if (!authStore.userId || !transfer.value) {
+  if (!authStore.userId || !transfer.value || actionLoading.value) {
     return;
   }
 
@@ -198,11 +205,11 @@ async function rejectTransfer() {
     });
 
     await loadTransfer();
-  } catch {
+  } catch (error: any) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("inventory.messages.transferRejectError"),
+      message: error?.message ?? t("inventory.messages.transferRejectError"),
     });
   } finally {
     actionLoading.value = false;
@@ -210,7 +217,7 @@ async function rejectTransfer() {
 }
 
 async function confirmTransferReceived() {
-  if (!authStore.userId || !transfer.value) {
+  if (!authStore.userId || !transfer.value || actionLoading.value) {
     return;
   }
 
@@ -231,11 +238,11 @@ async function confirmTransferReceived() {
     });
 
     await loadTransfer();
-  } catch {
+  } catch (error: any) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("inventory.messages.transferConfirmError"),
+      message: error?.message ?? t("inventory.messages.transferConfirmError"),
     });
   } finally {
     actionLoading.value = false;
@@ -252,8 +259,10 @@ onMounted(async () => {
 
 watch(
   () => props.transferId,
-  async () => {
-    await loadTransfer();
+  async (newTransferId, oldTransferId) => {
+    if (newTransferId && newTransferId !== oldTransferId) {
+      await loadTransfer();
+    }
   },
 );
 </script>
@@ -524,6 +533,10 @@ watch(
           {{ $t("inventory.actions.confirmReceived") }}
         </button>
       </div>
+    </div>
+
+    <div v-else class="text-bt-grey-500">
+      {{ $t("inventory.transfers.empty") }}
     </div>
   </div>
 </template>

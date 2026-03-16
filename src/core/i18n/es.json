@@ -633,11 +633,13 @@
       "requestReview": "Solicitar revisión",
       "delete": "Eliminar",
       "approve": "Aprobar",
-      "reject": "Rechazar"
+      "reject": "Rechazar",
+      "confirmReceived": "Confirmar recibido"
     },
     "messages": {
       "loadInventoryError": "No se pudo cargar el inventario.",
       "loadTransfersError": "No se pudieron cargar las transferencias.",
+      "loadCatalogsError": "No se pudieron cargar los catálogos.",
       "transferCreated": "Transferencia creada correctamente.",
       "transferCreateError": "No se pudo crear la transferencia.",
       "transferDeleted": "Transferencia eliminada correctamente.",
@@ -652,6 +654,7 @@
       "adjustmentError": "No se pudo registrar el ajuste físico.",
       "transferPending": "La transferencia quedó registrada como pendiente de revisión.",
       "transferConfirmed": "Transferencia confirmada correctamente.",
+      "transferConfirmError": "No se pudo confirmar la recepción de la transferencia.",
       "transferApproved": "Transferencia aprobada correctamente.",
       "transferApproveError": "No se pudo aprobar la transferencia.",
       "transferRejected": "Transferencia rechazada correctamente.",

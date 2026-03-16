@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
@@ -28,6 +28,7 @@ const toWarehouseId = ref("");
 const productId = ref("");
 const quantity = ref<number | null>(null);
 const notes = ref("");
+const requireApproval = ref(true);
 
 const loading = ref(false);
 const loadingCatalogs = ref(false);
@@ -43,6 +44,14 @@ const toBranch = computed(
     branches.value.find((branch) => branch.branchId === toBranchId.value) ??
     null,
 );
+
+watch(fromBranchId, () => {
+  fromWarehouseId.value = "";
+});
+
+watch(toBranchId, () => {
+  toWarehouseId.value = "";
+});
 
 function closeModal() {
   modalStore.close();
@@ -112,19 +121,23 @@ async function submit() {
       ],
     });
 
-    await InventoryTransfersService.requestReviewInventoryTransfer(
-      created.transferId,
-    );
+    if (requireApproval.value) {
+      await InventoryTransfersService.requestReviewInventoryTransfer(
+        created.transferId,
+      );
+    }
 
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
-      message: t("inventory.messages.transferCreated"),
+      message: requireApproval.value
+        ? t("inventory.messages.transferPending")
+        : t("inventory.messages.transferCreated"),
     });
 
     modalStore.onSuccess?.({
       ...created,
-      status: "REVIEW_REQUESTED",
+      status: requireApproval.value ? "REVIEW_REQUESTED" : "CREATED",
     });
 
     modalStore.close();
@@ -285,6 +298,13 @@ onMounted(async () => {
           rows="4"
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
         />
+      </div>
+
+      <div class="md:col-span-2 flex items-center gap-bt-spacing-8">
+        <input v-model="requireApproval" type="checkbox" />
+        <span class="text-bt-primary-700">
+          {{ $t("inventory.transfer.requireApproval") }}
+        </span>
       </div>
     </div>
 

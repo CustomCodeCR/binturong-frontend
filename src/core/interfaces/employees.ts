@@ -12,7 +12,7 @@ export interface Employee {
   employeeId: string;
 
   userId: string | null;
-  branchId: string;
+  branchId: string | null;
   branchName: string | null;
 
   fullName: string;
@@ -36,10 +36,11 @@ export interface EmployeeCreateRequest {
   branchId: string;
   fullName: string;
   nationalId: string;
+  email: string;
   jobTitle: string;
   baseSalary: number;
-  hireDate: string; // "YYYY-MM-DD"
-  terminationDate: string; // "YYYY-MM-DD" (según tu request ejemplo)
+  hireDate: string;
+  terminationDate: string;
   isActive: boolean;
 }
 
@@ -52,6 +53,7 @@ export interface EmployeesBrowseQuery {
   page?: number;
   pageSize?: number;
   search?: string;
+  userId?: string;
 }
 
 /** PUT /api/employees/{{id}} */
@@ -59,8 +61,9 @@ export interface EmployeeUpdateRequest {
   userId: string;
   branchId: string;
   fullName: string;
+  email: string;
   jobTitle: string;
   baseSalary: number;
-  terminationDate: string; // "YYYY-MM-DD"
+  terminationDate: string;
   isActive: boolean;
 }

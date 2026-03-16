@@ -1290,4 +1290,11 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/warehouses/select",
     headers: { Accept: "application/json" },
   },
+  readEmployeeByUserId: {
+    method: "GET",
+    path: "/api/employees/by-user/{{userId}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

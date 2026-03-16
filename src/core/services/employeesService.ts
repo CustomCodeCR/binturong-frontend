@@ -39,6 +39,12 @@ export const EmployeesService = {
     });
   },
 
+  readByUserId(userId: string): Promise<Employee> {
+    return callEndpoint<Employee>(Endpoints.readEmployeeByUserId, {
+      params: { userId },
+    });
+  },
+
   update(id: string, payload: EmployeeUpdateRequest): Promise<NoContent> {
     return callEndpoint<NoContent, EmployeeUpdateRequest>(
       Endpoints.updateEmployee,

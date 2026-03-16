@@ -59,7 +59,7 @@ export const router = createRouter({
           path: "employees",
           name: "employees",
           component: () =>
-            import("@/modules/employees/views/EmpleadosView.vue"),
+            import("@/modules/employees/views/EmployeesView.vue"),
         },
         {
           path: "audits",

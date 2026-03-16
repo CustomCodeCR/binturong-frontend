@@ -68,22 +68,22 @@
       "network": "A network error occurred. Please try again."
     }
   },
- "users": {
-  "title": "Users",
-  "subtitle": "Manage system users, roles, and account status.",
-  "searchPlaceholder": "Search by username or email",
-  "empty": "No users found.",
-  "never": "Never",
-  "filtered": "results",
-  "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
-  "status": {
-    "active": "Active",
-    "inactive": "Inactive"
-  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage system users, roles, and account status.",
+    "searchPlaceholder": "Search by username or email",
+    "empty": "No users found.",
+    "never": "Never",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "table": {
       "username": "Username",
       "email": "Email",
@@ -932,6 +932,116 @@
         "totalSalesDiff": "Total Sales Difference",
         "ordersCountDiff": "Orders Count Difference"
       }
+    }
+  },
+  "topbar": {
+    "online": "Online",
+    "offline": "Offline",
+    "language": "Language",
+    "languageChanged": "Language updated successfully.",
+    "noBranch": "No assigned branch"
+  },
+  "logout": "Logout",
+  "logoutConfirm": "Are you sure you want to sign out?",
+  "employees": {
+    "title": "Employees",
+    "subtitle": "Manage employees and attendance history.",
+    "searchPlaceholder": "Search by name, national id, email, or job title",
+    "empty": "No employees found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "fullName": "Full Name",
+      "nationalId": "National Id",
+      "email": "Email",
+      "branch": "Branch",
+      "jobTitle": "Job Title",
+      "baseSalary": "Base Salary",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "userId": "User Id",
+      "branch": "Branch",
+      "fullName": "Full Name",
+      "nationalId": "National Id",
+      "email": "Email",
+      "jobTitle": "Job Title",
+      "baseSalary": "Base Salary",
+      "hireDate": "Hire Date",
+      "terminationDate": "Termination Date",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newEmployee": "New Employee",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load employees.",
+      "createSuccess": "Employee created successfully.",
+      "createError": "Could not create employee.",
+      "updateSuccess": "Employee updated successfully.",
+      "updateError": "Could not update employee.",
+      "deactivateSuccess": "Employee deactivated successfully.",
+      "deactivateError": "Could not deactivate employee.",
+      "reactivateSuccess": "Employee reactivated successfully.",
+      "reactivateError": "Could not reactivate employee.",
+      "deleteSuccess": "Employee deleted successfully.",
+      "deleteError": "Could not delete employee."
+    },
+    "validation": {
+      "requiredCreate": "User id, branch, full name, national id, email, job title, base salary, and hire date are required.",
+      "requiredUpdate": "User id, branch, full name, job title, and base salary are required."
+    },
+    "modal": {
+      "createTitle": "Create Employee",
+      "createDescription": "Register a new employee.",
+      "editTitle": "Edit Employee",
+      "editDescription": "Update employee information."
+    },
+    "drawer": {
+      "title": "Employee Details",
+      "description": "Review profile and attendance history for {fullName}.",
+      "tabs": {
+        "details": "Details",
+        "history": "Attendance History"
+      }
+    },
+    "history": {
+      "empty": "No attendance history found.",
+      "table": {
+        "eventType": "Event Type",
+        "description": "Description",
+        "eventDate": "Event Date"
+      }
+    },
+    "attendance": {
+      "actions": {
+        "checkIn": "Check In",
+        "checkOut": "Check Out"
+      },
+      "messages": {
+        "available": "Attendance control available",
+        "employeeNotLinked": "No employee profile linked to this user.",
+        "checkInSuccess": "Check-in registered successfully.",
+        "checkOutSuccess": "Check-out registered successfully.",
+        "checkInError": "Could not register check-in.",
+        "checkOutError": "Could not register check-out.",
+        "genericError": "Could not register attendance."
+      }
+    },
+    "placeholders": {
+      "selectBranch": "Select a branch"
     }
   }
 }

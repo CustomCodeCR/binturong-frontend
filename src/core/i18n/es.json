@@ -69,22 +69,22 @@
     }
   },
   "users": {
-  "title": "Usuarios",
-  "subtitle": "Administre usuarios del sistema, roles y estado de cuenta.",
-  "searchPlaceholder": "Buscar por nombre de usuario o correo",
-  "empty": "No se encontraron usuarios.",
-  "never": "Nunca",
-  
-  "filtered": "resultados",
-  "filters": {
-    "allStatus": "Todos los estados",
-    "active": "Activos",
-    "inactive": "Inactivos"
-  },
-  "status": {
-    "active": "Activo",
-    "inactive": "Inactivo"
-  },
+    "title": "Usuarios",
+    "subtitle": "Administre usuarios del sistema, roles y estado de cuenta.",
+    "searchPlaceholder": "Buscar por nombre de usuario o correo",
+    "empty": "No se encontraron usuarios.",
+    "never": "Nunca",
+
+    "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "active": "Activos",
+      "inactive": "Inactivos"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "table": {
       "username": "Usuario",
       "email": "Correo",
@@ -933,6 +933,116 @@
         "totalSalesDiff": "Diferencia de ventas totales",
         "ordersCountDiff": "Diferencia en cantidad de órdenes"
       }
+    }
+  },
+  "topbar": {
+    "online": "En línea",
+    "offline": "Sin conexión",
+    "language": "Idioma",
+    "languageChanged": "Idioma actualizado correctamente.",
+    "noBranch": "Sin sucursal asignada"
+  },
+  "logout": "Cerrar sesión",
+  "logoutConfirm": "¿Desea cerrar su sesión?",
+  "employees": {
+    "title": "Empleados",
+    "subtitle": "Administre empleados e historial de asistencia.",
+    "searchPlaceholder": "Buscar por nombre, cédula, correo o puesto",
+    "empty": "No se encontraron empleados.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "fullName": "Nombre completo",
+      "nationalId": "Cédula",
+      "email": "Correo",
+      "branch": "Sucursal",
+      "jobTitle": "Puesto",
+      "baseSalary": "Salario base",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "userId": "Id de usuario",
+      "branch": "Sucursal",
+      "fullName": "Nombre completo",
+      "nationalId": "Cédula",
+      "email": "Correo",
+      "jobTitle": "Puesto",
+      "baseSalary": "Salario base",
+      "hireDate": "Fecha de ingreso",
+      "terminationDate": "Fecha de salida",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newEmployee": "Nuevo empleado",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los empleados.",
+      "createSuccess": "Empleado creado correctamente.",
+      "createError": "No se pudo crear el empleado.",
+      "updateSuccess": "Empleado actualizado correctamente.",
+      "updateError": "No se pudo actualizar el empleado.",
+      "deactivateSuccess": "Empleado desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el empleado.",
+      "reactivateSuccess": "Empleado reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el empleado.",
+      "deleteSuccess": "Empleado eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el empleado."
+    },
+    "validation": {
+      "requiredCreate": "Id de usuario, sucursal, nombre completo, cédula, correo, puesto, salario base y fecha de ingreso son obligatorios.",
+      "requiredUpdate": "Id de usuario, sucursal, nombre completo, puesto y salario base son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear empleado",
+      "createDescription": "Registre un nuevo empleado.",
+      "editTitle": "Editar empleado",
+      "editDescription": "Actualice la información del empleado."
+    },
+    "drawer": {
+      "title": "Detalle de empleado",
+      "description": "Revise el perfil e historial de asistencia de {fullName}.",
+      "tabs": {
+        "details": "Detalle",
+        "history": "Historial de asistencia"
+      }
+    },
+    "history": {
+      "empty": "No se encontró historial de asistencia.",
+      "table": {
+        "eventType": "Tipo de evento",
+        "description": "Descripción",
+        "eventDate": "Fecha del evento"
+      }
+    },
+    "attendance": {
+      "actions": {
+        "checkIn": "Marcar entrada",
+        "checkOut": "Marcar salida"
+      },
+      "messages": {
+        "available": "Control de asistencia disponible",
+        "employeeNotLinked": "No hay un perfil de empleado vinculado a este usuario.",
+        "checkInSuccess": "Entrada registrada correctamente.",
+        "checkOutSuccess": "Salida registrada correctamente.",
+        "checkInError": "No se pudo registrar la entrada.",
+        "checkOutError": "No se pudo registrar la salida.",
+        "genericError": "No se pudo registrar la asistencia."
+      }
+    },
+    "placeholders": {
+      "selectBranch": "Seleccione una sucursal"
     }
   }
 }

@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { LogOut, ChevronDown } from "lucide-vue-next";
-
+import { ChevronDown } from "lucide-vue-next";
 import { useSidebarItems } from "@/core/composables/useSidebarItems";
-import { useAuthStore } from "@/core/stores/authStore";
-
-const router = useRouter();
-const authStore = useAuthStore();
 
 const collapsed = ref(false);
-const showLogout = ref(false);
 const openGroups = ref<string[]>([]);
 
 const { navigation } = useSidebarItems();
@@ -19,55 +12,69 @@ function toggleGroup(name?: string) {
   if (!name) return;
 
   if (openGroups.value.includes(name)) {
-    openGroups.value = openGroups.value.filter((g) => g !== name);
-  } else {
-    openGroups.value.push(name);
+    openGroups.value = openGroups.value.filter(
+      (groupName) => groupName !== name,
+    );
+    return;
   }
+
+  openGroups.value.push(name);
 }
 
 function isOpen(name?: string) {
   if (!name) return false;
   return openGroups.value.includes(name);
 }
-
-function logout() {
-  authStore.logout();
-  showLogout.value = false;
-  router.push("/login");
-}
 </script>
 
 <template>
   <aside
     :class="[
-      'bg-slate-900 text-white flex flex-col transition-all duration-300',
-      collapsed ? 'w-16' : 'w-64',
+      'bg-bt-primary-700 text-bt-white flex flex-col transition-all duration-300 border-r border-bt-primary-600',
+      collapsed ? 'w-16' : 'w-72',
     ]"
   >
-    <!-- Toggle -->
-    <div class="p-4 flex justify-center">
-      <button @click="collapsed = !collapsed" class="text-xl">☰</button>
+    <div
+      class="p-bt-spacing-16 flex justify-center border-b border-bt-primary-600"
+    >
+      <button
+        type="button"
+        class="text-xl text-bt-white hover:text-bt-accent-300 transition"
+        @click="collapsed = !collapsed"
+      >
+        ☰
+      </button>
     </div>
 
-    <!-- Navigation -->
-    <nav class="flex-1 mt-4 space-y-1 overflow-y-auto">
-      <template v-for="section in navigation">
+    <nav
+      class="flex-1 mt-bt-spacing-12 space-y-1 overflow-y-auto px-bt-spacing-8 pb-bt-spacing-16"
+    >
+      <template
+        v-for="section in navigation"
+        :key="section.section || 'default'"
+      >
+        <div
+          v-if="section.section && !collapsed"
+          class="px-bt-spacing-12 pt-bt-spacing-12 pb-bt-spacing-8 text-xs uppercase tracking-wide text-bt-grey-300"
+        >
+          {{ section.section }}
+        </div>
+
         <template v-for="item in section.items" :key="item.name">
-          <!-- NORMAL ITEM -->
           <RouterLink
             v-if="!item.children"
             :to="item.to"
-            class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700"
-            active-class="bg-slate-800"
+            class="flex items-center gap-3 px-bt-spacing-16 py-bt-spacing-12 rounded-m text-bt-white hover:bg-bt-primary-600 transition"
+            active-class="bg-bt-primary-500"
           >
             <component :is="item.icon" :size="20" />
             <span v-if="!collapsed">{{ item.label }}</span>
           </RouterLink>
 
-          <!-- DROPDOWN -->
           <div v-else>
             <button
-              class="flex items-center justify-between w-full px-4 py-2 hover:bg-slate-700"
+              type="button"
+              class="flex items-center justify-between w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m text-bt-white hover:bg-bt-primary-600 transition"
               @click="toggleGroup(item.name)"
             >
               <div class="flex items-center gap-3">
@@ -77,19 +84,22 @@ function logout() {
 
               <ChevronDown
                 v-if="!collapsed"
+                :size="18"
                 class="transition-transform"
                 :class="{ 'rotate-180': isOpen(item.name) }"
-                :size="18"
               />
             </button>
 
-            <div v-if="isOpen(item.name)" class="ml-6 space-y-1">
+            <div
+              v-if="isOpen(item.name) && !collapsed"
+              class="ml-bt-spacing-24 mt-bt-spacing-4 space-y-1"
+            >
               <RouterLink
                 v-for="child in item.children"
                 :key="child.name"
                 :to="child.to"
-                class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700"
-                active-class="bg-slate-800"
+                class="flex items-center gap-3 px-bt-spacing-16 py-bt-spacing-10 rounded-m text-bt-grey-100 hover:bg-bt-primary-600 transition"
+                active-class="bg-bt-primary-500"
               >
                 <component :is="child.icon" :size="18" />
                 <span>{{ child.label }}</span>
@@ -99,48 +109,5 @@ function logout() {
         </template>
       </template>
     </nav>
-
-    <!-- Logout -->
-    <div class="p-4 border-t border-slate-700">
-      <button
-        @click="showLogout = true"
-        class="flex items-center gap-3 w-full p-2 rounded hover:bg-slate-700"
-      >
-        <LogOut :size="20" />
-        <span v-if="!collapsed">Logout</span>
-      </button>
-    </div>
   </aside>
-
-  <!-- Logout Modal -->
-  <div
-    v-if="showLogout"
-    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-  >
-    <div class="bg-white rounded-lg p-6 w-80">
-      <h3 class="text-lg font-semibold mb-2 text-slate-900">
-        {{ $t("logout") }}
-      </h3>
-
-      <p class="text-sm text-gray-600 mb-4">
-        {{ $t("logoutConfirm") }}
-      </p>
-
-      <div class="flex justify-end gap-2">
-        <button
-          class="px-4 py-2 text-sm rounded bg-gray-200"
-          @click="showLogout = false"
-        >
-          {{ $t("cancel") }}
-        </button>
-
-        <button
-          class="px-4 py-2 text-sm rounded bg-red-600 text-white"
-          @click="logout"
-        >
-          {{ $t("logout") }}
-        </button>
-      </div>
-    </div>
-  </div>
 </template>

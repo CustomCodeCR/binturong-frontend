@@ -9,7 +9,6 @@ import { useToastStore } from "@/core/stores/toastStore";
 import { SuppliersService } from "@/core/services/suppliersService";
 import { SupplierContactsService } from "@/core/services/supplierContactsService";
 import { SupplierAttachmentsService } from "@/core/services/supplierAttachmentsService";
-import { AttachmentsService } from "@/core/services/attachmentsService";
 
 import SupplierContactModal from "@/modules/suppliers/components/SupplierContactModal.vue";
 
@@ -49,21 +48,10 @@ const attachmentDocumentType = ref("");
 const attachmentFile = ref<File | null>(null);
 const dragOver = ref(false);
 
-const viewerOpen = ref(false);
-const viewerLoading = ref(false);
-const viewerError = ref("");
-const viewerObjectUrl = ref("");
-const viewerFileName = ref("");
-const viewerMimeType = ref("");
-
 const displayName = computed(() => {
   if (!supplier.value) return "";
   return supplier.value.tradeName || supplier.value.legalName;
 });
-
-const isViewerPdf = computed(() => viewerMimeType.value.includes("pdf"));
-const isViewerImage = computed(() => viewerMimeType.value.startsWith("image/"));
-const isViewerText = computed(() => viewerMimeType.value.startsWith("text/"));
 
 function emitSupplierUpdated(action: string) {
   window.dispatchEvent(
@@ -88,36 +76,6 @@ function formatDateTime(value?: string | null): string {
   }
 
   return date.toLocaleString();
-}
-
-function guessMimeType(fileName: string): string {
-  const lower = fileName.toLowerCase();
-
-  if (lower.endsWith(".pdf")) return "application/pdf";
-  if (lower.endsWith(".png")) return "image/png";
-  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-  if (lower.endsWith(".webp")) return "image/webp";
-  if (lower.endsWith(".gif")) return "image/gif";
-  if (lower.endsWith(".bmp")) return "image/bmp";
-  if (lower.endsWith(".svg")) return "image/svg+xml";
-  if (lower.endsWith(".txt")) return "text/plain";
-  if (lower.endsWith(".html") || lower.endsWith(".htm")) return "text/html";
-  if (lower.endsWith(".json")) return "application/json";
-
-  return "application/octet-stream";
-}
-
-function closeViewer() {
-  viewerOpen.value = false;
-  viewerLoading.value = false;
-  viewerError.value = "";
-  viewerFileName.value = "";
-  viewerMimeType.value = "";
-
-  if (viewerObjectUrl.value) {
-    URL.revokeObjectURL(viewerObjectUrl.value);
-    viewerObjectUrl.value = "";
-  }
 }
 
 async function loadSupplier() {
@@ -382,45 +340,21 @@ async function removeAttachment(attachmentId: string) {
   }
 }
 
-async function openAttachment(attachment: any) {
-  viewerLoading.value = true;
-  viewerError.value = "";
-  viewerFileName.value = attachment?.fileName ?? t("common.file");
-  viewerMimeType.value = guessMimeType(viewerFileName.value);
-  viewerOpen.value = true;
+function openAttachment(attachment: any) {
+  const directUrl =
+    attachment?.url ||
+    attachment?.fileUrl ||
+    attachment?.downloadUrl ||
+    attachment?.publicUrl;
 
-  try {
-    const result = await AttachmentsService.getDownloadUrl(
-      "suppliers",
-      attachment.attachmentId,
-    );
-
-    const response = await fetch(result.url);
-    if (!response.ok) {
-      throw new Error("Failed to fetch attachment blob");
-    }
-
-    const blob = await response.blob();
-
-    if (viewerObjectUrl.value) {
-      URL.revokeObjectURL(viewerObjectUrl.value);
-    }
-
-    viewerObjectUrl.value = URL.createObjectURL(blob);
-
-    if (
-      !viewerMimeType.value ||
-      viewerMimeType.value === "application/octet-stream"
-    ) {
-      viewerMimeType.value = blob.type || guessMimeType(result.fileName);
-    }
-
-    viewerFileName.value = result.fileName || viewerFileName.value;
-  } catch {
-    viewerError.value = t("suppliers.attachments.messages.openError");
-  } finally {
-    viewerLoading.value = false;
+  if (directUrl) {
+    window.open(directUrl, "_blank", "noopener,noreferrer");
+    return;
   }
+
+  const fallbackDownloadUrl = `/api/suppliers/${props.supplierId}/attachments/${attachment.attachmentId}/download`;
+
+  window.open(fallbackDownloadUrl, "_blank", "noopener,noreferrer");
 }
 
 async function exportPdf() {
@@ -470,7 +404,6 @@ async function exportExcel() {
 }
 
 function closeDrawer() {
-  closeViewer();
   drawerStore.closeDrawer();
 }
 
@@ -481,7 +414,6 @@ onMounted(async () => {
 watch(
   () => props.supplierId,
   async () => {
-    closeViewer();
     await refreshDrawer({ includeHistory: true });
   },
 );
@@ -1052,82 +984,5 @@ watch(activeTab, async (tab) => {
         </div>
       </div>
     </template>
-  </div>
-
-  <div
-    v-if="viewerOpen"
-    class="fixed inset-0 z-[80] bg-black/60 flex items-center justify-center p-bt-spacing-24"
-  >
-    <div
-      class="w-full max-w-6xl h-[90vh] bg-bt-white rounded-l shadow-bt-elevation-400 flex flex-col overflow-hidden"
-    >
-      <div
-        class="px-bt-spacing-24 py-bt-spacing-16 border-b border-bt-grey-200 flex items-center justify-between"
-      >
-        <div class="min-w-0">
-          <h3 class="text-lg font-bt-semibold text-bt-primary-700 truncate">
-            {{ viewerFileName }}
-          </h3>
-        </div>
-
-        <button
-          type="button"
-          class="px-bt-spacing-12 py-bt-spacing-8 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300"
-          @click="closeViewer"
-        >
-          {{ $t("common.close") }}
-        </button>
-      </div>
-
-      <div class="flex-1 min-h-0 bg-bt-grey-50 p-bt-spacing-16 overflow-auto">
-        <div
-          v-if="viewerLoading"
-          class="h-full flex items-center justify-center text-bt-grey-500"
-        >
-          {{ $t("common.loading") }}
-        </div>
-
-        <div
-          v-else-if="viewerError"
-          class="h-full flex items-center justify-center text-bt-error-700"
-        >
-          {{ viewerError }}
-        </div>
-
-        <div v-else-if="viewerObjectUrl" class="h-full">
-          <iframe
-            v-if="isViewerPdf"
-            :src="viewerObjectUrl"
-            class="w-full h-full rounded-m border border-bt-grey-200 bg-bt-white"
-          />
-
-          <div
-            v-else-if="isViewerImage"
-            class="h-full flex items-center justify-center"
-          >
-            <img
-              :src="viewerObjectUrl"
-              :alt="viewerFileName"
-              class="max-w-full max-h-full object-contain rounded-m border border-bt-grey-200 bg-bt-white"
-            />
-          </div>
-
-          <iframe
-            v-else-if="isViewerText"
-            :src="viewerObjectUrl"
-            class="w-full h-full rounded-m border border-bt-grey-200 bg-bt-white"
-          />
-
-          <div
-            v-else
-            class="h-full flex flex-col items-center justify-center text-center text-bt-grey-600 gap-bt-spacing-12"
-          >
-            <p>
-              {{ $t("suppliers.attachments.messages.previewNotAvailable") }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>

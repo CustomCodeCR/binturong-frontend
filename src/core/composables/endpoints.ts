@@ -1297,11 +1297,4 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
-  downloadAttachment: {
-    method: "GET",
-    path: "/api/attachments/{{module}}/{{attachmentId}}/download",
-    headers: {
-      Accept: "application/json",
-    },
-  },
 };

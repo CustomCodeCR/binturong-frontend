@@ -52,6 +52,14 @@ export const SelectService = {
   selectWarehouses(query?: SelectQuery): Promise<SelectOption[]> {
     return callSelect(Endpoints.selectWarehouses, query);
   },
+
+  selectPurchaseOrders(query?: SelectQuery): Promise<SelectOption[]> {
+    return callSelect(Endpoints.selectPurchaseOrders, query);
+  },
+
+  selectPurchaseRequests(query?: SelectQuery): Promise<SelectOption[]> {
+    return callSelect(Endpoints.selectPurchaseRequests, query);
+  },
 };
 
 function callSelect(endpoint: any, query?: SelectQuery) {

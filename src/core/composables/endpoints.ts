@@ -1304,4 +1304,12 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  selectPurchaseRequests: {
+    method: "GET",
+    path: "/api/purchases/requests/select",
+  },
+  selectPurchaseOrders: {
+    method: "GET",
+    path: "/api/purchases/orders/select",
+  },
 };

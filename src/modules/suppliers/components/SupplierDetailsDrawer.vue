@@ -10,11 +10,14 @@ import { SuppliersService } from "@/core/services/suppliersService";
 import { SupplierContactsService } from "@/core/services/supplierContactsService";
 import { SupplierAttachmentsService } from "@/core/services/supplierAttachmentsService";
 import { AttachmentsService } from "@/core/services/attachmentsService";
+import { SupplierEvaluationsService } from "@/core/services/supplierEvaluationsService";
 
 import SupplierContactModal from "@/modules/suppliers/components/SupplierContactModal.vue";
+import SupplierEvaluationCreateModal from "@/modules/purchases/components/SupplierEvaluationCreateModal.vue";
 
 import type { Supplier, SupplierContact } from "@/core/interfaces/suppliers";
 import type { PurchaseOrder } from "@/core/interfaces/purchasesOrders";
+import type { SupplierEvaluation } from "@/core/interfaces/supplierEvaluations";
 
 const props = defineProps<{
   supplierId: string;
@@ -27,16 +30,23 @@ const modalStore = useModalStore();
 const toastStore = useToastStore();
 
 const activeTab = ref<
-  "details" | "credit" | "contacts" | "attachments" | "purchases"
+  | "details"
+  | "credit"
+  | "contacts"
+  | "attachments"
+  | "purchases"
+  | "evaluations"
 >("details");
 
 const loadingSupplier = ref(false);
 const loadingHistory = ref(false);
+const loadingEvaluations = ref(false);
 const savingCredit = ref(false);
 const uploadingFile = ref(false);
 
 const supplier = ref<Supplier | null>(null);
 const purchaseHistory = ref<PurchaseOrder[]>([]);
+const evaluations = ref<SupplierEvaluation[]>([]);
 
 const creditLimit = ref<number | null>(null);
 const creditDays = ref<number | null>(null);
@@ -65,6 +75,32 @@ const isViewerPdf = computed(() => viewerMimeType.value.includes("pdf"));
 const isViewerImage = computed(() => viewerMimeType.value.startsWith("image/"));
 const isViewerText = computed(() => viewerMimeType.value.startsWith("text/"));
 
+function normalizeArrayResponse<T>(response: unknown): T[] {
+  if (Array.isArray(response)) {
+    return response as T[];
+  }
+
+  if (
+    response &&
+    typeof response === "object" &&
+    "items" in response &&
+    Array.isArray((response as { items: T[] }).items)
+  ) {
+    return (response as { items: T[] }).items;
+  }
+
+  if (
+    response &&
+    typeof response === "object" &&
+    "data" in response &&
+    Array.isArray((response as { data: T[] }).data)
+  ) {
+    return (response as { data: T[] }).data;
+  }
+
+  return [];
+}
+
 function emitSupplierUpdated(action: string) {
   window.dispatchEvent(
     new CustomEvent("supplier-updated", {
@@ -88,6 +124,17 @@ function formatDateTime(value?: string | null): string {
   }
 
   return date.toLocaleString();
+}
+
+function formatMoney(value?: number | null): string {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return "-";
+  }
+
+  return Number(value).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function guessMimeType(fileName: string): string {
@@ -145,16 +192,15 @@ async function loadPurchaseHistory() {
   loadingHistory.value = true;
 
   try {
-    purchaseHistory.value = await SuppliersService.purchaseHistory(
-      props.supplierId,
-      {
-        from: historyFrom.value || undefined,
-        to: historyTo.value || undefined,
-        status: historyStatus.value || undefined,
-        skip: 0,
-        take: 100,
-      },
-    );
+    const response = await SuppliersService.purchaseHistory(props.supplierId, {
+      from: historyFrom.value || undefined,
+      to: historyTo.value || undefined,
+      status: historyStatus.value || undefined,
+      skip: 0,
+      take: 100,
+    });
+
+    purchaseHistory.value = normalizeArrayResponse<PurchaseOrder>(response);
   } catch {
     purchaseHistory.value = [];
 
@@ -168,11 +214,44 @@ async function loadPurchaseHistory() {
   }
 }
 
-async function refreshDrawer(options?: { includeHistory?: boolean }) {
+async function loadEvaluations() {
+  loadingEvaluations.value = true;
+
+  try {
+    const response = await SupplierEvaluationsService.browseBySupplierId(
+      props.supplierId,
+      {
+        page: 1,
+        pageSize: 100,
+      },
+    );
+
+    evaluations.value = normalizeArrayResponse<SupplierEvaluation>(response);
+  } catch {
+    evaluations.value = [];
+
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("purchases.evaluations.messages.loadError"),
+    });
+  } finally {
+    loadingEvaluations.value = false;
+  }
+}
+
+async function refreshDrawer(options?: {
+  includeHistory?: boolean;
+  includeEvaluations?: boolean;
+}) {
   await loadSupplier();
 
   if (options?.includeHistory || activeTab.value === "purchases") {
     await loadPurchaseHistory();
+  }
+
+  if (options?.includeEvaluations || activeTab.value === "evaluations") {
+    await loadEvaluations();
   }
 }
 
@@ -262,6 +341,33 @@ function openEditContactModal(contact: SupplierContact) {
         severity: "error",
         title: t("toast.error"),
         message: error?.message ?? t("suppliers.contacts.messages.updateError"),
+      });
+    },
+  });
+}
+
+function openCreateEvaluationModal() {
+  modalStore.open({
+    component: SupplierEvaluationCreateModal,
+    props: {
+      initialSupplierId: props.supplierId,
+    },
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("purchases.evaluations.messages.createSuccess"),
+      });
+
+      emitSupplierUpdated("evaluation-created");
+      await loadEvaluations();
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message:
+          error?.message ?? t("purchases.evaluations.messages.createError"),
       });
     },
   });
@@ -475,20 +581,30 @@ function closeDrawer() {
 }
 
 onMounted(async () => {
-  await refreshDrawer({ includeHistory: true });
+  await refreshDrawer({
+    includeHistory: true,
+    includeEvaluations: true,
+  });
 });
 
 watch(
   () => props.supplierId,
   async () => {
     closeViewer();
-    await refreshDrawer({ includeHistory: true });
+    await refreshDrawer({
+      includeHistory: true,
+      includeEvaluations: true,
+    });
   },
 );
 
 watch(activeTab, async (tab) => {
   if (tab === "purchases") {
     await loadPurchaseHistory();
+  }
+
+  if (tab === "evaluations") {
+    await loadEvaluations();
   }
 });
 </script>
@@ -522,6 +638,7 @@ watch(activeTab, async (tab) => {
           'contacts',
           'attachments',
           'purchases',
+          'evaluations',
         ]"
         :key="tab"
         type="button"
@@ -918,6 +1035,81 @@ watch(activeTab, async (tab) => {
         </div>
       </div>
 
+      <div v-else-if="activeTab === 'evaluations'">
+        <div class="mb-bt-spacing-16 flex justify-end">
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700"
+            @click="openCreateEvaluationModal"
+          >
+            {{ $t("suppliers.evaluations.actions.newEvaluation") }}
+          </button>
+        </div>
+
+        <div v-if="loadingEvaluations" class="text-bt-grey-500">
+          {{ $t("common.loading") }}
+        </div>
+
+        <div v-else class="rounded-m border border-bt-grey-200 overflow-hidden">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-bt-primary-50 text-left">
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("suppliers.evaluations.table.score") }}
+                </th>
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("suppliers.evaluations.table.classification") }}
+                </th>
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("suppliers.evaluations.table.comment") }}
+                </th>
+                <th
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                >
+                  {{ $t("suppliers.evaluations.table.date") }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                v-for="evaluation in evaluations"
+                :key="evaluation.supplierEvaluationId"
+                class="border-t border-bt-grey-200"
+              >
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ evaluation.score }}
+                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ evaluation.classification ?? "-" }}
+                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ evaluation.comment ?? "-" }}
+                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                  {{ formatDateTime(evaluation.evaluatedAtUtc) }}
+                </td>
+              </tr>
+
+              <tr v-if="!evaluations.length">
+                <td
+                  colspan="4"
+                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+                >
+                  {{ $t("suppliers.evaluations.empty") }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div v-else>
         <div
           class="grid grid-cols-1 md:grid-cols-3 gap-bt-spacing-16 mb-bt-spacing-16"
@@ -1016,26 +1208,20 @@ watch(activeTab, async (tab) => {
             <tbody>
               <tr
                 v-for="item in purchaseHistory"
-                :key="(item as any).purchaseOrderId ?? (item as any).id"
+                :key="item.purchaseOrderId"
                 class="border-t border-bt-grey-200"
               >
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{
-                    (item as any).number ?? (item as any).purchaseOrderId ?? "-"
-                  }}
+                  {{ item.code ?? "-" }}
                 </td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ (item as any).status ?? "-" }}
+                  {{ item.status ?? "-" }}
                 </td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{
-                    formatDateTime(
-                      (item as any).createdAt ?? (item as any).date,
-                    )
-                  }}
+                  {{ formatDateTime(item.orderDate) }}
                 </td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ (item as any).total ?? "-" }}
+                  {{ formatMoney(item.total) }}
                 </td>
               </tr>
 

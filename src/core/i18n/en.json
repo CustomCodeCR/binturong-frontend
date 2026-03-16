@@ -1129,7 +1129,8 @@
         "credit": "Credit",
         "contacts": "Contacts",
         "attachments": "Attachments",
-        "purchases": "Purchases"
+        "purchases": "Purchases",
+        "evaluations": "Evaluations"
       }
     },
     "credit": {
@@ -1232,6 +1233,248 @@
         "status": "Status",
         "date": "Date",
         "total": "Total"
+      }
+    },
+    "evaluations": {
+      "modal": {
+        "createDescription": "Create an evaluation for this supplier."
+      },
+      "actions": {
+        "newEvaluation": "New evaluation"
+      },
+      "table": {
+        "score": "Score",
+        "classification": "Classification",
+        "comment": "Comment",
+        "date": "Date"
+      },
+      "empty": "There are no evaluations registered for this supplier."
+    }
+  },
+  "purchases": {
+    "title": "Purchases",
+    "subtitle": "Manage purchase orders, receipts, supplier quotes, and supplier evaluations.",
+    "searchPlaceholder": "Search current tab",
+    "messages": {
+      "loadError": "Could not load purchase data."
+    },
+    "tabs": {
+      "orders": "Orders",
+      "receipts": "Receipts",
+      "quotes": "Quotes",
+      "evaluations": "Evaluations",
+      "requests": "Requests"
+    },
+    "drawer": {
+      "messages": {
+        "loadError": "Could not load details."
+      },
+      "orderTitle": "Purchase Order Details",
+      "orderDescription": "Review purchase order information.",
+      "receiptTitle": "Purchase Receipt Details",
+      "receiptDescription": "Review receipt information.",
+      "quoteTitle": "Supplier Quote Details",
+      "quoteDescription": "Review supplier quote information."
+    },
+    "requests": {
+      "actions": {
+        "newRequest": "New Request"
+      },
+      "messages": {
+        "createSuccess": "Request created successfully",
+        "createError": "Could not create request"
+      },
+      "table": {
+        "code": "Code",
+        "branch": "Branch",
+        "requestedBy": "Requested By",
+        "status": "Status",
+        "date": "Date",
+        "notes": "Notes"
+      },
+      "empty": "No requests found"
+    },
+    "orders": {
+      "empty": "No purchase orders found.",
+      "fields": {
+        "code": "Code",
+        "supplier": "Supplier",
+        "branch": "Branch",
+        "requestId": "Request Id",
+        "orderDate": "Order Date",
+        "currency": "Currency",
+        "exchangeRate": "Exchange Rate",
+        "total": "Total",
+        "status": "Status"
+      },
+      "actions": {
+        "newOrder": "New Purchase Order",
+        "viewDetails": "View Details"
+      },
+      "messages": {
+        "createSuccess": "Purchase order created successfully.",
+        "createError": "Could not create purchase order."
+      },
+      "validation": {
+        "requiredHeader": "Code, supplier, branch, and order date are required.",
+        "requiredLines": "At least one line is required.",
+        "invalidLine": "All lines must have a product and a quantity greater than zero."
+      },
+      "modal": {
+        "createTitle": "Create Purchase Order",
+        "createDescription": "Register a new purchase order."
+      },
+      "table": {
+        "code": "Code",
+        "supplier": "Supplier",
+        "branch": "Branch",
+        "status": "Status",
+        "currency": "Currency",
+        "total": "Total",
+        "options": "Options"
+      },
+      "placeholders": {
+        "selectSupplier": "Select a supplier",
+        "selectBranch": "Select a branch",
+        "selectProduct": "Select a product",
+        "selectRequest": "Select a request"
+      },
+      "lines": {
+        "title": "Order Lines",
+        "addLine": "Add Line",
+        "product": "Product",
+        "quantity": "Quantity",
+        "unitPrice": "Unit Price",
+        "discountPerc": "Discount %",
+        "taxPerc": "Tax %",
+        "lineTotal": "Line Total"
+      }
+    },
+    "receipts": {
+      "empty": "No purchase receipts found.",
+      "fields": {
+        "receiptId": "Receipt Id",
+        "purchaseOrder": "Purchase Order",
+        "warehouse": "Warehouse",
+        "receiptDate": "Receipt Date",
+        "notes": "Notes",
+        "status": "Status"
+      },
+      "actions": {
+        "newReceipt": "New Receipt",
+        "viewDetails": "View Details"
+      },
+      "messages": {
+        "createSuccess": "Purchase receipt created successfully.",
+        "createError": "Could not create purchase receipt.",
+        "inventoryUpdated": "Inventory movement registered successfully.",
+        "inventoryMovementInfo": "Accepted receipt lines create purchase-in inventory movements automatically."
+      },
+      "validation": {
+        "requiredHeader": "Purchase order, warehouse, and receipt date are required.",
+        "invalidLine": "Received quantity and unit cost must be valid.",
+        "rejectMustBeFromDetail": "Receipt rejection should be handled from the receipt detail flow."
+      },
+      "modal": {
+        "createTitle": "Register Material Receipt",
+        "createDescription": "Register full or partial receipt and update inventory."
+      },
+      "placeholders": {
+        "selectOrder": "Select an order",
+        "selectWarehouse": "Select a warehouse"
+      },
+      "table": {
+        "receiptId": "Receipt Id",
+        "order": "Order",
+        "warehouse": "Warehouse",
+        "status": "Status",
+        "date": "Date",
+        "options": "Options"
+      },
+      "lines": {
+        "title": "Receipt Lines",
+        "product": "Product",
+        "quantityReceived": "Quantity Received",
+        "unitCost": "Unit Cost"
+      }
+    },
+    "quotes": {
+      "empty": "No supplier quotes found.",
+      "fields": {
+        "code": "Code",
+        "supplier": "Supplier",
+        "branch": "Branch",
+        "requestedAt": "Requested At",
+        "notes": "Notes",
+        "status": "Status"
+      },
+      "actions": {
+        "newQuote": "New Quote Request",
+        "viewDetails": "View Details"
+      },
+      "messages": {
+        "createSuccess": "Supplier quote request created successfully.",
+        "createError": "Could not create supplier quote request."
+      },
+      "validation": {
+        "requiredHeader": "Code, supplier, branch, and requested date are required.",
+        "invalidLine": "Each line must have a product and a quantity greater than zero."
+      },
+      "modal": {
+        "createTitle": "Create Supplier Quote Request",
+        "createDescription": "Send a quote request to a supplier."
+      },
+      "placeholders": {
+        "selectSupplier": "Select a supplier",
+        "selectBranch": "Select a branch",
+        "selectProduct": "Select a product"
+      },
+      "table": {
+        "code": "Code",
+        "supplier": "Supplier",
+        "branch": "Branch",
+        "status": "Status",
+        "requestedAt": "Requested At",
+        "options": "Options"
+      },
+      "lines": {
+        "title": "Quote Request Lines",
+        "addLine": "Add Line",
+        "product": "Product",
+        "quantity": "Quantity"
+      }
+    },
+    "evaluations": {
+      "empty": "No supplier evaluations found.",
+      "fields": {
+        "supplier": "Supplier",
+        "score": "Score",
+        "comment": "Comment",
+        "evaluatedAt": "Evaluated At"
+      },
+      "actions": {
+        "newEvaluation": "New Evaluation"
+      },
+      "messages": {
+        "createSuccess": "Supplier evaluation created successfully.",
+        "createError": "Could not create supplier evaluation."
+      },
+      "validation": {
+        "required": "Supplier, score, and evaluation date are required."
+      },
+      "modal": {
+        "createTitle": "Create Supplier Evaluation",
+        "createDescription": "Register a new supplier performance evaluation."
+      },
+      "placeholders": {
+        "selectSupplier": "Select a supplier"
+      },
+      "table": {
+        "supplier": "Supplier",
+        "score": "Score",
+        "classification": "Classification",
+        "comment": "Comment",
+        "date": "Date"
       }
     }
   }

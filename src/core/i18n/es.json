@@ -1097,7 +1097,8 @@
       "reactivate": "Reactivar",
       "delete": "Eliminar",
       "close": "Cerrar",
-      "saveChanges": "Guardar cambios"
+      "saveChanges": "Guardar cambios",
+      "evaluations": "Evaluaciones"
     },
     "messages": {
       "loadError": "No se pudieron cargar los proveedores.",
@@ -1233,6 +1234,248 @@
         "status": "Estado",
         "date": "Fecha",
         "total": "Total"
+      }
+    },
+    "evaluations": {
+      "modal": {
+        "createDescription": "Registrar evaluación para este proveedor."
+      },
+      "actions": {
+        "newEvaluation": "Nueva evaluación"
+      },
+      "table": {
+        "score": "Puntaje",
+        "classification": "Clasificación",
+        "comment": "Comentario",
+        "date": "Fecha"
+      },
+      "empty": "No hay evaluaciones registradas para este proveedor."
+    }
+  },
+  "purchases": {
+    "title": "Compras",
+    "subtitle": "Administre órdenes de compra, recepciones, cotizaciones a proveedores y evaluaciones.",
+    "searchPlaceholder": "Buscar en la pestaña actual",
+    "messages": {
+      "loadError": "No se pudieron cargar los datos de compras."
+    },
+    "tabs": {
+      "orders": "Órdenes",
+      "receipts": "Recepciones",
+      "quotes": "Cotizaciones",
+      "evaluations": "Evaluaciones",
+      "requests": "Solicitudes"
+    },
+    "drawer": {
+      "messages": {
+        "loadError": "No se pudieron cargar los detalles."
+      },
+      "orderTitle": "Detalle de orden de compra",
+      "orderDescription": "Revise la información de la orden de compra.",
+      "receiptTitle": "Detalle de recepción",
+      "receiptDescription": "Revise la información de la recepción.",
+      "quoteTitle": "Detalle de cotización",
+      "quoteDescription": "Revise la información de la cotización."
+    },
+    "requests": {
+      "actions": {
+        "newRequest": "Nueva solicitud"
+      },
+      "messages": {
+        "createSuccess": "Solicitud creada correctamente",
+        "createError": "No se pudo crear la solicitud"
+      },
+      "table": {
+        "code": "Código",
+        "branch": "Sucursal",
+        "requestedBy": "Solicitado por",
+        "status": "Estado",
+        "date": "Fecha",
+        "notes": "Notas"
+      },
+      "empty": "No se encontraron solicitudes"
+    },
+    "orders": {
+      "empty": "No se encontraron órdenes de compra.",
+      "fields": {
+        "code": "Código",
+        "supplier": "Proveedor",
+        "branch": "Sucursal",
+        "requestId": "Id solicitud",
+        "orderDate": "Fecha de orden",
+        "currency": "Moneda",
+        "exchangeRate": "Tipo de cambio",
+        "total": "Total",
+        "status": "Estado"
+      },
+      "actions": {
+        "newOrder": "Nueva orden de compra",
+        "viewDetails": "Ver detalle"
+      },
+      "messages": {
+        "createSuccess": "Orden de compra creada correctamente.",
+        "createError": "No se pudo crear la orden de compra."
+      },
+      "validation": {
+        "requiredHeader": "Código, proveedor, sucursal y fecha de orden son obligatorios.",
+        "requiredLines": "Debe existir al menos una línea.",
+        "invalidLine": "Todas las líneas deben tener producto y cantidad mayor que cero."
+      },
+      "modal": {
+        "createTitle": "Crear orden de compra",
+        "createDescription": "Registre una nueva orden de compra."
+      },
+      "table": {
+        "code": "Código",
+        "supplier": "Proveedor",
+        "branch": "Sucursal",
+        "status": "Estado",
+        "currency": "Moneda",
+        "total": "Total",
+        "options": "Opciones"
+      },
+      "placeholders": {
+        "selectSupplier": "Seleccione un proveedor",
+        "selectBranch": "Seleccione una sucursal",
+        "selectProduct": "Seleccione un producto",
+        "selectRequest": "Seleccione una solicitud"
+      },
+      "lines": {
+        "title": "Líneas de la orden",
+        "addLine": "Agregar línea",
+        "product": "Producto",
+        "quantity": "Cantidad",
+        "unitPrice": "Precio unitario",
+        "discountPerc": "Descuento %",
+        "taxPerc": "Impuesto %",
+        "lineTotal": "Total línea"
+      }
+    },
+    "receipts": {
+      "empty": "No se encontraron recepciones.",
+      "fields": {
+        "receiptId": "Id recepción",
+        "purchaseOrder": "Orden de compra",
+        "warehouse": "Almacén",
+        "receiptDate": "Fecha de recepción",
+        "notes": "Notas",
+        "status": "Estado"
+      },
+      "actions": {
+        "newReceipt": "Nueva recepción",
+        "viewDetails": "Ver detalle"
+      },
+      "messages": {
+        "createSuccess": "Recepción creada correctamente.",
+        "createError": "No se pudo crear la recepción.",
+        "inventoryUpdated": "Movimiento de inventario registrado correctamente.",
+        "inventoryMovementInfo": "Las líneas aceptadas de la recepción crean movimientos de entrada por compra automáticamente."
+      },
+      "validation": {
+        "requiredHeader": "Orden de compra, almacén y fecha de recepción son obligatorios.",
+        "invalidLine": "La cantidad recibida y el costo unitario deben ser válidos.",
+        "rejectMustBeFromDetail": "El rechazo de recepción debe manejarse desde el flujo de detalle de recepción."
+      },
+      "modal": {
+        "createTitle": "Registrar recepción de materiales",
+        "createDescription": "Registre recepción total o parcial y actualice inventario."
+      },
+      "placeholders": {
+        "selectOrder": "Seleccione una orden",
+        "selectWarehouse": "Seleccione un almacén"
+      },
+      "table": {
+        "receiptId": "Id recepción",
+        "order": "Orden",
+        "warehouse": "Almacén",
+        "status": "Estado",
+        "date": "Fecha",
+        "options": "Opciones"
+      },
+      "lines": {
+        "title": "Líneas de recepción",
+        "product": "Producto",
+        "quantityReceived": "Cantidad recibida",
+        "unitCost": "Costo unitario"
+      }
+    },
+    "quotes": {
+      "empty": "No se encontraron cotizaciones.",
+      "fields": {
+        "code": "Código",
+        "supplier": "Proveedor",
+        "branch": "Sucursal",
+        "requestedAt": "Fecha de solicitud",
+        "notes": "Notas",
+        "status": "Estado"
+      },
+      "actions": {
+        "newQuote": "Nueva solicitud de cotización",
+        "viewDetails": "Ver detalle"
+      },
+      "messages": {
+        "createSuccess": "Solicitud de cotización creada correctamente.",
+        "createError": "No se pudo crear la solicitud de cotización."
+      },
+      "validation": {
+        "requiredHeader": "Código, proveedor, sucursal y fecha de solicitud son obligatorios.",
+        "invalidLine": "Cada línea debe tener producto y cantidad mayor que cero."
+      },
+      "modal": {
+        "createTitle": "Crear solicitud de cotización",
+        "createDescription": "Envíe una solicitud de cotización a un proveedor."
+      },
+      "placeholders": {
+        "selectSupplier": "Seleccione un proveedor",
+        "selectBranch": "Seleccione una sucursal",
+        "selectProduct": "Seleccione un producto"
+      },
+      "table": {
+        "code": "Código",
+        "supplier": "Proveedor",
+        "branch": "Sucursal",
+        "status": "Estado",
+        "requestedAt": "Solicitada en",
+        "options": "Opciones"
+      },
+      "lines": {
+        "title": "Líneas de cotización",
+        "addLine": "Agregar línea",
+        "product": "Producto",
+        "quantity": "Cantidad"
+      }
+    },
+    "evaluations": {
+      "empty": "No se encontraron evaluaciones de proveedores.",
+      "fields": {
+        "supplier": "Proveedor",
+        "score": "Puntaje",
+        "comment": "Comentario",
+        "evaluatedAt": "Fecha de evaluación"
+      },
+      "actions": {
+        "newEvaluation": "Nueva evaluación"
+      },
+      "messages": {
+        "createSuccess": "Evaluación de proveedor creada correctamente.",
+        "createError": "No se pudo crear la evaluación del proveedor."
+      },
+      "validation": {
+        "required": "Proveedor, puntaje y fecha de evaluación son obligatorios."
+      },
+      "modal": {
+        "createTitle": "Crear evaluación de proveedor",
+        "createDescription": "Registre una nueva evaluación de desempeño del proveedor."
+      },
+      "placeholders": {
+        "selectSupplier": "Seleccione un proveedor"
+      },
+      "table": {
+        "supplier": "Proveedor",
+        "score": "Puntaje",
+        "classification": "Clasificación",
+        "comment": "Comentario",
+        "date": "Fecha"
       }
     }
   }

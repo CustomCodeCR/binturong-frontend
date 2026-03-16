@@ -42,12 +42,12 @@ const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
 
-// ← NUEVO: Filtro de estado
+// Filtro de estado
 const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
 
-// ← NUEVO: Usuarios filtrados localmente
+//Usuarios filtrados localmente
 const filteredUsers = computed(() => {
   let result = users.value;
 

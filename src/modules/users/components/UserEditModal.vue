@@ -24,7 +24,9 @@ const loadingRoles = ref(false);
 
 const user = ref<User | null>(null);
 const roleOptions = ref<RoleOption[]>([]);
-const selectedRoleId = ref("");
+
+// ← CAMBIO: Array de roleIds en lugar de string único
+const selectedRoleIds = ref<string[]>([]);
 
 const username = ref("");
 const email = ref("");
@@ -85,7 +87,10 @@ async function loadUser() {
     failedAttempts.value = response.failedAttempts ?? 0;
     lockedUntil.value = response.lockedUntil ?? null;
 
-    selectedRoleId.value = String(response.roles?.[0]?.roleId ?? "").trim();
+    // ← CAMBIO: Cargar TODOS los roleIds del usuario
+    selectedRoleIds.value = (response.roles ?? [])
+      .map((role) => String(role.roleId ?? "").trim())
+      .filter((id) => id.length > 0);
   } catch (error: any) {
     modalStore.onError?.({
       code: error?.status ?? 500,
@@ -96,23 +101,49 @@ async function loadUser() {
   }
 }
 
-async function syncRole() {
+// ← NUEVA FUNCIÓN: Sincronizar múltiples roles
+// ← NUEVA FUNCIÓN: Sincronizar múltiples roles
+async function syncRoles() {
   if (!user.value) {
     return;
   }
 
-  const nextRoleId = String(selectedRoleId.value ?? "").trim();
-  const currentRoleId = String(user.value.roles?.[0]?.roleId ?? "").trim();
+  // Roles actuales del usuario
+  const currentRoleIds = (user.value.roles ?? [])
+    .map((role) => String(role.roleId ?? "").trim())
+    .filter((id) => id.length > 0)
+    .sort();
 
-  if (!nextRoleId && currentRoleId) {
-    await UsersService.removeRole(user.value.userId, currentRoleId);
-    return;
+  // Roles seleccionados en el formulario
+  const nextRoleIds = selectedRoleIds.value
+    .map((id) => String(id ?? "").trim())
+    .filter((id) => id.length > 0)
+    .sort();
+
+  // Roles a eliminar (están en current pero NO en next)
+  const rolesToRemove = currentRoleIds.filter((id) => !nextRoleIds.includes(id));
+
+  // Roles a agregar (están en next pero NO en current)
+  const rolesToAdd = nextRoleIds.filter((id) => !currentRoleIds.includes(id));
+
+  console.log("🔍 syncRoles DEBUG:");
+  console.log("  currentRoleIds:", currentRoleIds);
+  console.log("  nextRoleIds:", nextRoleIds);
+  console.log("  rolesToRemove:", rolesToRemove);
+  console.log("  rolesToAdd:", rolesToAdd);
+
+  // Eliminar roles uno por uno
+  for (const roleId of rolesToRemove) {
+    console.log(`  → Removing role: ${roleId}`);
+    await UsersService.removeRole(user.value.userId, roleId);
   }
 
-  if (nextRoleId && nextRoleId !== currentRoleId) {
+  // Agregar roles uno por uno
+  for (const roleId of rolesToAdd) {
+    console.log(`  → Adding role: ${roleId} with replaceExisting: false`);
     await UsersService.modifyRole(user.value.userId, {
-      roleId: nextRoleId,
-      replaceExisting: true,
+      roleId: roleId,
+      replaceExisting: false, // ← NO reemplazar, solo agregar
     });
   }
 }
@@ -133,6 +164,7 @@ async function submit() {
   saving.value = true;
 
   try {
+    // 1. Actualizar datos del usuario
     await UsersService.update(user.value.userId, {
       username: username.value.trim(),
       email: email.value.trim(),
@@ -143,10 +175,12 @@ async function submit() {
       lockedUntil: lockedUntil.value,
     });
 
-    await syncRole();
+    // 2. Sincronizar roles
+    await syncRoles();
 
-    const selectedRole = roleOptions.value.find(
-      (role) => role.roleId === selectedRoleId.value,
+    // 3. Preparar payload de éxito con los roles seleccionados
+    const selectedRoles = roleOptions.value.filter((role) =>
+      selectedRoleIds.value.includes(role.roleId),
     );
 
     modalStore.onSuccess?.({
@@ -158,9 +192,10 @@ async function submit() {
       mustChangePassword: mustChangePassword.value,
       failedAttempts: failedAttempts.value,
       lockedUntil: lockedUntil.value,
-      roles: selectedRole
-        ? [{ roleId: selectedRole.roleId, name: selectedRole.name }]
-        : [],
+      roles: selectedRoles.map((role) => ({
+        roleId: role.roleId,
+        name: role.name,
+      })),
     });
 
     modalStore.close();
@@ -219,29 +254,48 @@ onMounted(async () => {
         />
       </div>
 
+      <!-- ← CAMBIO: Checkboxes para múltiples roles -->
       <div class="md:col-span-2">
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
           {{ $t("users.fields.roles") }}
         </label>
 
-        <select
-          v-model="selectedRoleId"
-          :disabled="loadingRoles"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
+        <div
+          v-if="loadingRoles"
+          class="py-bt-spacing-12 text-center text-bt-grey-500"
         >
-          <option value="">No role</option>
-          <option
-            v-for="role in roleOptions"
-            :key="role.roleId"
-            :value="role.roleId"
-          >
-            {{ role.name }}
-          </option>
-        </select>
-
-        <div v-if="loadingRoles" class="mt-bt-spacing-8 text-bt-grey-500">
           {{ $t("users.validation.loadingRoles") }}
         </div>
+
+        <div
+          v-else
+          class="space-y-bt-spacing-8 max-h-48 overflow-y-auto border border-bt-grey-300 rounded-m p-bt-spacing-12 bg-bt-grey-50"
+        >
+          <label
+            v-for="role in roleOptions"
+            :key="role.roleId"
+            class="flex items-center gap-bt-spacing-8 p-bt-spacing-8 hover:bg-bt-white rounded cursor-pointer transition"
+          >
+            <input
+              type="checkbox"
+              :value="role.roleId"
+              v-model="selectedRoleIds"
+              class="rounded border-bt-grey-300 text-bt-accent-500 focus:ring-bt-accent-500"
+            />
+            <span class="text-bt-primary-700">{{ role.name }}</span>
+          </label>
+
+          <div
+            v-if="!roleOptions.length"
+            class="text-center text-bt-grey-500 py-bt-spacing-12"
+          >
+            {{ $t("users.validation.noRolesAvailable") }}
+          </div>
+        </div>
+
+        <p class="mt-bt-spacing-8 text-xs text-bt-grey-500">
+          {{ $t("users.validation.selectMultipleRoles") }}
+        </p>
       </div>
 
       <div class="flex items-center gap-bt-spacing-8">

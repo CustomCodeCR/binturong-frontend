@@ -21,7 +21,9 @@ const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
 const roles = ref<RoleOption[]>([]);
-const selectedRoleId = ref("");
+
+// ← CAMBIO: Array de roleIds en lugar de string único
+const selectedRoleIds = ref<string[]>([]);
 
 const loading = ref(false);
 const loadingRoles = ref(false);
@@ -81,10 +83,11 @@ async function submit() {
     return;
   }
 
-  if (!selectedRoleId.value.trim()) {
+  // ← CAMBIO: Validar que haya al menos un rol seleccionado
+  if (selectedRoleIds.value.length === 0) {
     modalStore.onError?.({
       code: 400,
-      message: "A role is required.",
+      message: "At least one role is required.",
     });
     return;
   }
@@ -100,6 +103,7 @@ async function submit() {
   loading.value = true;
 
   try {
+    // 1. Crear el usuario
     const created = await UsersService.create({
       username: username.value.trim(),
       email: email.value.trim(),
@@ -113,14 +117,25 @@ async function submit() {
       throw new Error("User was created but no valid userId was returned.");
     }
 
-    await UsersService.modifyRole(userId, {
-      roleId: selectedRoleId.value.trim(),
-      replaceExisting: true,
-    });
+    // 2. Asignar roles (uno por uno)
+    const validRoleIds = selectedRoleIds.value
+      .map((id) => String(id ?? "").trim())
+      .filter((id) => id.length > 0);
+
+    console.log("🔍 Creating user with roles:", validRoleIds);
+
+    for (const roleId of validRoleIds) {
+      console.log(`  → Assigning role: ${roleId}`);
+      await UsersService.modifyRole(userId, {
+        roleId: roleId,
+        replaceExisting: false, // ← NO reemplazar, agregar
+      });
+    }
 
     modalStore.onSuccess?.(created);
     modalStore.close();
   } catch (error: any) {
+    console.error("❌ Error creating user:", error);
     modalStore.onError?.({
       code: error?.status ?? 500,
       message: error?.message ?? "User creation failed.",
@@ -214,24 +229,48 @@ onMounted(loadRoles);
         </p>
       </div>
 
+      <!-- ← CAMBIO: Checkboxes para múltiples roles -->
       <div class="md:col-span-2">
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-          Role
+          Roles
         </label>
-        <select
-          v-model="selectedRoleId"
-          :disabled="loadingRoles"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
-        >
-          <option value="" disabled>Select a role</option>
-          <option v-for="role in roles" :key="role.roleId" :value="role.roleId">
-            {{ role.name }}
-          </option>
-        </select>
 
-        <div v-if="loadingRoles" class="mt-bt-spacing-8 text-bt-grey-500">
+        <div
+          v-if="loadingRoles"
+          class="py-bt-spacing-12 text-center text-bt-grey-500"
+        >
           Loading roles...
         </div>
+
+        <div
+          v-else
+          class="space-y-bt-spacing-8 max-h-48 overflow-y-auto border border-bt-grey-300 rounded-m p-bt-spacing-12 bg-bt-grey-50"
+        >
+          <label
+            v-for="role in roles"
+            :key="role.roleId"
+            class="flex items-center gap-bt-spacing-8 p-bt-spacing-8 hover:bg-bt-white rounded cursor-pointer transition"
+          >
+            <input
+              type="checkbox"
+              :value="role.roleId"
+              v-model="selectedRoleIds"
+              class="rounded border-bt-grey-300 text-bt-accent-500 focus:ring-bt-accent-500"
+            />
+            <span class="text-bt-primary-700">{{ role.name }}</span>
+          </label>
+
+          <div
+            v-if="!roles.length"
+            class="text-center text-bt-grey-500 py-bt-spacing-12"
+          >
+            No roles available
+          </div>
+        </div>
+
+        <p class="mt-bt-spacing-8 text-xs text-bt-grey-500">
+          Select one or more roles for this user
+        </p>
       </div>
 
       <div class="md:col-span-2">

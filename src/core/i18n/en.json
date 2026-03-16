@@ -749,6 +749,8 @@
       }
     },
     "drawer": {
+      "title": "Transfer Details",
+      "description": "Review transfer information, lines, status, and traceability.",
       "fields": {
         "fromBranch": "From branch",
         "toBranch": "To branch",
@@ -1041,7 +1043,8 @@
       }
     },
     "placeholders": {
-      "selectBranch": "Select a branch"
+      "selectBranch": "Select a branch",
+      "selectUser": "Select a user"
     }
   }
 }

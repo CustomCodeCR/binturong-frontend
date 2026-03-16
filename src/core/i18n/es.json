@@ -750,6 +750,8 @@
       }
     },
     "drawer": {
+      "title": "Detalles de la transferencia",
+      "description": "Revise la información de la transferencia, sus líneas, estado y trazabilidad.",
       "fields": {
         "fromBranch": "Sucursal origen",
         "toBranch": "Sucursal destino",
@@ -1042,7 +1044,8 @@
       }
     },
     "placeholders": {
-      "selectBranch": "Seleccione una sucursal"
+      "selectBranch": "Seleccione una sucursal",
+      "selectUser": "Seleccione un usuario"
     }
   }
 }

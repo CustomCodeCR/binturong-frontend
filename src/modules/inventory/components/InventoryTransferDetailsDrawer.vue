@@ -21,20 +21,41 @@ const authStore = useAuthStore();
 
 const loadingTransfer = ref(false);
 const actionLoading = ref(false);
-
 const transfer = ref<InventoryTransfer | null>(null);
 
 const normalizedStatus = computed(() =>
-  (transfer.value?.status ?? "").trim().toUpperCase(),
+  String(transfer.value?.status ?? "")
+    .trim()
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .replaceAll("-", "_")
+    .replaceAll(" ", "_")
+    .toUpperCase(),
 );
 
-const canApprove = computed(
-  () => normalizedStatus.value === "REVIEW_REQUESTED",
+const isPendingReview = computed(() =>
+  ["PENDING_REVIEW", "REVIEW_REQUESTED", "REVIEWREQUESTED"].includes(
+    normalizedStatus.value,
+  ),
 );
-const canReject = computed(() => normalizedStatus.value === "REVIEW_REQUESTED");
-const canConfirmReceived = computed(
-  () => normalizedStatus.value === "APPROVED",
+
+const isApproved = computed(() =>
+  ["APPROVED"].includes(normalizedStatus.value),
 );
+
+const canApprove = computed(() => isPendingReview.value);
+const canReject = computed(() => isPendingReview.value);
+const canConfirmReceived = computed(() => isApproved.value);
+
+function emitInventoryRefresh(action: string) {
+  window.dispatchEvent(
+    new CustomEvent("inventory-transfer-updated", {
+      detail: {
+        action,
+        transferId: transfer.value?.transferId ?? props.transferId,
+      },
+    }),
+  );
+}
 
 function formatDateTime(value?: string | null): string {
   if (!value) {
@@ -134,9 +155,11 @@ async function loadTransfer() {
   loadingTransfer.value = true;
 
   try {
-    transfer.value = await InventoryTransfersService.getInventoryTransferById(
+    const response = await InventoryTransfersService.getInventoryTransferById(
       props.transferId,
     );
+
+    transfer.value = response ?? null;
   } catch (error: any) {
     toastStore.addToast({
       severity: "error",
@@ -164,12 +187,23 @@ async function approveTransfer() {
       },
     );
 
+    transfer.value = {
+      ...transfer.value,
+      status: "Approved",
+      approvedByUserId: authStore.userId,
+      approvedByUsername:
+        authStore.username ?? transfer.value.approvedByUsername,
+      approvedByEmail: authStore.email ?? transfer.value.approvedByEmail,
+      updatedAt: new Date().toISOString(),
+    };
+
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
       message: t("inventory.messages.transferApproved"),
     });
 
+    emitInventoryRefresh("approved");
     await loadTransfer();
   } catch (error: any) {
     toastStore.addToast({
@@ -190,13 +224,22 @@ async function rejectTransfer() {
   actionLoading.value = true;
 
   try {
+    const rejectionReason = t("inventory.drawer.defaultRejectReason");
+
     await InventoryTransfersService.rejectInventoryTransfer(
       transfer.value.transferId,
       {
         rejectedByUserId: authStore.userId,
-        reason: t("inventory.drawer.defaultRejectReason"),
+        reason: rejectionReason,
       },
     );
+
+    transfer.value = {
+      ...transfer.value,
+      status: "Rejected",
+      rejectionReason,
+      updatedAt: new Date().toISOString(),
+    };
 
     toastStore.addToast({
       severity: "success",
@@ -204,6 +247,7 @@ async function rejectTransfer() {
       message: t("inventory.messages.transferRejected"),
     });
 
+    emitInventoryRefresh("rejected");
     await loadTransfer();
   } catch (error: any) {
     toastStore.addToast({
@@ -231,12 +275,19 @@ async function confirmTransferReceived() {
       },
     );
 
+    transfer.value = {
+      ...transfer.value,
+      status: "Received",
+      updatedAt: new Date().toISOString(),
+    };
+
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
       message: t("inventory.messages.transferConfirmed"),
     });
 
+    emitInventoryRefresh("received");
     await loadTransfer();
   } catch (error: any) {
     toastStore.addToast({

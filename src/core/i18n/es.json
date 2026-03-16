@@ -945,7 +945,9 @@
     "offline": "Sin conexión",
     "language": "Idioma",
     "languageChanged": "Idioma actualizado correctamente.",
-    "noBranch": "Sin sucursal asignada"
+    "noBranch": "Sin sucursal asignada",
+    "employeeAssigned": "Asignado a empleado",
+    "employeeNotAssigned": "No asignado a empleado"
   },
   "logout": "Cerrar sesión",
   "logoutConfirm": "¿Desea cerrar su sesión?",

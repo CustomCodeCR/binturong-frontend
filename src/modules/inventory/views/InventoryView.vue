@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-vue-next";
 
@@ -52,6 +52,7 @@ const loadingBranches = ref(false);
 const loadingEmployee = ref(false);
 const loadingInventory = ref(false);
 const loadingTransfers = ref(false);
+const reloadingAfterAction = ref(false);
 
 const inventorySearch = ref("");
 const transferSearch = ref("");
@@ -68,14 +69,16 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const isSuperAdminOrAdmin = computed(() => {
+const isAdminUser = computed(() => {
   return authStore.roles.some((role) =>
     ["superadmin", "admin"].includes(String(role).toLowerCase()),
   );
 });
 
 const assignedBranchId = computed(() => {
-  return String((assignedEmployee.value as any)?.branchId ?? "").trim();
+  return String(
+    assignedEmployee.value?.branchId ?? authStore.employeeBranchId ?? "",
+  ).trim();
 });
 
 const assignedWarehouseId = computed(() => {
@@ -83,7 +86,7 @@ const assignedWarehouseId = computed(() => {
 });
 
 const visibleBranches = computed(() => {
-  if (isSuperAdminOrAdmin.value) {
+  if (isAdminUser.value) {
     return branches.value;
   }
 
@@ -92,16 +95,52 @@ const visibleBranches = computed(() => {
   }
 
   return branches.value.filter(
-    (branch) => branch.branchId === assignedBranchId.value,
+    (branch) => String(branch.branchId).trim() === assignedBranchId.value,
   );
 });
 
+function transferBelongsToCurrentBranch(transfer: InventoryTransfer): boolean {
+  if (isAdminUser.value) {
+    return true;
+  }
+
+  if (!assignedBranchId.value) {
+    return false;
+  }
+
+  const fromBranchId = String(transfer.fromBranchId ?? "").trim();
+  const toBranchId = String(transfer.toBranchId ?? "").trim();
+
+  return (
+    fromBranchId === assignedBranchId.value ||
+    toBranchId === assignedBranchId.value
+  );
+}
+
+function canDeleteTransfer(transfer: InventoryTransfer): boolean {
+  if (isAdminUser.value) {
+    return true;
+  }
+
+  return transferBelongsToCurrentBranch(transfer);
+}
+
 async function fetchTransfers(): Promise<InventoryTransfer[]> {
-  return await InventoryTransfersService.getInventoryTransfers({
+  const response = await InventoryTransfersService.getInventoryTransfers({
     page: transferPage.value,
     pageSize: pageSize.value,
     search: transferSearch.value.trim() || undefined,
   });
+
+  const safeTransfers = response ?? [];
+
+  if (isAdminUser.value) {
+    return safeTransfers;
+  }
+
+  return safeTransfers.filter((transfer) =>
+    transferBelongsToCurrentBranch(transfer),
+  );
 }
 
 async function loadBranches() {
@@ -129,7 +168,7 @@ async function loadBranches() {
 async function loadAssignedEmployee() {
   assignedEmployee.value = null;
 
-  if (isSuperAdminOrAdmin.value) {
+  if (isAdminUser.value) {
     return;
   }
 
@@ -171,9 +210,7 @@ async function loadInventory() {
 
         let filteredItems = items ?? [];
 
-        // Si luego tenés endpoint por warehouse, aquí es donde se reemplaza
-        // por una llamada real a inventario por almacén.
-        if (!isSuperAdminOrAdmin.value && assignedWarehouseId.value) {
+        if (!isAdminUser.value && assignedWarehouseId.value) {
           filteredItems = filteredItems.filter(() => true);
         }
 
@@ -212,6 +249,25 @@ async function loadTransfers() {
   } finally {
     loadingTransfers.value = false;
   }
+}
+
+async function reloadAllAfterTransferAction() {
+  reloadingAfterAction.value = true;
+
+  try {
+    await Promise.all([
+      loadBranches(),
+      loadAssignedEmployee(),
+      loadInventory(),
+      loadTransfers(),
+    ]);
+  } finally {
+    reloadingAfterAction.value = false;
+  }
+}
+
+function handleInventoryTransferUpdated() {
+  void reloadAllAfterTransferAction();
 }
 
 async function reloadInventoryEventually(options?: {
@@ -277,6 +333,19 @@ async function reloadTransfersUntil(
 }
 
 function patchTransferInList(payload: InventoryTransferSuccessPayload) {
+  const draftTransfer = {
+    id: `transfer:${payload.transferId}`,
+    transferId: payload.transferId,
+    status: payload.status,
+    notes: payload.notes,
+    createdAt: payload.createdAt,
+    lines: payload.lines as any[],
+  } as InventoryTransfer;
+
+  if (!isAdminUser.value && !transferBelongsToCurrentBranch(draftTransfer)) {
+    return;
+  }
+
   const existingIndex = transfers.value.findIndex(
     (transfer) => transfer.transferId === payload.transferId,
   );
@@ -297,17 +366,7 @@ function patchTransferInList(payload: InventoryTransferSuccessPayload) {
     return;
   }
 
-  transfers.value = [
-    {
-      id: `transfer:${payload.transferId}`,
-      transferId: payload.transferId,
-      status: payload.status,
-      notes: payload.notes,
-      createdAt: payload.createdAt,
-      lines: payload.lines as any[],
-    } as InventoryTransfer,
-    ...transfers.value,
-  ];
+  transfers.value = [draftTransfer, ...transfers.value];
 }
 
 function removeTransferFromList(transferId: string) {
@@ -466,6 +525,15 @@ function openMovementModal(
 }
 
 function openTransferDrawer(transfer: InventoryTransfer) {
+  if (!transferBelongsToCurrentBranch(transfer)) {
+    toastStore.addToast({
+      severity: "warning",
+      title: t("toast.warning"),
+      message: t("inventory.messages.transferNotAvailableForBranch"),
+    });
+    return;
+  }
+
   drawerStore.openDrawer({
     component: InventoryTransferDetailsDrawer,
     props: {
@@ -481,6 +549,15 @@ function openTransferDrawer(transfer: InventoryTransfer) {
 }
 
 async function deleteTransfer(transfer: InventoryTransfer) {
+  if (!canDeleteTransfer(transfer)) {
+    toastStore.addToast({
+      severity: "warning",
+      title: t("toast.warning"),
+      message: t("inventory.messages.transferDeleteNotAllowed"),
+    });
+    return;
+  }
+
   try {
     await InventoryTransfersService.deleteInventoryTransfer(
       transfer.transferId,
@@ -500,6 +577,8 @@ async function deleteTransfer(transfer: InventoryTransfer) {
           (item) => item.transferId === transfer.transferId,
         ),
     );
+
+    await reloadInventoryEventually();
   } catch {
     toastStore.addToast({
       severity: "error",
@@ -546,9 +625,21 @@ watch(
 );
 
 onMounted(async () => {
+  window.addEventListener(
+    "inventory-transfer-updated",
+    handleInventoryTransferUpdated as EventListener,
+  );
+
   await loadBranches();
   await loadAssignedEmployee();
   await Promise.all([loadInventory(), loadTransfers()]);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener(
+    "inventory-transfer-updated",
+    handleInventoryTransferUpdated as EventListener,
+  );
 });
 </script>
 
@@ -566,6 +657,13 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <div
+        v-if="reloadingAfterAction"
+        class="mb-bt-spacing-16 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-info-100 text-bt-info-700 shrink-0"
+      >
+        {{ $t("common.loading") }}
+      </div>
+
       <div class="flex flex-wrap gap-bt-spacing-8 mb-bt-spacing-24 shrink-0">
         <button
           type="button"
@@ -924,11 +1022,15 @@ onMounted(async () => {
                         label: t('inventory.actions.viewDetails'),
                         action: () => openTransferDrawer(transfer),
                       },
-                      {
-                        label: t('inventory.actions.delete'),
-                        action: () => deleteTransfer(transfer),
-                        danger: true,
-                      },
+                      ...(canDeleteTransfer(transfer)
+                        ? [
+                            {
+                              label: t('inventory.actions.delete'),
+                              action: () => deleteTransfer(transfer),
+                              danger: true,
+                            },
+                          ]
+                        : []),
                     ]"
                   >
                     <template #trigger>

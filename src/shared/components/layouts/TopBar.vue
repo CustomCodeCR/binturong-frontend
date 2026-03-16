@@ -1,23 +1,24 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import {
   Globe,
   LogOut,
-  User,
   ChevronDown,
   Clock3,
   Wifi,
   WifiOff,
   Building2,
+  UserCheck,
+  UserX,
 } from "lucide-vue-next";
 
 import { useAuthStore } from "@/core/stores/authStore";
 import { useToastStore } from "@/core/stores/toastStore";
 import { EmployeesService } from "@/core/services/employeesService";
 
-import type { Employee } from "@/core/interfaces/employees";
+type AttendanceState = "CHECK_IN" | "CHECK_OUT" | null;
 
 const router = useRouter();
 const { t, locale } = useI18n();
@@ -27,16 +28,18 @@ const toastStore = useToastStore();
 
 const showLogoutModal = ref(false);
 const openUserMenu = ref(false);
-const online = ref(navigator.onLine);
-
-const employee = ref<Employee | null>(null);
-const loadingEmployee = ref(false);
 const attendanceLoading = ref(false);
-
 const menuRoot = ref<HTMLElement | null>(null);
 
+/**
+ * Local reactive attendance state.
+ * It updates instantly after check-in / check-out
+ * and stays synced with the employee profile history.
+ */
+const attendanceState = ref<AttendanceState>(null);
+
 const displayName = computed(() => {
-  if (employee.value?.fullName?.trim()) return employee.value.fullName;
+  if (authStore.employeeFullName?.trim()) return authStore.employeeFullName;
   if (authStore.username?.trim()) return authStore.username;
   return "User";
 });
@@ -44,7 +47,13 @@ const displayName = computed(() => {
 const displayEmail = computed(() => authStore.email || "-");
 
 const displayBranch = computed(() => {
-  return employee.value?.branchName || t("topbar.noBranch");
+  return authStore.employeeBranchName || t("topbar.noBranch");
+});
+
+const employeeAssignedLabel = computed(() => {
+  return authStore.employeeAssigned
+    ? t("topbar.employeeAssigned")
+    : t("topbar.employeeNotAssigned");
 });
 
 const initials = computed(() => {
@@ -57,64 +66,48 @@ const initials = computed(() => {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 });
 
+const canCheckAttendance = computed(() => !!authStore.employeeId);
+
+const sortedHistory = computed(() => {
+  if (!authStore.employeeProfile?.history?.length) return [];
+
+  return [...authStore.employeeProfile.history].sort(
+    (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime(),
+  );
+});
+
+const lastAttendanceEvent = computed(() => {
+  return sortedHistory.value.length ? sortedHistory.value[0] : null;
+});
+
+/**
+ * Sync local state with store history
+ */
+watch(
+  lastAttendanceEvent,
+  (event) => {
+    attendanceState.value = event?.eventType ?? null;
+  },
+  { immediate: true },
+);
+
+const online = computed(() => attendanceState.value === "CHECK_IN");
+
 const connectionLabel = computed(() =>
   online.value ? t("topbar.online") : t("topbar.offline"),
 );
 
-const canCheckAttendance = computed(() => !!employee.value?.employeeId);
-
-const lastAttendanceEvent = computed(() => {
-  if (!employee.value?.history?.length) return null;
-  return [...employee.value.history].sort(
-    (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime(),
-  )[0];
-});
-
 const suggestedAttendanceAction = computed<"check-in" | "check-out">(() => {
-  if (!lastAttendanceEvent.value) return "check-in";
-  return lastAttendanceEvent.value.eventType === "CHECK_IN"
-    ? "check-out"
-    : "check-in";
+  if (!attendanceState.value) return "check-in";
+
+  return attendanceState.value === "CHECK_IN" ? "check-out" : "check-in";
 });
 
 function handleOutsideClick(event: MouseEvent) {
   if (!menuRoot.value) return;
+
   if (!menuRoot.value.contains(event.target as Node)) {
     openUserMenu.value = false;
-  }
-}
-
-function handleOnline() {
-  online.value = true;
-}
-
-function handleOffline() {
-  online.value = false;
-}
-
-async function loadEmployeeProfile() {
-  if (!authStore.userId) {
-    employee.value = null;
-    return;
-  }
-
-  loadingEmployee.value = true;
-
-  try {
-    const employees = await EmployeesService.browse({
-      page: 1,
-      pageSize: 100,
-      search: authStore.userId,
-    });
-
-    const matchedByUserId =
-      employees.find((item) => item.userId === authStore.userId) ?? null;
-
-    employee.value = matchedByUserId;
-  } catch {
-    employee.value = null;
-  } finally {
-    loadingEmployee.value = false;
   }
 }
 
@@ -130,8 +123,14 @@ function toggleLanguage() {
   openUserMenu.value = false;
 }
 
+async function refreshEmployeeProfile() {
+  await authStore.loadEmployeeProfile();
+}
+
 async function handleAttendance() {
-  if (!employee.value?.employeeId) {
+  const currentEmployeeId = authStore.employeeId;
+
+  if (!currentEmployeeId) {
     toastStore.addToast({
       severity: "warning",
       title: t("toast.warning"),
@@ -144,7 +143,17 @@ async function handleAttendance() {
 
   try {
     if (suggestedAttendanceAction.value === "check-in") {
-      await EmployeesService.checkIn(employee.value.employeeId);
+      await EmployeesService.checkIn(currentEmployeeId);
+
+      /**
+       * Update UI immediately
+       */
+      attendanceState.value = "CHECK_IN";
+
+      /**
+       * Optional sync with backend/store
+       */
+      await refreshEmployeeProfile();
 
       toastStore.addToast({
         severity: "success",
@@ -152,7 +161,17 @@ async function handleAttendance() {
         message: t("employees.attendance.messages.checkInSuccess"),
       });
     } else {
-      await EmployeesService.checkOut(employee.value.employeeId);
+      await EmployeesService.checkOut(currentEmployeeId);
+
+      /**
+       * Update UI immediately
+       */
+      attendanceState.value = "CHECK_OUT";
+
+      /**
+       * Optional sync with backend/store
+       */
+      await refreshEmployeeProfile();
 
       toastStore.addToast({
         severity: "success",
@@ -161,7 +180,6 @@ async function handleAttendance() {
       });
     }
 
-    await loadEmployeeProfile();
     openUserMenu.value = false;
   } catch (error: any) {
     const rawMessage = String(error?.message || "").toLowerCase();
@@ -205,15 +223,11 @@ function logout() {
 
 onMounted(async () => {
   document.addEventListener("click", handleOutsideClick);
-  window.addEventListener("online", handleOnline);
-  window.addEventListener("offline", handleOffline);
-  await loadEmployeeProfile();
+  await refreshEmployeeProfile();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleOutsideClick);
-  window.removeEventListener("online", handleOnline);
-  window.removeEventListener("offline", handleOffline);
 });
 </script>
 
@@ -267,7 +281,7 @@ onBeforeUnmount(() => {
 
         <div
           v-if="openUserMenu"
-          class="absolute right-0 mt-bt-spacing-8 w-[320px] bg-bt-white rounded-l shadow-bt-elevation-400 border border-bt-grey-200 z-50 overflow-hidden"
+          class="absolute right-0 mt-bt-spacing-8 w-[340px] bg-bt-white rounded-l shadow-bt-elevation-400 border border-bt-grey-200 z-50 overflow-hidden"
         >
           <div
             class="p-bt-spacing-16 border-b border-bt-grey-200 bg-bt-grey-50"
@@ -283,16 +297,40 @@ onBeforeUnmount(() => {
                 <p class="font-bt-semibold text-bt-primary-700">
                   {{ displayName }}
                 </p>
+
                 <p class="text-sm text-bt-grey-600 break-all">
                   {{ displayEmail }}
                 </p>
+
+                <div
+                  class="mt-bt-spacing-8 flex items-center gap-bt-spacing-8 text-sm"
+                >
+                  <component
+                    :is="authStore.employeeAssigned ? UserCheck : UserX"
+                    :size="15"
+                    :class="
+                      authStore.employeeAssigned
+                        ? 'text-bt-success-600'
+                        : 'text-bt-warning-600'
+                    "
+                  />
+                  <span
+                    :class="
+                      authStore.employeeAssigned
+                        ? 'text-bt-success-700'
+                        : 'text-bt-warning-700'
+                    "
+                  >
+                    {{ employeeAssignedLabel }}
+                  </span>
+                </div>
 
                 <div
                   class="mt-bt-spacing-8 flex items-center gap-bt-spacing-8 text-sm text-bt-grey-600"
                 >
                   <Building2 :size="15" />
                   <span>
-                    {{ loadingEmployee ? $t("common.loading") : displayBranch }}
+                    {{ displayBranch }}
                   </span>
                 </div>
 
@@ -335,7 +373,7 @@ onBeforeUnmount(() => {
 
             <button
               type="button"
-              class="w-full flex items-center gap-bt-spacing-12 px-bt-spacing-16 py-bt-spacing-12 rounded-m text-bt-primary-700 hover:bg-bt-grey-100 transition"
+              class="w-full flex items-center gap-bt-spacing-12 px-bt-spacing-16 py-bt-spacing-12 rounded-m text-bt-primary-700 hover:bg-bt-grey-100 transition disabled:opacity-60"
               :disabled="attendanceLoading || !canCheckAttendance"
               @click="handleAttendance"
             >

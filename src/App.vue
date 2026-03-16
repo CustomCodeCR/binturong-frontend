@@ -6,9 +6,11 @@ import { RouterView } from "vue-router";
 </script>
 
 <template>
+
   <BTToastContainer />
   <BTModalContainer />
   <BTDrawerContainer />
 
   <RouterView />
 </template>
+

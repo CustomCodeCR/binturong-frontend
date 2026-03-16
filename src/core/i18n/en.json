@@ -48,7 +48,8 @@
     "details": "Details",
     "active": "Active",
     "inactive": "Inactive",
-    "required": "Required"
+    "required": "Required",
+    "view": "View"
   },
   "toast": {
     "success": "Success",
@@ -1050,6 +1051,188 @@
     "placeholders": {
       "selectBranch": "Select a branch",
       "selectUser": "Select a user"
+    }
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "subtitle": "Manage suppliers, credit conditions, contacts, documents, and purchase history.",
+    "searchPlaceholder": "Search by identification, legal name, trade name, email, or phone",
+    "empty": "No suppliers found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "identification": "Identification",
+      "legalName": "Legal Name",
+      "tradeName": "Trade Name",
+      "email": "Email",
+      "phone": "Phone",
+      "pendingPayables": "Pending Payables",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "identificationType": "Identification Type",
+      "identification": "Identification",
+      "legalName": "Legal Name",
+      "tradeName": "Trade Name",
+      "email": "Email",
+      "phone": "Phone",
+      "paymentTerms": "Payment Terms",
+      "mainCurrency": "Main Currency",
+      "creditLimit": "Credit Limit",
+      "creditDays": "Credit Days",
+      "pendingPayables": "Pending Payables",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newSupplier": "New Supplier",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "close": "Close",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load suppliers.",
+      "createSuccess": "Supplier created successfully.",
+      "createError": "Could not create supplier.",
+      "updateSuccess": "Supplier updated successfully.",
+      "updateError": "Could not update supplier.",
+      "deactivateSuccess": "Supplier deactivated successfully.",
+      "deactivateError": "Could not deactivate supplier.",
+      "reactivateSuccess": "Supplier reactivated successfully.",
+      "reactivateError": "Could not reactivate supplier.",
+      "deleteSuccess": "Supplier deleted successfully.",
+      "deleteError": "Could not delete supplier."
+    },
+    "validation": {
+      "requiredCreate": "Identification type, identification, legal name, trade name, email, phone, payment terms, and currency are required.",
+      "requiredUpdate": "Legal name, trade name, email, phone, payment terms, and currency are required."
+    },
+    "modal": {
+      "createTitle": "Create Supplier",
+      "createDescription": "Register a new supplier.",
+      "editTitle": "Edit Supplier",
+      "editDescription": "Update supplier information."
+    },
+    "drawer": {
+      "title": "Supplier Details",
+      "description": "Review information, credit conditions, contacts, attachments, and purchase history for {name}.",
+      "tabs": {
+        "details": "Details",
+        "credit": "Credit",
+        "contacts": "Contacts",
+        "attachments": "Attachments",
+        "purchases": "Purchases"
+      }
+    },
+    "credit": {
+      "fields": {
+        "creditLimit": "Credit Limit",
+        "creditDays": "Credit Days"
+      },
+      "actions": {
+        "save": "Save Credit Conditions"
+      },
+      "messages": {
+        "updateSuccess": "Credit conditions updated successfully.",
+        "updateError": "Could not update credit conditions."
+      },
+      "validation": {
+        "required": "Credit limit and credit days are required."
+      }
+    },
+    "contacts": {
+      "empty": "No contacts found.",
+      "primary": "Primary",
+      "fields": {
+        "name": "Name",
+        "jobTitle": "Job Title",
+        "email": "Email",
+        "phone": "Phone",
+        "isPrimary": "Primary Contact"
+      },
+      "actions": {
+        "newContact": "New Contact",
+        "setPrimary": "Set as Primary"
+      },
+      "messages": {
+        "createSuccess": "Contact created successfully.",
+        "createError": "Could not create contact.",
+        "updateSuccess": "Contact updated successfully.",
+        "updateError": "Could not update contact.",
+        "deleteSuccess": "Contact deleted successfully.",
+        "deleteError": "Could not delete contact.",
+        "setPrimarySuccess": "Primary contact updated successfully.",
+        "setPrimaryError": "Could not set primary contact."
+      },
+      "validation": {
+        "required": "Name, job title, email, and phone are required."
+      },
+      "modal": {
+        "createTitle": "Create Contact",
+        "createDescription": "Add a new supplier contact.",
+        "editTitle": "Edit Contact",
+        "editDescription": "Update supplier contact information."
+      }
+    },
+    "attachments": {
+      "empty": "No attachments found.",
+      "fields": {
+        "documentType": "Document Type"
+      },
+      "actions": {
+        "upload": "Upload File"
+      },
+      "messages": {
+        "uploadSuccess": "Attachment uploaded successfully.",
+        "uploadError": "Could not upload attachment.",
+        "deleteSuccess": "Attachment removed successfully.",
+        "deleteError": "Could not remove attachment."
+      },
+      "validation": {
+        "required": "Document type and file are required."
+      },
+      "dropzone": {
+        "title": "Drop files here",
+        "subtitle": "or select a file manually"
+      },
+      "table": {
+        "fileName": "File Name",
+        "documentType": "Document Type",
+        "uploadedAt": "Uploaded At",
+        "options": "Options"
+      }
+    },
+    "purchases": {
+      "empty": "No purchase history found.",
+      "fields": {
+        "from": "From",
+        "to": "To",
+        "status": "Status"
+      },
+      "actions": {
+        "loadHistory": "Load History",
+        "exportPdf": "Export PDF",
+        "exportExcel": "Export Excel"
+      },
+      "messages": {
+        "loadError": "Could not load purchase history.",
+        "exportPdfError": "Could not export PDF history.",
+        "exportExcelError": "Could not export Excel history."
+      },
+      "table": {
+        "reference": "Reference",
+        "status": "Status",
+        "date": "Date",
+        "total": "Total"
+      }
     }
   }
 }

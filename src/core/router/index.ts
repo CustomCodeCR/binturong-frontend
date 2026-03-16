@@ -100,6 +100,12 @@ export const router = createRouter({
           component: () =>
             import("@/modules/inventory/views/InventoryView.vue"),
         },
+        {
+          path: "suppliers",
+          name: "suppliers",
+          component: () =>
+            import("@/modules/suppliers/views/SuppliersView.vue"),
+        },
       ],
     },
   ],

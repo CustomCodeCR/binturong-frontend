@@ -48,7 +48,8 @@
     "details": "Detalle",
     "active": "Activo",
     "inactive": "Inactivo",
-    "required": "Requerido"
+    "required": "Requerido",
+    "view": "Ver"
   },
   "toast": {
     "success": "Éxito",
@@ -1051,6 +1052,188 @@
     "placeholders": {
       "selectBranch": "Seleccione una sucursal",
       "selectUser": "Seleccione un usuario"
+    }
+  },
+  "suppliers": {
+    "title": "Proveedores",
+    "subtitle": "Administre proveedores, condiciones de crédito, contactos, documentos e historial de compras.",
+    "searchPlaceholder": "Buscar por identificación, razón social, nombre comercial, correo o teléfono",
+    "empty": "No se encontraron proveedores.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "identification": "Identificación",
+      "legalName": "Razón social",
+      "tradeName": "Nombre comercial",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "pendingPayables": "Pendientes por pagar",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "identificationType": "Tipo de identificación",
+      "identification": "Identificación",
+      "legalName": "Razón social",
+      "tradeName": "Nombre comercial",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "paymentTerms": "Términos de pago",
+      "mainCurrency": "Moneda principal",
+      "creditLimit": "Límite de crédito",
+      "creditDays": "Días de crédito",
+      "pendingPayables": "Pendientes por pagar",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newSupplier": "Nuevo proveedor",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "close": "Cerrar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los proveedores.",
+      "createSuccess": "Proveedor creado correctamente.",
+      "createError": "No se pudo crear el proveedor.",
+      "updateSuccess": "Proveedor actualizado correctamente.",
+      "updateError": "No se pudo actualizar el proveedor.",
+      "deactivateSuccess": "Proveedor desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el proveedor.",
+      "reactivateSuccess": "Proveedor reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el proveedor.",
+      "deleteSuccess": "Proveedor eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el proveedor."
+    },
+    "validation": {
+      "requiredCreate": "Tipo de identificación, identificación, razón social, nombre comercial, correo, teléfono, términos de pago y moneda son obligatorios.",
+      "requiredUpdate": "Razón social, nombre comercial, correo, teléfono, términos de pago y moneda son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear proveedor",
+      "createDescription": "Registre un nuevo proveedor.",
+      "editTitle": "Editar proveedor",
+      "editDescription": "Actualice la información del proveedor."
+    },
+    "drawer": {
+      "title": "Detalle de proveedor",
+      "description": "Revise información, condiciones de crédito, contactos, adjuntos e historial de compras de {name}.",
+      "tabs": {
+        "details": "Detalle",
+        "credit": "Crédito",
+        "contacts": "Contactos",
+        "attachments": "Adjuntos",
+        "purchases": "Compras"
+      }
+    },
+    "credit": {
+      "fields": {
+        "creditLimit": "Límite de crédito",
+        "creditDays": "Días de crédito"
+      },
+      "actions": {
+        "save": "Guardar condiciones de crédito"
+      },
+      "messages": {
+        "updateSuccess": "Condiciones de crédito actualizadas correctamente.",
+        "updateError": "No se pudieron actualizar las condiciones de crédito."
+      },
+      "validation": {
+        "required": "Límite de crédito y días de crédito son obligatorios."
+      }
+    },
+    "contacts": {
+      "empty": "No se encontraron contactos.",
+      "primary": "Principal",
+      "fields": {
+        "name": "Nombre",
+        "jobTitle": "Puesto",
+        "email": "Correo",
+        "phone": "Teléfono",
+        "isPrimary": "Contacto principal"
+      },
+      "actions": {
+        "newContact": "Nuevo contacto",
+        "setPrimary": "Marcar como principal"
+      },
+      "messages": {
+        "createSuccess": "Contacto creado correctamente.",
+        "createError": "No se pudo crear el contacto.",
+        "updateSuccess": "Contacto actualizado correctamente.",
+        "updateError": "No se pudo actualizar el contacto.",
+        "deleteSuccess": "Contacto eliminado correctamente.",
+        "deleteError": "No se pudo eliminar el contacto.",
+        "setPrimarySuccess": "Contacto principal actualizado correctamente.",
+        "setPrimaryError": "No se pudo actualizar el contacto principal."
+      },
+      "validation": {
+        "required": "Nombre, puesto, correo y teléfono son obligatorios."
+      },
+      "modal": {
+        "createTitle": "Crear contacto",
+        "createDescription": "Agregue un nuevo contacto del proveedor.",
+        "editTitle": "Editar contacto",
+        "editDescription": "Actualice la información del contacto del proveedor."
+      }
+    },
+    "attachments": {
+      "empty": "No se encontraron adjuntos.",
+      "fields": {
+        "documentType": "Tipo de documento"
+      },
+      "actions": {
+        "upload": "Subir archivo"
+      },
+      "messages": {
+        "uploadSuccess": "Adjunto subido correctamente.",
+        "uploadError": "No se pudo subir el adjunto.",
+        "deleteSuccess": "Adjunto eliminado correctamente.",
+        "deleteError": "No se pudo eliminar el adjunto."
+      },
+      "validation": {
+        "required": "Tipo de documento y archivo son obligatorios."
+      },
+      "dropzone": {
+        "title": "Suelte archivos aquí",
+        "subtitle": "o seleccione un archivo manualmente"
+      },
+      "table": {
+        "fileName": "Nombre de archivo",
+        "documentType": "Tipo de documento",
+        "uploadedAt": "Fecha de carga",
+        "options": "Opciones"
+      }
+    },
+    "purchases": {
+      "empty": "No hay historial de compras.",
+      "fields": {
+        "from": "Desde",
+        "to": "Hasta",
+        "status": "Estado"
+      },
+      "actions": {
+        "loadHistory": "Cargar historial",
+        "exportPdf": "Exportar PDF",
+        "exportExcel": "Exportar Excel"
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el historial de compras.",
+        "exportPdfError": "No se pudo exportar el historial PDF.",
+        "exportExcelError": "No se pudo exportar el historial Excel."
+      },
+      "table": {
+        "reference": "Referencia",
+        "status": "Estado",
+        "date": "Fecha",
+        "total": "Total"
+      }
     }
   }
 }

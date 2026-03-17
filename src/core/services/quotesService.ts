@@ -9,7 +9,7 @@ import type {
   QuoteCreateResponse,
   QuoteDetailCreateRequest,
   QuoteDetailCreateResponse,
-  QuoteExpireRequest,
+  QuoteRejectRequest,
 } from "@/core/interfaces/quotes";
 
 type NoContent = Record<string, never>;
@@ -58,11 +58,11 @@ export const QuotesService = {
   },
 
   reject(id: string): Promise<NoContent> {
-    return callEndpoint<NoContent>(Endpoints.rejectQuote, { params: { id } });
+    return callEndpoint<NoContent>(Endpoints.expireQuote, { params: { id } });
   },
 
-  expire(id: string, payload: QuoteExpireRequest): Promise<NoContent> {
-    return callEndpoint<NoContent, QuoteExpireRequest>(Endpoints.expireQuote, {
+  expire(id: string, payload: QuoteRejectRequest): Promise<NoContent> {
+    return callEndpoint<NoContent, QuoteRejectRequest>(Endpoints.rejectQuote, {
       params: { id },
       body: payload,
     });

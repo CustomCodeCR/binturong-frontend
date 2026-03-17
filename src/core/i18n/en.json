@@ -1684,5 +1684,171 @@
         "total": "Total"
       }
     }
+  },
+  "quotes": {
+    "title": "Quotes",
+    "subtitle": "Manage client quotes, send them, update their status, and convert them into contracts or invoices.",
+    "searchPlaceholder": "Search by code, client, branch, status, or currency",
+    "empty": "No quotes found.",
+    "accepted": {
+      "yes": "Accepted",
+      "no": "Pending"
+    },
+    "table": {
+      "code": "Code",
+      "client": "Client",
+      "branch": "Branch",
+      "issueDate": "Issue Date",
+      "validUntil": "Valid Until",
+      "status": "Status",
+      "total": "Total",
+      "accepted": "Accepted",
+      "options": "Options"
+    },
+    "fields": {
+      "code": "Code",
+      "client": "Client",
+      "branch": "Branch",
+      "issueDate": "Issue Date",
+      "validUntil": "Valid Until",
+      "currency": "Currency",
+      "exchangeRate": "Exchange Rate",
+      "notes": "Notes",
+      "total": "Total",
+      "status": "Status",
+      "version": "Version",
+      "acceptedByClient": "Accepted By Client",
+      "acceptanceDate": "Acceptance Date"
+    },
+    "actions": {
+      "title": "Actions",
+      "search": "Search",
+      "refresh": "Refresh",
+      "newQuote": "New Quote",
+      "viewDetails": "View Details",
+      "send": "Send",
+      "accept": "Accept",
+      "reject": "Reject",
+      "expire": "Expire",
+      "convertToContract": "Convert to Contract",
+      "convertToInvoice": "Convert to Invoice"
+    },
+    "messages": {
+      "loadError": "Could not load quotes.",
+      "loadDetailError": "Could not load quote details.",
+      "createSuccess": "Quote created successfully.",
+      "createError": "Could not create quote.",
+      "sendSuccess": "Quote sent successfully.",
+      "sendError": "Could not send quote.",
+      "acceptSuccess": "Quote accepted successfully.",
+      "acceptError": "Could not accept quote.",
+      "rejectSuccess": "Quote rejected successfully.",
+      "rejectError": "Could not reject quote.",
+      "expireSuccess": "Quote expired successfully.",
+      "expireError": "Could not expire quote.",
+      "convertContractSuccess": "Quote converted to contract successfully.",
+      "convertContractError": "Could not convert quote to contract.",
+      "convertInvoiceSuccess": "Quote converted to invoice successfully.",
+      "convertInvoiceError": "Could not convert quote to invoice."
+    },
+    "validation": {
+      "requiredHeader": "Code, client, branch, issue date, and valid until are required.",
+      "requiredLines": "At least one line is required.",
+      "invalidLine": "All lines must have a product, quantity greater than zero, and valid prices."
+    },
+    "modal": {
+      "createTitle": "Create Quote",
+      "createDescription": "Register a quote header and its detail lines."
+    },
+    "drawer": {
+      "title": "Quote Details",
+      "description": "Review quote details, financial summary, and available actions."
+    },
+    "placeholders": {
+      "selectClient": "Select a client",
+      "selectBranch": "Select a branch",
+      "selectProduct": "Select a product"
+    },
+    "lines": {
+      "title": "Quote Lines",
+      "addLine": "Add Line",
+      "product": "Product",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "discountPerc": "Discount %",
+      "taxPerc": "Tax %",
+      "lineTotal": "Line Total",
+      "empty": "No lines found."
+    },
+    "summary": {
+      "title": "Financial Summary",
+      "subtotal": "Subtotal",
+      "discounts": "Discounts",
+      "taxes": "Taxes",
+      "total": "Total"
+    },
+    "expire": {
+      "fields": {
+        "reason": "Reason"
+      },
+      "actions": {
+        "confirm": "Expire Quote"
+      },
+      "validation": {
+        "required": "The expiration reason is required."
+      },
+      "modal": {
+        "title": "Expire Quote",
+        "description": "Set the quote as expired and record the reason."
+      }
+    },
+    "convertContract": {
+      "fields": {
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "responsibleUser": "Responsible User",
+        "description": "Description",
+        "notes": "Notes",
+        "autoRenewEnabled": "Auto Renew",
+        "autoRenewEveryDays": "Renew Every Days",
+        "expiryNoticeDays": "Expiry Notice Days"
+      },
+      "actions": {
+        "confirm": "Convert to Contract"
+      },
+      "validation": {
+        "required": "Start date, end date, responsible user, and description are required.",
+        "notAccepted": "Only accepted quotes can be converted to contracts."
+      },
+      "placeholders": {
+        "selectResponsibleUser": "Select a responsible user"
+      },
+      "modal": {
+        "title": "Convert Quote to Contract",
+        "description": "Complete contract information before conversion."
+      }
+    },
+    "convertInvoice": {
+      "fields": {
+        "branch": "Branch",
+        "issueDate": "Issue Date",
+        "documentType": "Document Type",
+        "mode": "Emission Mode"
+      },
+      "actions": {
+        "confirm": "Convert to Invoice"
+      },
+      "validation": {
+        "required": "Branch, issue date, document type, and mode are required.",
+        "notAccepted": "Only accepted quotes can be converted to invoices."
+      },
+      "placeholders": {
+        "selectBranch": "Select a branch"
+      },
+      "modal": {
+        "title": "Convert Quote to Invoice",
+        "description": "Complete invoice information before conversion."
+      }
+    }
   }
 }

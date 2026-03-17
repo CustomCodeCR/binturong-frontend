@@ -50,7 +50,6 @@ export interface QuotesBrowseQuery {
   search?: string;
 }
 
-/** POST /api/quotes */
 export interface QuoteCreateRequest {
   code: string;
   clientId: string;
@@ -66,7 +65,6 @@ export interface QuoteCreateResponse {
   quoteId: string;
 }
 
-/** POST /api/quotes/{{id}}/details */
 export interface QuoteDetailCreateRequest {
   productId: string;
   quantity: number;
@@ -79,7 +77,6 @@ export interface QuoteDetailCreateResponse {
   quoteDetailId: string;
 }
 
-/** POST /api/quotes/{{id}}/expire */
-export interface QuoteExpireRequest {
+export interface QuoteRejectRequest {
   reason: string;
 }

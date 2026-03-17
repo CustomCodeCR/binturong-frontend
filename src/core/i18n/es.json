@@ -1685,5 +1685,171 @@
         "total": "Total"
       }
     }
+  },
+  "quotes": {
+    "title": "Cotizaciones",
+    "subtitle": "Administre cotizaciones de clientes, envíelas, actualice su estado y conviértalas en contratos o facturas.",
+    "searchPlaceholder": "Buscar por código, cliente, sucursal, estado o moneda",
+    "empty": "No se encontraron cotizaciones.",
+    "accepted": {
+      "yes": "Aceptada",
+      "no": "Pendiente"
+    },
+    "table": {
+      "code": "Código",
+      "client": "Cliente",
+      "branch": "Sucursal",
+      "issueDate": "Fecha de emisión",
+      "validUntil": "Válida hasta",
+      "status": "Estado",
+      "total": "Total",
+      "accepted": "Aceptada",
+      "options": "Opciones"
+    },
+    "fields": {
+      "code": "Código",
+      "client": "Cliente",
+      "branch": "Sucursal",
+      "issueDate": "Fecha de emisión",
+      "validUntil": "Válida hasta",
+      "currency": "Moneda",
+      "exchangeRate": "Tipo de cambio",
+      "notes": "Notas",
+      "total": "Total",
+      "status": "Estado",
+      "version": "Versión",
+      "acceptedByClient": "Aceptada por el cliente",
+      "acceptanceDate": "Fecha de aceptación"
+    },
+    "actions": {
+      "title": "Acciones",
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newQuote": "Nueva cotización",
+      "viewDetails": "Ver detalle",
+      "send": "Enviar",
+      "accept": "Aceptar",
+      "reject": "Rechazar",
+      "expire": "Vencer",
+      "convertToContract": "Convertir a contrato",
+      "convertToInvoice": "Convertir a factura"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las cotizaciones.",
+      "loadDetailError": "No se pudo cargar el detalle de la cotización.",
+      "createSuccess": "Cotización creada correctamente.",
+      "createError": "No se pudo crear la cotización.",
+      "sendSuccess": "Cotización enviada correctamente.",
+      "sendError": "No se pudo enviar la cotización.",
+      "acceptSuccess": "Cotización aceptada correctamente.",
+      "acceptError": "No se pudo aceptar la cotización.",
+      "rejectSuccess": "Cotización rechazada correctamente.",
+      "rejectError": "No se pudo rechazar la cotización.",
+      "expireSuccess": "Cotización vencida correctamente.",
+      "expireError": "No se pudo vencer la cotización.",
+      "convertContractSuccess": "Cotización convertida a contrato correctamente.",
+      "convertContractError": "No se pudo convertir la cotización a contrato.",
+      "convertInvoiceSuccess": "Cotización convertida a factura correctamente.",
+      "convertInvoiceError": "No se pudo convertir la cotización a factura."
+    },
+    "validation": {
+      "requiredHeader": "Código, cliente, sucursal, fecha de emisión y fecha de validez son obligatorios.",
+      "requiredLines": "Debe existir al menos una línea.",
+      "invalidLine": "Todas las líneas deben tener producto, cantidad mayor que cero y precios válidos."
+    },
+    "modal": {
+      "createTitle": "Crear cotización",
+      "createDescription": "Registre la cabecera de la cotización y sus líneas de detalle."
+    },
+    "drawer": {
+      "title": "Detalle de cotización",
+      "description": "Revise el detalle de la cotización, su resumen financiero y acciones disponibles."
+    },
+    "placeholders": {
+      "selectClient": "Seleccione un cliente",
+      "selectBranch": "Seleccione una sucursal",
+      "selectProduct": "Seleccione un producto"
+    },
+    "lines": {
+      "title": "Líneas de cotización",
+      "addLine": "Agregar línea",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "discountPerc": "Descuento %",
+      "taxPerc": "Impuesto %",
+      "lineTotal": "Total línea",
+      "empty": "No se encontraron líneas."
+    },
+    "summary": {
+      "title": "Resumen financiero",
+      "subtotal": "Subtotal",
+      "discounts": "Descuentos",
+      "taxes": "Impuestos",
+      "total": "Total"
+    },
+    "expire": {
+      "fields": {
+        "reason": "Motivo"
+      },
+      "actions": {
+        "confirm": "Vencer cotización"
+      },
+      "validation": {
+        "required": "El motivo de vencimiento es obligatorio."
+      },
+      "modal": {
+        "title": "Vencer cotización",
+        "description": "Marque la cotización como vencida y registre el motivo."
+      }
+    },
+    "convertContract": {
+      "fields": {
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "responsibleUser": "Usuario responsable",
+        "description": "Descripción",
+        "notes": "Notas",
+        "autoRenewEnabled": "Auto renovación",
+        "autoRenewEveryDays": "Renovar cada días",
+        "expiryNoticeDays": "Días de aviso de vencimiento"
+      },
+      "actions": {
+        "confirm": "Convertir a contrato"
+      },
+      "validation": {
+        "required": "Fecha de inicio, fecha de fin, usuario responsable y descripción son obligatorios.",
+        "notAccepted": "Solo las cotizaciones aceptadas se pueden convertir a contrato."
+      },
+      "placeholders": {
+        "selectResponsibleUser": "Seleccione un usuario responsable"
+      },
+      "modal": {
+        "title": "Convertir cotización a contrato",
+        "description": "Complete la información contractual antes de convertir."
+      }
+    },
+    "convertInvoice": {
+      "fields": {
+        "branch": "Sucursal",
+        "issueDate": "Fecha de emisión",
+        "documentType": "Tipo de documento",
+        "mode": "Modo de emisión"
+      },
+      "actions": {
+        "confirm": "Convertir a factura"
+      },
+      "validation": {
+        "required": "Sucursal, fecha de emisión, tipo de documento y modo son obligatorios.",
+        "notAccepted": "Solo las cotizaciones aceptadas se pueden convertir a factura."
+      },
+      "placeholders": {
+        "selectBranch": "Seleccione una sucursal"
+      },
+      "modal": {
+        "title": "Convertir cotización a factura",
+        "description": "Complete la información de facturación antes de convertir."
+      }
+    }
   }
 }

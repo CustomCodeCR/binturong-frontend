@@ -116,9 +116,22 @@ async function uploadAttachment() {
     toastStore.addToast({ severity: "success", title: "Éxito", message: "Archivo subido" });
     attachmentFile.value = null;
     attachmentDocumentType.value = "";
-    await loadClient();
+    await loadClient(); // Recarga para mostrar en la lista
+  } catch {
+    toastStore.addToast({ severity: "error", title: "Error", message: "No se pudo subir el archivo" });
   } finally {
     uploadingFile.value = false;
+  }
+}
+
+async function deleteAttachment(attachmentId: string) {
+  if (!confirm("¿Eliminar este documento?")) return;
+  try {
+    await ClientsService.deleteAttachment(props.clientId, attachmentId);
+    toastStore.addToast({ severity: "success", title: "Éxito", message: "Archivo eliminado" });
+    await loadClient();
+  } catch {
+    toastStore.addToast({ severity: "error", title: "Error", message: "No se pudo eliminar" });
   }
 }
 
@@ -251,7 +264,13 @@ watch(() => props.clientId, loadClient);
         </div>
 
         <div v-if="activeTab === 'attachments'" class="space-y-6">
-          <div class="border-2 border-dashed p-8 rounded-2xl transition-all text-center bg-white" :class="dragOver ? 'border-slate-700 bg-slate-50' : 'border-gray-200'">
+          <div 
+            class="border-2 border-dashed p-8 rounded-2xl transition-all text-center bg-white" 
+            :class="dragOver ? 'border-slate-700 bg-slate-50' : 'border-gray-200'"
+            @dragover.prevent="dragOver = true" 
+            @dragleave.prevent="dragOver = false" 
+            @drop.prevent="onDrop"
+          >
             <Paperclip :size="32" class="mx-auto text-gray-300 mb-2" />
             <p class="text-sm font-bold text-slate-700">{{ attachmentFile ? attachmentFile.name : 'Arrastra archivos aquí' }}</p>
             <input type="file" @change="handleFileSelect" class="mt-4 text-xs mx-auto block text-gray-400" />
@@ -262,6 +281,41 @@ watch(() => props.clientId, loadClient);
             <button @click="uploadAttachment" :disabled="uploadingFile" class="w-full py-2 bg-slate-700 text-white rounded-md font-bold text-sm disabled:opacity-50">
               {{ uploadingFile ? 'Subiendo...' : 'Subir Archivo' }}
             </button>
+          </div>
+
+          <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
+            <div class="p-4 border-b bg-gray-50/50">
+              <h4 class="text-xs font-black text-slate-500 uppercase tracking-tighter">Archivos Adjuntos</h4>
+            </div>
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="text-[10px] text-gray-400 uppercase font-bold border-b bg-gray-50/30">
+                  <th class="px-4 py-3">Nombre</th>
+                  <th class="px-4 py-3 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <tr v-if="!client.attachments || client.attachments.length === 0">
+                  <td colspan="2" class="p-6 text-center text-gray-400 italic text-xs">No hay archivos.</td>
+                </tr>
+                <tr v-for="file in client.attachments" :key="file.attachmentId" class="hover:bg-slate-50 transition-colors group">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      <Paperclip :size="14" class="text-slate-400" />
+                      <div>
+                        <p class="font-bold text-slate-700 leading-tight">{{ file.fileName }}</p>
+                        <p class="text-[10px] text-[#C6983A] font-bold uppercase tracking-tighter">{{ file.documentType }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <button @click="deleteAttachment(file.attachmentId)" class="p-2 text-gray-300 hover:text-red-500 transition">
+                      <Trash2 :size="16" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </template>

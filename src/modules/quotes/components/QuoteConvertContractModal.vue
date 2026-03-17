@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
+import { useAuthStore } from "@/core/stores/authStore";
 import { ContractsService } from "@/core/services/contractsService";
-import { SelectService } from "@/core/services/selectService";
-
-import type { SelectOption } from "@/core/interfaces/select";
 
 const props = defineProps<{
   quoteId: string;
@@ -15,20 +13,24 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
-
-const users = ref<SelectOption[]>([]);
+const authStore = useAuthStore();
 
 const startDate = ref("");
 const endDate = ref("");
-const responsibleUserId = ref("");
 const description = ref("");
 const notes = ref("");
 const autoRenewEnabled = ref(false);
 const autoRenewEveryDays = ref(30);
 const expiryNoticeDays = ref(10);
 
-const loadingCatalogs = ref(false);
 const loading = ref(false);
+
+const responsibleUserId = computed(() => authStore.userId ?? "");
+const responsibleUserLabel = computed(() => {
+  return (
+    authStore.employeeFullName || authStore.username || authStore.email || "-"
+  );
+});
 
 function closeModal() {
   modalStore.close();
@@ -48,16 +50,6 @@ function addDays(dateText: string, days: number): string {
   return getLocalDateForInput(date);
 }
 
-async function loadCatalogs() {
-  loadingCatalogs.value = true;
-
-  try {
-    users.value = await SelectService.selectUsers({ onlyActive: true });
-  } finally {
-    loadingCatalogs.value = false;
-  }
-}
-
 async function submit() {
   if (props.quoteStatus.toLowerCase() !== "accepted") {
     modalStore.onError?.({
@@ -67,12 +59,15 @@ async function submit() {
     return;
   }
 
-  if (
-    !startDate.value ||
-    !endDate.value ||
-    !responsibleUserId.value.trim() ||
-    !description.value.trim()
-  ) {
+  if (!responsibleUserId.value) {
+    modalStore.onError?.({
+      code: 400,
+      message: t("quotes.convertContract.validation.required"),
+    });
+    return;
+  }
+
+  if (!startDate.value || !endDate.value || !description.value.trim()) {
     modalStore.onError?.({
       code: 400,
       message: t("quotes.convertContract.validation.required"),
@@ -86,7 +81,7 @@ async function submit() {
     const created = await ContractsService.convertFromQuote(props.quoteId, {
       startDate: startDate.value,
       endDate: endDate.value,
-      responsibleUserId: responsibleUserId.value.trim(),
+      responsibleUserId: responsibleUserId.value,
       description: description.value.trim(),
       notes: notes.value.trim(),
       autoRenewEnabled: autoRenewEnabled.value,
@@ -106,10 +101,9 @@ async function submit() {
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   startDate.value = getLocalDateForInput();
   endDate.value = addDays(startDate.value, 30);
-  await loadCatalogs();
 });
 </script>
 
@@ -126,14 +120,7 @@ onMounted(async () => {
       </p>
     </div>
 
-    <div
-      v-if="loadingCatalogs"
-      class="py-bt-spacing-24 text-center text-bt-grey-500"
-    >
-      {{ $t("common.loading") }}
-    </div>
-
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
       <div>
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
           {{ $t("quotes.convertContract.fields.startDate") }}
@@ -160,19 +147,12 @@ onMounted(async () => {
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
           {{ $t("quotes.convertContract.fields.responsibleUser") }}
         </label>
-        <select
-          v-model="responsibleUserId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-        >
-          <option value="">
-            {{
-              $t("quotes.convertContract.placeholders.selectResponsibleUser")
-            }}
-          </option>
-          <option v-for="user in users" :key="user.id" :value="user.id">
-            {{ user.label }}
-          </option>
-        </select>
+        <input
+          :value="responsibleUserLabel"
+          type="text"
+          disabled
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-700"
+        />
       </div>
 
       <div class="md:col-span-2">

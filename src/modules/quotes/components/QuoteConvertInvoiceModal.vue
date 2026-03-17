@@ -20,8 +20,8 @@ const branches = ref<SelectOption[]>([]);
 
 const branchId = ref("");
 const issueDate = ref("");
-const documentType = ref("FACTURA");
-const mode = ref("electronic");
+const documentType = ref("INVOICE");
+const mode = ref("normal");
 
 const loadingCatalogs = ref(false);
 const loading = ref(false);
@@ -35,6 +35,26 @@ function getLocalDateForInput(date = new Date()): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function toUtcIsoString(dateText: string): string {
+  if (!dateText) {
+    return "";
+  }
+
+  let normalized = dateText.trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    normalized = `${normalized}T00:00:00`;
+  }
+
+  const localDate = new Date(normalized);
+
+  if (Number.isNaN(localDate.getTime())) {
+    return "";
+  }
+
+  return localDate.toISOString();
 }
 
 async function loadCatalogs() {
@@ -56,12 +76,12 @@ async function submit() {
     return;
   }
 
-  if (
-    !branchId.value.trim() ||
-    !issueDate.value ||
-    !documentType.value.trim() ||
-    !mode.value.trim()
-  ) {
+  const normalizedBranchId = branchId.value.trim();
+  const normalizedIssueDate = toUtcIsoString(issueDate.value);
+  const normalizedDocumentType = "INVOICE";
+  const normalizedMode = "normal";
+
+  if (!normalizedBranchId || !normalizedIssueDate) {
     modalStore.onError?.({
       code: 400,
       message: t("quotes.convertInvoice.validation.required"),
@@ -73,10 +93,10 @@ async function submit() {
 
   try {
     const created = await InvoicesService.convertFromQuote(props.quoteId, {
-      branchId: branchId.value.trim(),
-      issueDate: issueDate.value,
-      documentType: documentType.value.trim(),
-      mode: mode.value.trim(),
+      branchId: normalizedBranchId,
+      issueDate: normalizedIssueDate,
+      documentType: normalizedDocumentType,
+      mode: normalizedMode,
     });
 
     modalStore.onSuccess?.(created);
@@ -155,9 +175,10 @@ onMounted(async () => {
           {{ $t("quotes.convertInvoice.fields.documentType") }}
         </label>
         <input
-          v-model="documentType"
+          :value="documentType"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          disabled
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-700"
         />
       </div>
 
@@ -166,9 +187,10 @@ onMounted(async () => {
           {{ $t("quotes.convertInvoice.fields.mode") }}
         </label>
         <input
-          v-model="mode"
+          :value="mode"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          disabled
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-700"
         />
       </div>
     </div>

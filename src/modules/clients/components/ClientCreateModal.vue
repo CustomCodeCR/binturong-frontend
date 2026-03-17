@@ -1,94 +1,296 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+
 import { useModalStore } from "@/core/stores/modalStore";
 import { ClientsService } from "@/core/services/clientsService";
-import type { ClientCreateRequest } from "@/core/interfaces/clients";
 
+const { t } = useI18n();
 const modalStore = useModalStore();
-const saving = ref(false);
 
-const form = ref<ClientCreateRequest>({
-  personType: "Física", // Valor por defecto común en tus capturas
-  identificationType: "Cédula", 
-  identification: "",
-  tradeName: "",
-  contactName: "",
-  email: "",
-  primaryPhone: "",
-  secondaryPhone: "",
-  industry: "",
-  clientType: "Regular",
-  score: 0,
-  isActive: true
-});
+const personTypeOptions = [
+  { value: "Juridico", label: "Jurídico" },
+  { value: "Fisico", label: "Físico" },
+];
+
+const identificationTypeOptionsForPhysical = [
+  { value: "CedulaNacional", label: "Cédula nacional" },
+  { value: "CedulaResidencia", label: "Cédula de residencia" },
+  { value: "Pasaporte", label: "Pasaporte" },
+];
+
+const personType = ref("Juridico");
+const identificationType = ref("CedulaJuridica");
+const identification = ref("");
+const tradeName = ref("");
+const contactName = ref("");
+const email = ref("");
+const primaryPhone = ref("");
+const secondaryPhone = ref("");
+const industry = ref("");
+const clientType = ref("Regular");
+const score = ref<number | null>(0);
+const isActive = ref(true);
+
+const loading = ref(false);
+
+watch(
+  personType,
+  (value) => {
+    if (value === "Juridico") {
+      identificationType.value = "CedulaJuridica";
+      return;
+    }
+
+    if (
+      !["CedulaNacional", "CedulaResidencia", "Pasaporte"].includes(
+        identificationType.value,
+      )
+    ) {
+      identificationType.value = "CedulaNacional";
+    }
+  },
+  { immediate: true },
+);
+
+function closeModal() {
+  modalStore.close();
+}
 
 async function submit() {
-  if (saving.value) return;
-  saving.value = true;
+  if (
+    !personType.value.trim() ||
+    !identificationType.value.trim() ||
+    !identification.value.trim() ||
+    !tradeName.value.trim() ||
+    !contactName.value.trim() ||
+    !email.value.trim() ||
+    !primaryPhone.value.trim()
+  ) {
+    modalStore.onError?.({
+      code: 400,
+      message: t("clients.validation.requiredCreate"),
+    });
+    return;
+  }
+
+  loading.value = true;
+
   try {
-    await ClientsService.create(form.value);
-    modalStore.onSuccess?.();
+    const created = await ClientsService.create({
+      personType: personType.value.trim(),
+      identificationType: identificationType.value.trim(),
+      identification: identification.value.trim(),
+      tradeName: tradeName.value.trim(),
+      contactName: contactName.value.trim(),
+      email: email.value.trim(),
+      primaryPhone: primaryPhone.value.trim(),
+      secondaryPhone: secondaryPhone.value.trim(),
+      industry: industry.value.trim(),
+      clientType: clientType.value.trim(),
+      score: Number(score.value ?? 0),
+      isActive: isActive.value,
+    });
+
+    modalStore.onSuccess?.(created);
     modalStore.close();
-  } catch (err) {
-    console.error("Error al crear:", err);
+  } catch (error: any) {
+    modalStore.onError?.({
+      code: error?.status ?? 500,
+      message: error?.message ?? t("clients.messages.createError"),
+    });
   } finally {
-    saving.value = false;
+    loading.value = false;
   }
 }
 </script>
 
 <template>
-  <div class="p-8 bg-white rounded-lg w-full max-w-2xl shadow-xl">
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Crear Cliente</h2>
-      <p class="text-gray-500">Registra un nuevo cliente en el sistema.</p>
+  <div
+    class="bg-bt-white rounded-l shadow-bt-elevation-400 w-full max-w-5xl p-bt-spacing-24"
+  >
+    <div class="mb-bt-spacing-24">
+      <h2 class="text-xl font-bt-bold text-bt-primary-700">
+        {{ $t("clients.modal.createTitle") }}
+      </h2>
+      <p class="text-bt-grey-600 mt-bt-spacing-8">
+        {{ $t("clients.modal.createDescription") }}
+      </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Persona</label>
-        <select v-model="form.personType" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none">
-          <option value="Física">Física</option>
-          <option value="Jurídica">Jurídica</option>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.personType") }}
+        </label>
+        <select
+          v-model="personType"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        >
+          <option
+            v-for="option in personTypeOptions"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
         </select>
       </div>
 
-      <input v-model="form.identification" placeholder="Identificación" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      <input v-model="form.tradeName" placeholder="Nombre Comercial" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.identificationType") }}
+        </label>
 
-      <input v-model="form.contactName" placeholder="Nombre de Contacto" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      <input v-model="form.email" placeholder="Email" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
+        <input
+          v-if="personType === 'Juridico'"
+          :value="'CedulaJuridica'"
+          type="text"
+          disabled
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-600 cursor-not-allowed focus:outline-none"
+        />
 
-      <input v-model="form.primaryPhone" placeholder="Teléfono Primario" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      <input v-model="form.secondaryPhone" placeholder="Teléfono Secundario" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-
-      <input v-model="form.industry" placeholder="Industria" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      <input v-model="form.clientType" placeholder="Tipo de Cliente" class="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-
-      <div class="col-span-full">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Score Inicial</label>
-        <input v-model.number="form.score" type="number" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
+        <select
+          v-else
+          v-model="identificationType"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        >
+          <option
+            v-for="option in identificationTypeOptionsForPhysical"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
       </div>
 
-      <div class="col-span-full flex items-center gap-2 mt-2">
-        <input type="checkbox" v-model="form.isActive" id="isActive" class="w-4 h-4 text-slate-700 rounded border-gray-300" />
-        <label for="isActive" class="text-sm font-medium text-gray-700">Cliente Activo</label>
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.identification") }}
+        </label>
+        <input
+          v-model="identification"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.tradeName") }}
+        </label>
+        <input
+          v-model="tradeName"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.contactName") }}
+        </label>
+        <input
+          v-model="contactName"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.email") }}
+        </label>
+        <input
+          v-model="email"
+          type="email"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.primaryPhone") }}
+        </label>
+        <input
+          v-model="primaryPhone"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.secondaryPhone") }}
+        </label>
+        <input
+          v-model="secondaryPhone"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.industry") }}
+        </label>
+        <input
+          v-model="industry"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.clientType") }}
+        </label>
+        <input
+          v-model="clientType"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.score") }}
+        </label>
+        <input
+          v-model.number="score"
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">
+        <input v-model="isActive" type="checkbox" />
+        <span class="text-bt-primary-700">
+          {{ $t("clients.fields.isActive") }}
+        </span>
       </div>
     </div>
 
-    <div class="mt-8 flex justify-end gap-3">
-      <button 
-        @click="modalStore.close" 
-        class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition font-medium"
+    <div class="mt-bt-spacing-24 flex justify-end gap-bt-spacing-12">
+      <button
+        type="button"
+        class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300"
+        @click="closeModal"
       >
-        Cancelar
+        {{ $t("common.cancel") }}
       </button>
-      <button 
-        @click="submit" 
-        :disabled="saving" 
-        class="px-8 py-2.5 bg-[#C6983A] text-white rounded-md hover:bg-[#b08733] transition font-bold disabled:opacity-50"
+
+      <button
+        type="button"
+        :disabled="loading"
+        class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 disabled:bg-bt-disabled"
+        @click="submit"
       >
-        {{ saving ? 'Guardando...' : 'Guardar' }}
+        {{ loading ? $t("common.loading") : $t("common.save") }}
       </button>
     </div>
   </div>

@@ -49,7 +49,8 @@
     "active": "Active",
     "inactive": "Inactive",
     "required": "Required",
-    "view": "View"
+    "view": "View",
+    "selectOption": "Select an option"
   },
   "toast": {
     "success": "Success",
@@ -1475,6 +1476,212 @@
         "classification": "Classification",
         "comment": "Comment",
         "date": "Date"
+      }
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "subtitle": "Manage clients, contacts, addresses, attachments, and history.",
+    "searchPlaceholder": "Search by identification, trade name, contact, email, or phone",
+    "empty": "No clients found.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "identification": "Identification",
+      "tradeName": "Trade Name",
+      "contactName": "Contact Name",
+      "email": "Email",
+      "phone": "Phone",
+      "clientType": "Client Type",
+      "status": "Status",
+      "options": "Options"
+    },
+    "fields": {
+      "personType": "Person Type",
+      "identificationType": "Identification Type",
+      "identification": "Identification",
+      "tradeName": "Trade Name",
+      "contactName": "Contact Name",
+      "email": "Email",
+      "primaryPhone": "Primary Phone",
+      "secondaryPhone": "Secondary Phone",
+      "industry": "Industry",
+      "clientType": "Client Type",
+      "score": "Score",
+      "isActive": "Active"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newClient": "New Client",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load clients.",
+      "createSuccess": "Client created successfully.",
+      "createError": "Could not create client.",
+      "updateSuccess": "Client updated successfully.",
+      "updateError": "Could not update client.",
+      "deactivateSuccess": "Client deactivated successfully.",
+      "deactivateError": "Could not deactivate client.",
+      "reactivateSuccess": "Client reactivated successfully.",
+      "reactivateError": "Could not reactivate client.",
+      "deleteSuccess": "Client deleted successfully.",
+      "deleteError": "Could not delete client."
+    },
+    "validation": {
+      "requiredCreate": "Person type, identification type, identification, trade name, contact name, email, and primary phone are required.",
+      "requiredUpdate": "Trade name, contact name, email, and primary phone are required."
+    },
+    "modal": {
+      "createTitle": "Create Client",
+      "createDescription": "Register a new client.",
+      "editTitle": "Edit Client",
+      "editDescription": "Update client information."
+    },
+    "drawer": {
+      "title": "Client Details",
+      "description": "Review information, contacts, addresses, attachments, and history for {name}.",
+      "tabs": {
+        "details": "Details",
+        "history": "History",
+        "contacts": "Contacts",
+        "addresses": "Addresses",
+        "attachments": "Attachments"
+      }
+    },
+    "kpis": {
+      "outstandingBalance": "Outstanding Balance",
+      "totalInvoicedLast90Days": "Invoiced Last 90 Days",
+      "activeContractsCount": "Active Contracts"
+    },
+    "contacts": {
+      "empty": "No contacts found.",
+      "primary": "Primary",
+      "fields": {
+        "name": "Name",
+        "jobTitle": "Job Title",
+        "email": "Email",
+        "phone": "Phone",
+        "isPrimary": "Primary Contact"
+      },
+      "actions": {
+        "newContact": "New Contact",
+        "setPrimary": "Set as Primary"
+      },
+      "messages": {
+        "createSuccess": "Contact created successfully.",
+        "createError": "Could not create contact.",
+        "updateSuccess": "Contact updated successfully.",
+        "updateError": "Could not update contact.",
+        "deleteSuccess": "Contact deleted successfully.",
+        "deleteError": "Could not delete contact.",
+        "setPrimarySuccess": "Primary contact updated successfully.",
+        "setPrimaryError": "Could not set primary contact."
+      },
+      "validation": {
+        "required": "Name, job title, email, and phone are required."
+      },
+      "modal": {
+        "createTitle": "Create Contact",
+        "createDescription": "Add a new client contact.",
+        "editTitle": "Edit Contact",
+        "editDescription": "Update client contact information."
+      }
+    },
+    "addresses": {
+      "empty": "No addresses found.",
+      "primary": "Primary",
+      "fields": {
+        "addressType": "Address Type",
+        "addressLine": "Address Line",
+        "province": "Province",
+        "canton": "Canton",
+        "district": "District",
+        "notes": "Notes",
+        "isPrimary": "Primary Address"
+      },
+      "actions": {
+        "newAddress": "New Address",
+        "setPrimary": "Set as Primary"
+      },
+      "messages": {
+        "createSuccess": "Address created successfully.",
+        "createError": "Could not create address.",
+        "updateSuccess": "Address updated successfully.",
+        "updateError": "Could not update address.",
+        "deleteSuccess": "Address deleted successfully.",
+        "deleteError": "Could not delete address.",
+        "setPrimarySuccess": "Primary address updated successfully.",
+        "setPrimaryError": "Could not set primary address."
+      },
+      "validation": {
+        "required": "Address type, address line, province, canton, and district are required."
+      },
+      "modal": {
+        "createTitle": "Create Address",
+        "createDescription": "Add a new client address.",
+        "editTitle": "Edit Address",
+        "editDescription": "Update client address information."
+      }
+    },
+    "attachments": {
+      "empty": "No attachments found.",
+      "fields": {
+        "documentType": "Document Type"
+      },
+      "actions": {
+        "upload": "Upload File"
+      },
+      "messages": {
+        "uploadSuccess": "Attachment uploaded successfully.",
+        "uploadError": "Could not upload attachment.",
+        "deleteSuccess": "Attachment removed successfully.",
+        "deleteError": "Could not remove attachment.",
+        "openError": "Could not open attachment.",
+        "previewNotAvailable": "Preview is not available for this file."
+      },
+      "validation": {
+        "required": "Document type and file are required."
+      },
+      "dropzone": {
+        "title": "Drop files here",
+        "subtitle": "or select a file manually"
+      },
+      "table": {
+        "fileName": "File Name",
+        "documentType": "Document Type",
+        "uploadedAt": "Uploaded At",
+        "options": "Options"
+      }
+    },
+    "history": {
+      "empty": "No history records found.",
+      "fields": {
+        "from": "From",
+        "to": "To",
+        "status": "Status"
+      },
+      "actions": {
+        "loadHistory": "Load History",
+        "exportPdf": "Export PDF"
+      },
+      "messages": {
+        "loadError": "Could not load client history.",
+        "exportPdfError": "Could not export client history PDF."
+      },
+      "table": {
+        "code": "Code",
+        "status": "Status",
+        "date": "Date",
+        "total": "Total"
       }
     }
   }

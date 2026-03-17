@@ -1,136 +1,333 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+
 import { useModalStore } from "@/core/stores/modalStore";
 import { ClientsService } from "@/core/services/clientsService";
-import type { ClientUpdateRequest } from "@/core/interfaces/clients";
 
-const props = defineProps<{ clientId: string }>();
+import type { Client } from "@/core/interfaces/clients";
+
+const props = defineProps<{
+  clientId: string;
+}>();
+
+const { t } = useI18n();
 const modalStore = useModalStore();
+
+const personTypeOptions = [
+  { value: "Juridico", label: "Jurídico" },
+  { value: "Fisico", label: "Físico" },
+];
+
+const identificationTypeOptionsForPhysical = [
+  { value: "CedulaNacional", label: "Cédula nacional" },
+  { value: "CedulaResidencia", label: "Cédula de residencia" },
+  { value: "Pasaporte", label: "Pasaporte" },
+];
+
+const loading = ref(false);
 const saving = ref(false);
-const loading = ref(true);
 
-const form = ref<ClientUpdateRequest>({
-  tradeName: "",
-  contactName: "",
-  email: "",
-  primaryPhone: "",
-  secondaryPhone: "",
-  industry: "",
-  clientType: "",
-  score: 0,
-  isActive: true
-});
+const client = ref<Client | null>(null);
 
-onMounted(async () => {
-  try {
-    const data = await ClientsService.readById(props.clientId);
-    // Mapeamos solo los campos que pertenecen al request de actualización
-    Object.assign(form.value, {
-      tradeName: data.tradeName,
-      contactName: data.contactName,
-      email: data.email,
-      primaryPhone: data.primaryPhone,
-      secondaryPhone: data.secondaryPhone,
-      industry: data.industry,
-      clientType: data.clientType,
-      score: data.score,
-      isActive: data.isActive
-    });
-  } catch (error) {
-    console.error("Error al cargar cliente:", error);
-  } finally {
-    loading.value = false;
+const personType = ref("Juridico");
+const identificationType = ref("CedulaJuridica");
+const identification = ref("");
+const tradeName = ref("");
+const contactName = ref("");
+const email = ref("");
+const primaryPhone = ref("");
+const secondaryPhone = ref("");
+const industry = ref("");
+const clientType = ref("");
+const score = ref<number | null>(0);
+const isActive = ref(true);
+
+watch(personType, (value) => {
+  if (value === "Juridico") {
+    identificationType.value = "CedulaJuridica";
+    return;
+  }
+
+  if (
+    !["CedulaNacional", "CedulaResidencia", "Pasaporte"].includes(
+      identificationType.value,
+    )
+  ) {
+    identificationType.value = "CedulaNacional";
   }
 });
 
-async function submit() {
-  if (saving.value) return;
-  saving.value = true;
+function closeModal() {
+  modalStore.close();
+}
+
+async function loadClient() {
+  loading.value = true;
+
   try {
-    await ClientsService.update(props.clientId, form.value);
-    modalStore.onSuccess?.();
+    const response = await ClientsService.readById(props.clientId);
+    client.value = response;
+
+    personType.value = response.personType;
+    identificationType.value = response.identificationType;
+    identification.value = response.identification;
+    tradeName.value = response.tradeName;
+    contactName.value = response.contactName;
+    email.value = response.email;
+    primaryPhone.value = response.primaryPhone;
+    secondaryPhone.value = response.secondaryPhone;
+    industry.value = response.industry;
+    clientType.value = response.clientType;
+    score.value = response.score;
+    isActive.value = response.isActive;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function submit() {
+  if (
+    !personType.value.trim() ||
+    !identificationType.value.trim() ||
+    !identification.value.trim() ||
+    !tradeName.value.trim() ||
+    !contactName.value.trim() ||
+    !email.value.trim() ||
+    !primaryPhone.value.trim()
+  ) {
+    modalStore.onError?.({
+      code: 400,
+      message: t("clients.validation.requiredUpdate"),
+    });
+    return;
+  }
+
+  saving.value = true;
+
+  try {
+    await ClientsService.update(props.clientId, {
+      personType: personType.value.trim(),
+      identificationType: identificationType.value.trim(),
+      identification: identification.value.trim(),
+      tradeName: tradeName.value.trim(),
+      contactName: contactName.value.trim(),
+      email: email.value.trim(),
+      primaryPhone: primaryPhone.value.trim(),
+      secondaryPhone: secondaryPhone.value.trim(),
+      industry: industry.value.trim(),
+      clientType: clientType.value.trim(),
+      score: Number(score.value ?? 0),
+      isActive: isActive.value,
+    });
+
+    modalStore.onSuccess?.({ ok: true });
     modalStore.close();
-  } catch (err) {
-    console.error("Error al actualizar:", err);
+  } catch (error: any) {
+    modalStore.onError?.({
+      code: error?.status ?? 500,
+      message: error?.message ?? t("clients.messages.updateError"),
+    });
   } finally {
     saving.value = false;
   }
 }
+
+onMounted(async () => {
+  await loadClient();
+});
 </script>
 
 <template>
-  <div class="p-8 bg-white rounded-lg w-full max-w-2xl shadow-xl">
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Editar Cliente</h2>
-      <p class="text-gray-500 text-sm">Modifica la información del cliente seleccionado.</p>
+  <div
+    class="bg-bt-white rounded-l shadow-bt-elevation-400 w-full max-w-4xl p-bt-spacing-24"
+  >
+    <div class="mb-bt-spacing-24">
+      <h2 class="text-xl font-bt-bold text-bt-primary-700">
+        {{ $t("clients.modal.editTitle") }}
+      </h2>
+      <p class="text-bt-grey-600 mt-bt-spacing-8">
+        {{ $t("clients.modal.editDescription") }}
+      </p>
     </div>
 
-    <div v-if="loading" class="py-10 text-center text-gray-500">
-      Cargando datos del cliente...
+    <div v-if="loading" class="py-bt-spacing-24 text-center text-bt-grey-500">
+      {{ $t("common.loading") }}
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full">
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre Comercial</label>
-        <input v-model="form.tradeName" placeholder="Nombre Comercial" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
       <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre de Contacto</label>
-        <input v-model="form.contactName" placeholder="Contacto" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Correo Electrónico</label>
-        <input v-model="form.email" placeholder="Email" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Teléfono Primario</label>
-        <input v-model="form.primaryPhone" placeholder="Primario" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Teléfono Secundario</label>
-        <input v-model="form.secondaryPhone" placeholder="Secundario" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Industria</label>
-        <input v-model="form.industry" placeholder="Industria" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Tipo de Cliente</label>
-        <input v-model="form.clientType" placeholder="Tipo" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Score</label>
-        <input v-model.number="form.score" type="number" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-slate-700 outline-none" />
-      </div>
-
-      <div class="flex items-end pb-2">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" v-model="form.isActive" class="w-4 h-4 text-slate-700 rounded border-gray-300" />
-          <span class="text-sm font-medium text-gray-700">Cliente Activo</span>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.personType") }}
         </label>
+        <select
+          v-model="personType"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        >
+          <option
+            v-for="option in personTypeOptions"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.identificationType") }}
+        </label>
+
+        <input
+          v-if="personType === 'Juridico'"
+          :value="'CedulaJuridica'"
+          type="text"
+          disabled
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-600 cursor-not-allowed focus:outline-none"
+        />
+
+        <select
+          v-else
+          v-model="identificationType"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        >
+          <option
+            v-for="option in identificationTypeOptionsForPhysical"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.identification") }}
+        </label>
+        <input
+          v-model="identification"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.tradeName") }}
+        </label>
+        <input
+          v-model="tradeName"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.contactName") }}
+        </label>
+        <input
+          v-model="contactName"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.email") }}
+        </label>
+        <input
+          v-model="email"
+          type="email"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.primaryPhone") }}
+        </label>
+        <input
+          v-model="primaryPhone"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.secondaryPhone") }}
+        </label>
+        <input
+          v-model="secondaryPhone"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.industry") }}
+        </label>
+        <input
+          v-model="industry"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.clientType") }}
+        </label>
+        <input
+          v-model="clientType"
+          type="text"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("clients.fields.score") }}
+        </label>
+        <input
+          v-model.number="score"
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">
+        <input v-model="isActive" type="checkbox" />
+        <span class="text-bt-primary-700">
+          {{ $t("clients.fields.isActive") }}
+        </span>
       </div>
     </div>
 
-    <div class="mt-8 flex justify-end gap-3 border-t pt-6">
-      <button 
-        @click="modalStore.close" 
-        class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition font-medium"
+    <div class="mt-bt-spacing-24 flex justify-end gap-bt-spacing-12">
+      <button
+        type="button"
+        class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300"
+        @click="closeModal"
       >
-        Cancelar
+        {{ $t("common.cancel") }}
       </button>
-      <button 
-        @click="submit" 
-        :disabled="saving || loading" 
-        class="px-8 py-2.5 bg-[#C6983A] text-white rounded-md hover:bg-[#b08733] transition font-bold disabled:opacity-50"
+
+      <button
+        type="button"
+        :disabled="saving"
+        class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 disabled:bg-bt-disabled"
+        @click="submit"
       >
-        {{ saving ? 'Guardando...' : 'Actualizar Cliente' }}
+        {{ saving ? $t("common.loading") : $t("clients.actions.saveChanges") }}
       </button>
     </div>
   </div>

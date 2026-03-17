@@ -49,7 +49,8 @@
     "active": "Activo",
     "inactive": "Inactivo",
     "required": "Requerido",
-    "view": "Ver"
+    "view": "Ver",
+    "selectOption": "Seleccione una opción"
   },
   "toast": {
     "success": "Éxito",
@@ -1476,6 +1477,212 @@
         "classification": "Clasificación",
         "comment": "Comentario",
         "date": "Fecha"
+      }
+    }
+  },
+  "clients": {
+    "title": "Clientes",
+    "subtitle": "Administre clientes, contactos, direcciones, adjuntos e historial.",
+    "searchPlaceholder": "Buscar por identificación, nombre comercial, contacto, correo o teléfono",
+    "empty": "No se encontraron clientes.",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "identification": "Identificación",
+      "tradeName": "Nombre comercial",
+      "contactName": "Nombre de contacto",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "clientType": "Tipo de cliente",
+      "status": "Estado",
+      "options": "Opciones"
+    },
+    "fields": {
+      "personType": "Tipo de persona",
+      "identificationType": "Tipo de identificación",
+      "identification": "Identificación",
+      "tradeName": "Nombre comercial",
+      "contactName": "Nombre de contacto",
+      "email": "Correo",
+      "primaryPhone": "Teléfono principal",
+      "secondaryPhone": "Teléfono secundario",
+      "industry": "Industria",
+      "clientType": "Tipo de cliente",
+      "score": "Puntaje",
+      "isActive": "Activo"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newClient": "Nuevo cliente",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
+      "delete": "Eliminar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los clientes.",
+      "createSuccess": "Cliente creado correctamente.",
+      "createError": "No se pudo crear el cliente.",
+      "updateSuccess": "Cliente actualizado correctamente.",
+      "updateError": "No se pudo actualizar el cliente.",
+      "deactivateSuccess": "Cliente desactivado correctamente.",
+      "deactivateError": "No se pudo desactivar el cliente.",
+      "reactivateSuccess": "Cliente reactivado correctamente.",
+      "reactivateError": "No se pudo reactivar el cliente.",
+      "deleteSuccess": "Cliente eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el cliente."
+    },
+    "validation": {
+      "requiredCreate": "Tipo de persona, tipo de identificación, identificación, nombre comercial, nombre de contacto, correo y teléfono principal son obligatorios.",
+      "requiredUpdate": "Nombre comercial, nombre de contacto, correo y teléfono principal son obligatorios."
+    },
+    "modal": {
+      "createTitle": "Crear cliente",
+      "createDescription": "Registre un nuevo cliente.",
+      "editTitle": "Editar cliente",
+      "editDescription": "Actualice la información del cliente."
+    },
+    "drawer": {
+      "title": "Detalle de cliente",
+      "description": "Revise información, contactos, direcciones, adjuntos e historial de {name}.",
+      "tabs": {
+        "details": "Detalle",
+        "history": "Historial",
+        "contacts": "Contactos",
+        "addresses": "Direcciones",
+        "attachments": "Adjuntos"
+      }
+    },
+    "kpis": {
+      "outstandingBalance": "Saldo pendiente",
+      "totalInvoicedLast90Days": "Facturado últimos 90 días",
+      "activeContractsCount": "Contratos activos"
+    },
+    "contacts": {
+      "empty": "No se encontraron contactos.",
+      "primary": "Principal",
+      "fields": {
+        "name": "Nombre",
+        "jobTitle": "Puesto",
+        "email": "Correo",
+        "phone": "Teléfono",
+        "isPrimary": "Contacto principal"
+      },
+      "actions": {
+        "newContact": "Nuevo contacto",
+        "setPrimary": "Marcar como principal"
+      },
+      "messages": {
+        "createSuccess": "Contacto creado correctamente.",
+        "createError": "No se pudo crear el contacto.",
+        "updateSuccess": "Contacto actualizado correctamente.",
+        "updateError": "No se pudo actualizar el contacto.",
+        "deleteSuccess": "Contacto eliminado correctamente.",
+        "deleteError": "No se pudo eliminar el contacto.",
+        "setPrimarySuccess": "Contacto principal actualizado correctamente.",
+        "setPrimaryError": "No se pudo actualizar el contacto principal."
+      },
+      "validation": {
+        "required": "Nombre, puesto, correo y teléfono son obligatorios."
+      },
+      "modal": {
+        "createTitle": "Crear contacto",
+        "createDescription": "Agregue un nuevo contacto del cliente.",
+        "editTitle": "Editar contacto",
+        "editDescription": "Actualice la información del contacto del cliente."
+      }
+    },
+    "addresses": {
+      "empty": "No se encontraron direcciones.",
+      "primary": "Principal",
+      "fields": {
+        "addressType": "Tipo de dirección",
+        "addressLine": "Dirección",
+        "province": "Provincia",
+        "canton": "Cantón",
+        "district": "Distrito",
+        "notes": "Notas",
+        "isPrimary": "Dirección principal"
+      },
+      "actions": {
+        "newAddress": "Nueva dirección",
+        "setPrimary": "Marcar como principal"
+      },
+      "messages": {
+        "createSuccess": "Dirección creada correctamente.",
+        "createError": "No se pudo crear la dirección.",
+        "updateSuccess": "Dirección actualizada correctamente.",
+        "updateError": "No se pudo actualizar la dirección.",
+        "deleteSuccess": "Dirección eliminada correctamente.",
+        "deleteError": "No se pudo eliminar la dirección.",
+        "setPrimarySuccess": "Dirección principal actualizada correctamente.",
+        "setPrimaryError": "No se pudo actualizar la dirección principal."
+      },
+      "validation": {
+        "required": "Tipo de dirección, dirección, provincia, cantón y distrito son obligatorios."
+      },
+      "modal": {
+        "createTitle": "Crear dirección",
+        "createDescription": "Agregue una nueva dirección del cliente.",
+        "editTitle": "Editar dirección",
+        "editDescription": "Actualice la información de la dirección del cliente."
+      }
+    },
+    "attachments": {
+      "empty": "No se encontraron adjuntos.",
+      "fields": {
+        "documentType": "Tipo de documento"
+      },
+      "actions": {
+        "upload": "Subir archivo"
+      },
+      "messages": {
+        "uploadSuccess": "Adjunto subido correctamente.",
+        "uploadError": "No se pudo subir el adjunto.",
+        "deleteSuccess": "Adjunto eliminado correctamente.",
+        "deleteError": "No se pudo eliminar el adjunto.",
+        "openError": "No se pudo abrir el adjunto.",
+        "previewNotAvailable": "No hay vista previa disponible para este archivo."
+      },
+      "validation": {
+        "required": "Tipo de documento y archivo son obligatorios."
+      },
+      "dropzone": {
+        "title": "Suelte archivos aquí",
+        "subtitle": "o seleccione un archivo manualmente"
+      },
+      "table": {
+        "fileName": "Nombre de archivo",
+        "documentType": "Tipo de documento",
+        "uploadedAt": "Fecha de carga",
+        "options": "Opciones"
+      }
+    },
+    "history": {
+      "empty": "No hay registros previos.",
+      "fields": {
+        "from": "Desde",
+        "to": "Hasta",
+        "status": "Estado"
+      },
+      "actions": {
+        "loadHistory": "Cargar historial",
+        "exportPdf": "Exportar PDF"
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el historial del cliente.",
+        "exportPdfError": "No se pudo exportar el PDF del historial."
+      },
+      "table": {
+        "code": "Código",
+        "status": "Estado",
+        "date": "Fecha",
+        "total": "Total"
       }
     }
   }

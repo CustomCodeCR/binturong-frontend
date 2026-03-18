@@ -50,7 +50,8 @@
     "inactive": "Inactive",
     "required": "Required",
     "view": "View",
-    "selectOption": "Select an option"
+    "selectOption": "Select an option",
+    "delete": "Delete"
   },
   "toast": {
     "success": "Success",
@@ -1849,6 +1850,164 @@
         "title": "Convert Quote to Invoice",
         "description": "Complete invoice information before conversion."
       }
+    }
+  },
+  "contracts": {
+    "title": "Contracts",
+    "subtitle": "Manage client contracts, milestones, and supporting documents.",
+    "searchPlaceholder": "Search by code, client, status, or description",
+    "empty": "No contracts found.",
+    "summary": {
+      "total": "Total Contracts",
+      "active": "Active Contracts",
+      "withMilestones": "With Milestones",
+      "totalAmount": "Total Amount",
+      "billedAmount": "Billed Amount",
+      "pendingAmount": "Pending Amount"
+    },
+    "table": {
+      "code": "Code",
+      "client": "Client",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "status": "Status",
+      "milestones": "Milestones",
+      "options": "Options"
+    },
+    "fields": {
+      "code": "Code",
+      "client": "Client",
+      "quoteId": "Quote Id",
+      "salesOrderId": "Sales Order Id",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "status": "Status",
+      "description": "Description",
+      "notes": "Notes"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newContract": "New Contract",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "delete": "Delete",
+      "saveChanges": "Save Changes"
+    },
+    "messages": {
+      "loadError": "Could not load contracts.",
+      "loadDetailError": "Could not load contract details.",
+      "createSuccess": "Contract created successfully.",
+      "createError": "Could not create contract.",
+      "updateSuccess": "Contract updated successfully.",
+      "updateError": "Could not update contract.",
+      "deleteSuccess": "Contract deleted successfully.",
+      "deleteError": "Could not delete contract."
+    },
+    "validation": {
+      "required": "Code, client, start date, end date, status, and description are required.",
+      "invalidRange": "The end date must be greater than or equal to the start date.",
+      "invalidMilestone": "All milestones must have description, amount, percentage, and scheduled date.",
+      "maxLength": "Description and notes cannot exceed 255 characters"
+    },
+    "modal": {
+      "createTitle": "Create Contract",
+      "createDescription": "Register a new contract and optional milestones.",
+      "editTitle": "Edit Contract",
+      "editDescription": "Update contract information."
+    },
+    "drawer": {
+      "title": "Contract Details",
+      "description": "Review contract {code}, its milestones, and attachments.",
+      "tabs": {
+        "details": "Details",
+        "milestones": "Milestones",
+        "attachments": "Attachments"
+      }
+    },
+    "placeholders": {
+      "selectClient": "Select a client",
+      "selectQuote": "Select a quote",
+      "selectSalesOrder": "Select a sales order",
+      "selectInvoice": "Select an invoice"
+    },
+    "milestones": {
+      "title": "Milestones",
+      "empty": "No milestones found.",
+      "placeholders": {
+        "selectInvoice": "Select an invoice"
+      },
+      "fields": {
+        "description": "Description",
+        "percentage": "Percentage",
+        "amount": "Amount",
+        "scheduledDate": "Scheduled Date",
+        "isBilled": "Is Billed",
+        "invoiceId": "Invoice Id"
+      },
+      "table": {
+        "description": "Description",
+        "percentage": "Percentage",
+        "amount": "Amount",
+        "scheduledDate": "Scheduled Date",
+        "isBilled": "Billed",
+        "invoiceId": "Invoice Id",
+        "options": "Options"
+      },
+      "actions": {
+        "add": "Add Milestone",
+        "newMilestone": "New Milestone"
+      },
+      "messages": {
+        "createSuccess": "Milestone created successfully.",
+        "createError": "Could not create milestone.",
+        "updateSuccess": "Milestone updated successfully.",
+        "updateError": "Could not update milestone.",
+        "deleteSuccess": "Milestone deleted successfully.",
+        "deleteError": "Could not delete milestone."
+      },
+      "validation": {
+        "required": "Description, percentage, amount, and scheduled date are required."
+      },
+      "modal": {
+        "createTitle": "Create Milestone",
+        "createDescription": "Add a new milestone to the contract.",
+        "editTitle": "Edit Milestone",
+        "editDescription": "Update the selected milestone."
+      }
+    },
+    "attachments": {
+      "title": "Attachments",
+      "actions": {
+        "upload": "Upload PDF"
+      },
+      "messages": {
+        "backendListMissing": "The current backend does not expose persisted contract attachments in the read model, so the uploaded files cannot be listed automatically yet.",
+        "previewHint": "Once your backend returns attachment ids and file names in the contract response, this section can show the full file list.",
+        "uploadSuccess": "File uploaded successfully",
+        "uploadError": "Error uploading file",
+        "deleteSuccess": "File deleted successfully",
+        "deleteError": "Error deleting file",
+        "openError": "Could not open the file",
+        "downloadError": "Could not download the file",
+        "previewNotAvailable": "Preview is not available for this file type"
+      },
+      "validation": {
+        "required": "A PDF file is required.",
+        "onlyPdf": "Only PDF files are allowed."
+      },
+      "dropzone": {
+        "title": "Drop PDF files here",
+        "subtitle": "or select a PDF manually"
+      },
+      "table": {
+        "fileName": "File",
+        "contentType": "Type",
+        "size": "Size",
+        "uploadedAt": "Uploaded at",
+        "options": "Options"
+      },
+      "empty": "No attachments available"
     }
   }
 }

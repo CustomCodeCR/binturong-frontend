@@ -29,8 +29,16 @@ export const SelectService = {
     return callSelect(Endpoints.selectProducts, query);
   },
 
+  selectQuotes(query?: SelectQuery): Promise<SelectOption[]> {
+    return callSelect(Endpoints.selectQuotes, query);
+  },
+
   selectRoles(query?: SelectQuery): Promise<SelectOption[]> {
     return callSelect(Endpoints.selectRoles, query);
+  },
+
+  selectSalesOrders(query?: SelectQuery): Promise<SelectOption[]> {
+    return callSelect(Endpoints.selectSalesOrders, query);
   },
 
   selectSuppliers(query?: SelectQuery): Promise<SelectOption[]> {
@@ -59,6 +67,10 @@ export const SelectService = {
 
   selectPurchaseRequests(query?: SelectQuery): Promise<SelectOption[]> {
     return callSelect(Endpoints.selectPurchaseRequests, query);
+  },
+
+  selectInvoices(query?: SelectQuery): Promise<SelectOption[]> {
+    return callSelect(Endpoints.selectInvoices, query);
   },
 };
 

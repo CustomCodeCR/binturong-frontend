@@ -1312,4 +1312,16 @@ export const Endpoints: Record<string, Endpoint> = {
     method: "GET",
     path: "/api/purchases/orders/select",
   },
+  selectQuotes: {
+    path: "/api/quotes/select",
+    method: "GET",
+  },
+  selectSalesOrders: {
+    path: "/api/sales-orders/select",
+    method: "GET",
+  },
+  selectInvoices: {
+    path: "/api/invoices/select",
+    method: "GET",
+  },
 };

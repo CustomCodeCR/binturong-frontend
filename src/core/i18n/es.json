@@ -50,7 +50,8 @@
     "inactive": "Inactivo",
     "required": "Requerido",
     "view": "Ver",
-    "selectOption": "Seleccione una opción"
+    "selectOption": "Seleccione una opción",
+    "delete": "Eliminar"
   },
   "toast": {
     "success": "Éxito",
@@ -1850,6 +1851,166 @@
         "title": "Convertir cotización a factura",
         "description": "Complete la información de facturación antes de convertir."
       }
+    }
+  },
+  "contracts": {
+    "title": "Contratos",
+    "subtitle": "Administre contratos de clientes, hitos y documentos de respaldo.",
+    "searchPlaceholder": "Buscar por código, cliente, estado o descripción",
+    "empty": "No se encontraron contratos.",
+    "summary": {
+      "total": "Contratos totales",
+      "active": "Contratos activos",
+      "withMilestones": "Con hitos",
+      "totalAmount": "Monto total",
+      "billedAmount": "Monto facturado",
+      "pendingAmount": "Monto pendiente"
+    },
+    "table": {
+      "code": "Código",
+      "client": "Cliente",
+      "startDate": "Fecha inicio",
+      "endDate": "Fecha fin",
+      "status": "Estado",
+      "milestones": "Hitos",
+      "options": "Opciones"
+    },
+    "fields": {
+      "code": "Código",
+      "client": "Cliente",
+      "quoteId": "Id de cotización",
+      "salesOrderId": "Id de orden de venta",
+      "startDate": "Fecha inicio",
+      "endDate": "Fecha fin",
+      "status": "Estado",
+      "description": "Descripción",
+      "notes": "Notas"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newContract": "Nuevo contrato",
+      "viewDetails": "Ver detalle",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "saveChanges": "Guardar cambios"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los contratos.",
+      "loadDetailError": "No se pudo cargar el detalle del contrato.",
+      "createSuccess": "Contrato creado correctamente.",
+      "createError": "No se pudo crear el contrato.",
+      "updateSuccess": "Contrato actualizado correctamente.",
+      "updateError": "No se pudo actualizar el contrato.",
+      "deleteSuccess": "Contrato eliminado correctamente.",
+      "deleteError": "No se pudo eliminar el contrato."
+    },
+    "validation": {
+      "required": "Código, cliente, fecha de inicio, fecha de fin, estado y descripción son obligatorios.",
+      "invalidRange": "La fecha de fin debe ser mayor o igual a la fecha de inicio.",
+      "invalidMilestone": "Todos los hitos deben tener descripción, monto, porcentaje y fecha programada.",
+      "maxLength": "La descripción y notas no pueden superar los 255 caracteres"
+    },
+    "modal": {
+      "createTitle": "Crear contrato",
+      "createDescription": "Registre un nuevo contrato y sus hitos opcionales.",
+      "editTitle": "Editar contrato",
+      "editDescription": "Actualice la información del contrato."
+    },
+    "drawer": {
+      "title": "Detalle de contrato",
+      "description": "Revise el contrato {code}, sus hitos y adjuntos.",
+      "tabs": {
+        "details": "Detalle",
+        "milestones": "Hitos",
+        "attachments": "Adjuntos"
+      }
+    },
+    "placeholders": {
+      "selectClient": "Seleccione un cliente",
+      "selectQuote": "Seleccione una cotización",
+      "selectSalesOrder": "Seleccione una orden de venta",
+      "selectInvoice": "Seleccione una factura"
+    },
+    "milestones": {
+      "title": "Hitos",
+      "empty": "No se encontraron hitos.",
+      "milestones": {
+        "placeholders": {
+          "selectInvoice": "Seleccione una factura"
+        }
+      },
+      "fields": {
+        "description": "Descripción",
+        "percentage": "Porcentaje",
+        "amount": "Monto",
+        "scheduledDate": "Fecha programada",
+        "isBilled": "Facturado",
+        "invoiceId": "Id de factura"
+      },
+      "table": {
+        "description": "Descripción",
+        "percentage": "Porcentaje",
+        "amount": "Monto",
+        "scheduledDate": "Fecha programada",
+        "isBilled": "Facturado",
+        "invoiceId": "Id de factura",
+        "options": "Opciones"
+      },
+      "actions": {
+        "add": "Agregar hito",
+        "newMilestone": "Nuevo hito"
+      },
+      "messages": {
+        "createSuccess": "Hito creado correctamente.",
+        "createError": "No se pudo crear el hito.",
+        "updateSuccess": "Hito actualizado correctamente.",
+        "updateError": "No se pudo actualizar el hito.",
+        "deleteSuccess": "Hito eliminado correctamente.",
+        "deleteError": "No se pudo eliminar el hito."
+      },
+      "validation": {
+        "required": "Descripción, porcentaje, monto y fecha programada son obligatorios."
+      },
+      "modal": {
+        "createTitle": "Crear hito",
+        "createDescription": "Agregue un nuevo hito al contrato.",
+        "editTitle": "Editar hito",
+        "editDescription": "Actualice el hito seleccionado."
+      }
+    },
+    "attachments": {
+      "title": "Adjuntos",
+      "actions": {
+        "upload": "Subir PDF"
+      },
+      "messages": {
+        "backendListMissing": "El backend actual no expone los adjuntos persistidos del contrato en el read model, por eso aún no se pueden listar automáticamente.",
+        "previewHint": "Cuando el backend devuelva ids de adjuntos y nombres de archivo en el contrato, esta sección podrá mostrar la lista completa.",
+        "uploadSuccess": "Archivo subido correctamente",
+        "uploadError": "Error al subir el archivo",
+        "deleteSuccess": "Archivo eliminado correctamente",
+        "deleteError": "Error al eliminar el archivo",
+        "openError": "No se pudo abrir el archivo",
+        "downloadError": "No se pudo descargar el archivo",
+        "previewNotAvailable": "Vista previa no disponible para este tipo de archivo"
+      },
+      "validation": {
+        "required": "Debe seleccionar un archivo PDF.",
+        "onlyPdf": "Solo se permiten archivos PDF."
+      },
+      "dropzone": {
+        "title": "Suelte archivos PDF aquí",
+        "subtitle": "o seleccione un PDF manualmente"
+      },
+      "table": {
+        "fileName": "Archivo",
+        "contentType": "Tipo",
+        "size": "Tamaño",
+        "uploadedAt": "Fecha de carga",
+        "options": "Opciones"
+      },
+      "empty": "No hay archivos adjuntos"
     }
   }
 }

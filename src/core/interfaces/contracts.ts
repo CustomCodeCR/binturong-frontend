@@ -14,6 +14,15 @@ export interface ContractMilestone {
   invoiceId: string | null;
 }
 
+export interface ContractAttachment {
+  attachmentId: string;
+  fileName: string;
+  contentType: string;
+  storageKey: string;
+  size: number;
+  uploadedAt: string;
+}
+
 export interface Contract {
   id: string;
   contractId: string;
@@ -23,11 +32,12 @@ export interface Contract {
   quoteId: string | null;
   salesOrderId: string | null;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   status: string;
   description: string;
   notes: string;
   milestones: ContractMilestone[];
+  attachments: ContractAttachment[];
 }
 
 export interface ContractCreateRequest {

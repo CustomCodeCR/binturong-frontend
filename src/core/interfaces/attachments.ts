@@ -3,4 +3,4 @@ export interface AttachmentDownloadResponse {
   url: string;
 }
 
-export type AttachmentModule = "suppliers" | "clients" | "customers";
+export type AttachmentModule = "suppliers" | "clients" | "contracts";

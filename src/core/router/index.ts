@@ -123,6 +123,11 @@ export const router = createRouter({
           component: () =>
             import("@/modules/contracts/views/ContractsView.vue"),
         },
+        {
+          path: "sales",
+          name: "sales",
+          component: () => import("@/modules/sales/views/SalesOrdersView.vue"),
+        },
       ],
     },
   ],

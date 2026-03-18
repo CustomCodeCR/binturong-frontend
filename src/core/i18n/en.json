@@ -1732,7 +1732,8 @@
       "reject": "Reject",
       "expire": "Expire",
       "convertToContract": "Convert to Contract",
-      "convertToInvoice": "Convert to Invoice"
+      "convertToInvoice": "Convert to Invoice",
+      "convertToSalesOrder": "Convert to Sales Order"
     },
     "messages": {
       "loadError": "Could not load quotes.",
@@ -1750,7 +1751,9 @@
       "convertContractSuccess": "Quote converted to contract successfully.",
       "convertContractError": "Could not convert quote to contract.",
       "convertInvoiceSuccess": "Quote converted to invoice successfully.",
-      "convertInvoiceError": "Could not convert quote to invoice."
+      "convertInvoiceError": "Could not convert quote to invoice.",
+      "convertSalesOrderSuccess": "The sales order was created successfully.",
+      "convertSalesOrderError": "The quote could not be converted into a sales order."
     },
     "validation": {
       "requiredHeader": "Code, client, branch, issue date, and valid until are required.",
@@ -1801,6 +1804,30 @@
       "modal": {
         "title": "Expire Quote",
         "description": "Set the quote as expired and record the reason."
+      }
+    },
+    "convertSalesOrder": {
+      "modal": {
+        "title": "Convert quote to sales order",
+        "description": "Complete the required information to generate the sales order from this quote."
+      },
+      "fields": {
+        "branchSearch": "Search branch",
+        "branchSearchPlaceholder": "Type to search for a branch",
+        "branch": "Branch",
+        "branchPlaceholder": "Select a branch",
+        "currency": "Currency",
+        "exchangeRate": "Exchange rate",
+        "notes": "Notes"
+      },
+      "actions": {
+        "confirm": "Convert to order"
+      },
+      "validation": {
+        "required": "You must complete the required fields to convert the quote.",
+        "notAccepted": "Only accepted quotes can be converted.",
+        "expired": "The quote is expired. It must be revalidated before conversion.",
+        "branchLoadError": "Branches could not be loaded."
       }
     },
     "convertContract": {
@@ -2020,6 +2047,105 @@
         "options": "Options"
       },
       "empty": "No attachments available"
+    }
+  },
+  "sales": {
+    "title": "Sales",
+    "subtitle": "Manage sales orders linked to clients, branches, and sellers.",
+    "searchPlaceholder": "Search by code, client, branch, status, or notes",
+    "empty": "No sales orders found.",
+    "summary": {
+      "totalOrders": "Total Orders",
+      "confirmedOrders": "Confirmed Orders",
+      "totalAmount": "Total Amount"
+    },
+    "table": {
+      "code": "Code",
+      "client": "Client",
+      "branch": "Branch",
+      "seller": "Seller",
+      "date": "Date",
+      "status": "Status",
+      "total": "Total",
+      "options": "Options"
+    },
+    "sections": {
+      "generalData": "General Data",
+      "summary": "Commercial Summary"
+    },
+    "fields": {
+      "code": "Code",
+      "client": "Client",
+      "branch": "Branch",
+      "seller": "Seller",
+      "currency": "Currency",
+      "exchangeRate": "Exchange Rate",
+      "notes": "Notes",
+      "status": "Status",
+      "orderDate": "Order Date",
+      "subtotal": "Subtotal",
+      "discounts": "Discounts",
+      "taxes": "Taxes",
+      "total": "Total",
+      "lineTotal": "Line Total"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newSale": "New Sale",
+      "viewDetails": "View Details",
+      "confirm": "Confirm Sale"
+    },
+    "placeholders": {
+      "selectClient": "Select a client",
+      "selectBranch": "Select a branch",
+      "selectSeller": "Select a seller",
+      "selectProduct": "Select a product"
+    },
+    "messages": {
+      "loadError": "Could not load sales orders.",
+      "loadDetailError": "Could not load sales order details.",
+      "loadCatalogsError": "Could not load catalogs.",
+      "createSuccess": "Sales order created successfully.",
+      "createError": "Could not create sales order.",
+      "confirmSuccess": "Sales order confirmed successfully.",
+      "confirmError": "Could not confirm sales order."
+    },
+    "validation": {
+      "clientRequired": "You must select a client before continuing.",
+      "sellerRequired": "You must select the responsible seller.",
+      "headerRequired": "Client, branch, seller, currency, and exchange rate are required.",
+      "linesRequired": "At least one line is required.",
+      "invalidLine": "All lines must have product, quantity, unit price, discount, and tax values."
+    },
+    "drawer": {
+      "createTitle": "Create Sales Order",
+      "createDescription": "Register a sale associated with client, branch, and seller.",
+      "detailsTitle": "Sales Order Details",
+      "detailsDescription": "Review sales order {code}."
+    },
+    "confirmModal": {
+      "title": "Confirm Sale",
+      "description": "Confirm the sales order {code} and assign the responsible seller.",
+      "commissionHint": "When confirming, the system can register the seller commission according to the business rules."
+    },
+    "lines": {
+      "title": "Order Lines",
+      "addLine": "Add Line",
+      "product": "Product",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "discountPerc": "Discount %",
+      "taxPerc": "Tax %",
+      "empty": "No lines found.",
+      "table": {
+        "product": "Product",
+        "quantity": "Quantity",
+        "unitPrice": "Unit Price",
+        "discountPerc": "Discount %",
+        "taxPerc": "Tax %",
+        "total": "Total"
+      }
     }
   }
 }

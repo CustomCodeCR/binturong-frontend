@@ -15,6 +15,7 @@ import QuoteDetailsDrawer from "@/modules/quotes/components/QuoteDetailsDrawer.v
 import QuoteExpireModal from "@/modules/quotes/components/QuoteExpireModal.vue";
 import QuoteConvertContractModal from "@/modules/quotes/components/QuoteConvertContractModal.vue";
 import QuoteConvertInvoiceModal from "@/modules/quotes/components/QuoteConvertInvoiceModal.vue";
+import QuoteConvertSalesOrderModal from "@/modules/quotes/components/QuoteConvertSalesOrderModal.vue";
 
 import type { Quote } from "@/core/interfaces/quotes";
 
@@ -348,6 +349,35 @@ function openConvertInvoiceModal(quote: Quote) {
   });
 }
 
+function openConvertSalesOrderModal(quote: Quote) {
+  modalStore.open({
+    component: QuoteConvertSalesOrderModal,
+    props: {
+      quoteId: quote.quoteId,
+      quoteStatus: quote.status,
+      quoteValidUntil: quote.validUntil,
+      branchId: quote.branchId,
+      currency: quote.currency,
+      exchangeRate: quote.exchangeRate,
+      notes: quote.notes,
+    },
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("quotes.messages.convertSalesOrderSuccess"),
+      });
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("quotes.messages.convertSalesOrderError"),
+      });
+    },
+  });
+}
+
 onMounted(async () => {
   await loadQuotes();
 });
@@ -539,6 +569,10 @@ onMounted(async () => {
                     {
                       label: t('quotes.actions.convertToInvoice'),
                       action: () => openConvertInvoiceModal(quote),
+                    },
+                    {
+                      label: t('quotes.actions.convertToSalesOrder'),
+                      action: () => openConvertSalesOrderModal(quote),
                     },
                   ]"
                 >

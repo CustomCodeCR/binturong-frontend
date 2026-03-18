@@ -11,6 +11,7 @@ import { QuotesService } from "@/core/services/quotesService";
 import QuoteExpireModal from "@/modules/quotes/components/QuoteExpireModal.vue";
 import QuoteConvertContractModal from "@/modules/quotes/components/QuoteConvertContractModal.vue";
 import QuoteConvertInvoiceModal from "@/modules/quotes/components/QuoteConvertInvoiceModal.vue";
+import QuoteConvertSalesOrderModal from "@/modules/quotes/components/QuoteConvertSalesOrderModal.vue";
 
 import type { Quote, QuoteDetail } from "@/core/interfaces/quotes";
 
@@ -155,9 +156,6 @@ async function loadQuote() {
         ? response.lines.map((line) => normalizeLine(line))
         : [],
     };
-
-    console.log("QUOTE =>", quote.value);
-    console.log("FINANCIAL SUMMARY =>", financialSummary.value);
   } catch {
     quote.value = null;
 
@@ -315,6 +313,39 @@ function openConvertInvoiceModal() {
         severity: "error",
         title: t("toast.error"),
         message: error?.message ?? t("quotes.messages.convertInvoiceError"),
+      });
+    },
+  });
+}
+
+function openConvertSalesOrderModal() {
+  if (!quote.value) return;
+
+  modalStore.open({
+    component: QuoteConvertSalesOrderModal,
+    props: {
+      quoteId: quote.value.quoteId,
+      quoteStatus: quote.value.status,
+      quoteValidUntil: quote.value.validUntil,
+      branchId: quote.value.branchId,
+      currency: quote.value.currency,
+      exchangeRate: quote.value.exchangeRate,
+      notes: quote.value.notes,
+    },
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("quotes.messages.convertSalesOrderSuccess"),
+      });
+
+      await loadQuote();
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("quotes.messages.convertSalesOrderError"),
       });
     },
   });
@@ -665,6 +696,14 @@ onMounted(async () => {
                 @click="openConvertInvoiceModal"
               >
                 {{ $t("quotes.actions.convertToInvoice") }}
+              </button>
+
+              <button
+                type="button"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600"
+                @click="openConvertSalesOrderModal"
+              >
+                {{ $t("quotes.actions.convertToSalesOrder") }}
               </button>
             </div>
           </div>

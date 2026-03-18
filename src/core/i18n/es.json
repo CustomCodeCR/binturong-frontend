@@ -1733,7 +1733,8 @@
       "reject": "Rechazar",
       "expire": "Vencer",
       "convertToContract": "Convertir a contrato",
-      "convertToInvoice": "Convertir a factura"
+      "convertToInvoice": "Convertir a factura",
+      "convertToSalesOrder": "Convertir a orden de venta"
     },
     "messages": {
       "loadError": "No se pudieron cargar las cotizaciones.",
@@ -1751,7 +1752,9 @@
       "convertContractSuccess": "Cotización convertida a contrato correctamente.",
       "convertContractError": "No se pudo convertir la cotización a contrato.",
       "convertInvoiceSuccess": "Cotización convertida a factura correctamente.",
-      "convertInvoiceError": "No se pudo convertir la cotización a factura."
+      "convertInvoiceError": "No se pudo convertir la cotización a factura.",
+      "convertSalesOrderSuccess": "La orden de venta fue creada correctamente.",
+      "convertSalesOrderError": "No se pudo convertir la cotización en orden de venta."
     },
     "validation": {
       "requiredHeader": "Código, cliente, sucursal, fecha de emisión y fecha de validez son obligatorios.",
@@ -1802,6 +1805,30 @@
       "modal": {
         "title": "Vencer cotización",
         "description": "Marque la cotización como vencida y registre el motivo."
+      }
+    },
+    "convertSalesOrder": {
+      "modal": {
+        "title": "Convertir cotización a orden de venta",
+        "description": "Complete la información necesaria para generar la orden de venta a partir de esta cotización."
+      },
+      "fields": {
+        "branchSearch": "Buscar sucursal",
+        "branchSearchPlaceholder": "Escriba para buscar una sucursal",
+        "branch": "Sucursal",
+        "branchPlaceholder": "Seleccione una sucursal",
+        "currency": "Moneda",
+        "exchangeRate": "Tipo de cambio",
+        "notes": "Notas"
+      },
+      "actions": {
+        "confirm": "Convertir a orden"
+      },
+      "validation": {
+        "required": "Debe completar los campos requeridos para convertir la cotización.",
+        "notAccepted": "Solo se pueden convertir cotizaciones aceptadas.",
+        "expired": "La cotización está vencida. Debe revalidarse antes de convertirla.",
+        "branchLoadError": "No se pudieron cargar las sucursales."
       }
     },
     "convertContract": {
@@ -2023,6 +2050,105 @@
         "options": "Opciones"
       },
       "empty": "No hay archivos adjuntos"
+    }
+  },
+  "sales": {
+    "title": "Ventas",
+    "subtitle": "Administre órdenes de venta vinculadas a clientes, sucursales y vendedores.",
+    "searchPlaceholder": "Buscar por código, cliente, sucursal, estado o notas",
+    "empty": "No se encontraron órdenes de venta.",
+    "summary": {
+      "totalOrders": "Órdenes totales",
+      "confirmedOrders": "Órdenes confirmadas",
+      "totalAmount": "Monto total"
+    },
+    "table": {
+      "code": "Código",
+      "client": "Cliente",
+      "branch": "Sucursal",
+      "seller": "Vendedor",
+      "date": "Fecha",
+      "status": "Estado",
+      "total": "Total",
+      "options": "Opciones"
+    },
+    "sections": {
+      "generalData": "Datos generales",
+      "summary": "Resumen comercial"
+    },
+    "fields": {
+      "code": "Código",
+      "client": "Cliente",
+      "branch": "Sucursal",
+      "seller": "Vendedor",
+      "currency": "Moneda",
+      "exchangeRate": "Tipo de cambio",
+      "notes": "Notas",
+      "status": "Estado",
+      "orderDate": "Fecha de orden",
+      "subtotal": "Subtotal",
+      "discounts": "Descuentos",
+      "taxes": "Impuestos",
+      "total": "Total",
+      "lineTotal": "Total de línea"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newSale": "Nueva venta",
+      "viewDetails": "Ver detalle",
+      "confirm": "Confirmar venta"
+    },
+    "placeholders": {
+      "selectClient": "Seleccione un cliente",
+      "selectBranch": "Seleccione una sucursal",
+      "selectSeller": "Seleccione un vendedor",
+      "selectProduct": "Seleccione un producto"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las órdenes de venta.",
+      "loadDetailError": "No se pudo cargar el detalle de la orden de venta.",
+      "loadCatalogsError": "No se pudieron cargar los catálogos.",
+      "createSuccess": "Orden de venta creada correctamente.",
+      "createError": "No se pudo crear la orden de venta.",
+      "confirmSuccess": "Orden de venta confirmada correctamente.",
+      "confirmError": "No se pudo confirmar la orden de venta."
+    },
+    "validation": {
+      "clientRequired": "Debe seleccionar un cliente antes de continuar.",
+      "sellerRequired": "Debe seleccionar el vendedor responsable.",
+      "headerRequired": "Cliente, sucursal, vendedor, moneda y tipo de cambio son obligatorios.",
+      "linesRequired": "Debe agregar al menos una línea.",
+      "invalidLine": "Todas las líneas deben tener producto, cantidad, precio unitario, descuento e impuesto válidos."
+    },
+    "drawer": {
+      "createTitle": "Crear orden de venta",
+      "createDescription": "Registre una venta asociada a cliente, sucursal y vendedor.",
+      "detailsTitle": "Detalle de orden de venta",
+      "detailsDescription": "Revise la orden de venta {code}."
+    },
+    "confirmModal": {
+      "title": "Confirmar venta",
+      "description": "Confirme la orden de venta {code} y asigne el vendedor responsable.",
+      "commissionHint": "Al confirmar, el sistema puede registrar la comisión del vendedor según las reglas del negocio."
+    },
+    "lines": {
+      "title": "Líneas de la orden",
+      "addLine": "Agregar línea",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "discountPerc": "Descuento %",
+      "taxPerc": "Impuesto %",
+      "empty": "No se encontraron líneas.",
+      "table": {
+        "product": "Producto",
+        "quantity": "Cantidad",
+        "unitPrice": "Precio unitario",
+        "discountPerc": "Descuento %",
+        "taxPerc": "Impuesto %",
+        "total": "Total"
+      }
     }
   }
 }

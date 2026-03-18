@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
+import { useAuthStore } from "@/core/stores/authStore";
 import { ContractsService } from "@/core/services/contractsService";
 import { SelectService } from "@/core/services/selectService";
 
@@ -15,6 +16,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const authStore = useAuthStore();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -35,26 +37,21 @@ const status = ref("");
 const description = ref("");
 const notes = ref("");
 
+const autoRenewEnabled = ref(false);
+const autoRenewEveryDays = ref(365);
+const expiryNoticeDays = ref(30);
+
 function closeModal() {
   modalStore.close();
 }
 
 function toDateInputValue(value?: string | null): string {
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
 
   const normalized = String(value).trim();
+  if (!normalized) return "";
 
-  if (!normalized) {
-    return "";
-  }
-
-  if (normalized.length >= 10) {
-    return normalized.slice(0, 10);
-  }
-
-  return normalized;
+  return normalized.length >= 10 ? normalized.slice(0, 10) : normalized;
 }
 
 async function loadCatalogs() {
@@ -63,9 +60,7 @@ async function loadCatalogs() {
   try {
     const [clientsResponse, quotesResponse, salesOrdersResponse] =
       await Promise.all([
-        SelectService.selectClients({
-          onlyActive: true,
-        }),
+        SelectService.selectClients({ onlyActive: true }),
         SelectService.selectQuotes(),
         SelectService.selectSalesOrders(),
       ]);
@@ -91,8 +86,6 @@ async function loadContract() {
   try {
     const response = await ContractsService.readById(props.contractId);
 
-    console.log("Contract readById response:", response);
-
     contract.value = response;
 
     code.value = response?.code ?? "";
@@ -104,6 +97,9 @@ async function loadContract() {
     status.value = response?.status ?? "";
     description.value = response?.description ?? "";
     notes.value = response?.notes ?? "";
+    autoRenewEnabled.value = response?.autoRenewEnabled ?? false;
+    autoRenewEveryDays.value = response?.autoRenewEveryDays ?? 365;
+    expiryNoticeDays.value = response?.expiryNoticeDays ?? 30;
   } catch (error: any) {
     console.error("Load contract error:", error);
 
@@ -124,6 +120,7 @@ async function submit() {
   const normalizedStatus = status.value.trim();
   const normalizedDescription = description.value.trim();
   const normalizedNotes = notes.value.trim();
+  const responsibleUserId = authStore.userId?.trim() ?? "";
 
   if (
     !normalizedCode ||
@@ -131,7 +128,8 @@ async function submit() {
     !startDate.value ||
     !endDate.value ||
     !normalizedStatus ||
-    !normalizedDescription
+    !normalizedDescription ||
+    !responsibleUserId
   ) {
     modalStore.onError?.({
       code: 400,
@@ -156,6 +154,22 @@ async function submit() {
     return;
   }
 
+  if (expiryNoticeDays.value < 0) {
+    modalStore.onError?.({
+      code: 400,
+      message: t("contracts.validation.invalidExpiryNoticeDays"),
+    });
+    return;
+  }
+
+  if (autoRenewEnabled.value && autoRenewEveryDays.value <= 0) {
+    modalStore.onError?.({
+      code: 400,
+      message: t("contracts.validation.invalidAutoRenewEveryDays"),
+    });
+    return;
+  }
+
   saving.value = true;
 
   try {
@@ -169,6 +183,12 @@ async function submit() {
       status: normalizedStatus,
       description: normalizedDescription,
       notes: normalizedNotes,
+      responsibleUserId,
+      autoRenewEnabled: autoRenewEnabled.value,
+      autoRenewEveryDays: autoRenewEnabled.value
+        ? Number(autoRenewEveryDays.value)
+        : 365,
+      expiryNoticeDays: Number(expiryNoticeDays.value),
     });
 
     modalStore.onSuccess?.({ ok: true });
@@ -196,6 +216,7 @@ watch(notes, (value) => {
 });
 
 onMounted(async () => {
+  await authStore.initialize();
   await loadCatalogs();
   await loadContract();
 });
@@ -322,6 +343,40 @@ onMounted(async () => {
         <input
           v-model="endDate"
           type="date"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        />
+      </div>
+
+      <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">
+        <input v-model="autoRenewEnabled" type="checkbox" />
+        <span class="text-bt-primary-700">
+          {{ $t("contracts.fields.autoRenewEnabled") }}
+        </span>
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("contracts.fields.autoRenewEveryDays") }}
+        </label>
+        <input
+          v-model.number="autoRenewEveryDays"
+          type="number"
+          min="1"
+          step="1"
+          :disabled="!autoRenewEnabled"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("contracts.fields.expiryNoticeDays") }}
+        </label>
+        <input
+          v-model.number="expiryNoticeDays"
+          type="number"
+          min="0"
+          step="1"
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
         />
       </div>

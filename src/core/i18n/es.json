@@ -1859,6 +1859,7 @@
     "searchPlaceholder": "Buscar por código, cliente, estado o descripción",
     "empty": "No se encontraron contratos.",
     "summary": {
+      "autoRenew": "Auto renovación",
       "total": "Contratos totales",
       "active": "Contratos activos",
       "withMilestones": "Con hitos",
@@ -1873,7 +1874,9 @@
       "endDate": "Fecha fin",
       "status": "Estado",
       "milestones": "Hitos",
-      "options": "Opciones"
+      "options": "Opciones",
+      "autoRenew": "Auto renovación",
+      "expiryNoticeDays": "Días aviso vencimiento"
     },
     "fields": {
       "code": "Código",
@@ -1884,7 +1887,14 @@
       "endDate": "Fecha fin",
       "status": "Estado",
       "description": "Descripción",
-      "notes": "Notas"
+      "notes": "Notas",
+      "autoRenewEnabled": "Auto renovación",
+      "autoRenewEveryDays": "Renovar cada (días)",
+      "expiryNoticeDays": "Aviso de vencimiento (días)",
+      "expiryAlertActive": "Alerta activa",
+      "expiryLastNotifiedAtUtc": "Última notificación",
+      "renewedAtUtc": "Última renovación",
+      "responsibleUserId": "Usuario responsable"
     },
     "actions": {
       "search": "Buscar",
@@ -1909,7 +1919,9 @@
       "required": "Código, cliente, fecha de inicio, fecha de fin, estado y descripción son obligatorios.",
       "invalidRange": "La fecha de fin debe ser mayor o igual a la fecha de inicio.",
       "invalidMilestone": "Todos los hitos deben tener descripción, monto, porcentaje y fecha programada.",
-      "maxLength": "La descripción y notas no pueden superar los 255 caracteres"
+      "maxLength": "La descripción y notas no pueden superar los 255 caracteres",
+      "invalidExpiryNoticeDays": "Los días de aviso deben ser 0 o mayores",
+      "invalidAutoRenewEveryDays": "Los días de renovación deben ser mayores que 0"
     },
     "modal": {
       "createTitle": "Crear contrato",

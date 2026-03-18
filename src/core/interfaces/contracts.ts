@@ -34,8 +34,17 @@ export interface Contract {
   startDate: string;
   endDate: string | null;
   status: string;
-  description: string;
-  notes: string;
+  description: string | null;
+  notes: string | null;
+
+  responsibleUserId: string | null;
+  autoRenewEnabled: boolean;
+  autoRenewEveryDays: number;
+  expiryNoticeDays: number;
+  expiryAlertActive: boolean;
+  expiryLastNotifiedAtUtc: string | null;
+  renewedAtUtc: string | null;
+
   milestones: ContractMilestone[];
   attachments: ContractAttachment[];
 }
@@ -46,10 +55,14 @@ export interface ContractCreateRequest {
   quoteId?: string;
   salesOrderId?: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   status: string;
   description: string;
   notes: string;
+  responsibleUserId: string;
+  autoRenewEnabled: boolean;
+  autoRenewEveryDays: number;
+  expiryNoticeDays: number;
   milestones: {
     description: string;
     percentage: number;
@@ -68,15 +81,19 @@ export interface ContractUpdateRequest {
   quoteId?: string;
   salesOrderId?: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   status: string;
   description: string;
   notes: string;
+  responsibleUserId: string;
+  autoRenewEnabled: boolean;
+  autoRenewEveryDays: number;
+  expiryNoticeDays: number;
 }
 
 export interface QuoteToContractRequest {
   startDate: string;
-  endDate: string;
+  endDate?: string;
   responsibleUserId: string;
   description: string;
   notes: string;

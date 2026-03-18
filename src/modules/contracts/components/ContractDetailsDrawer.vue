@@ -97,6 +97,10 @@ function formatMoney(value?: number | null): string {
   });
 }
 
+function formatBool(value?: boolean | null): string {
+  return value ? t("common.yes") : t("common.no");
+}
+
 function formatFileSize(value?: number | null): string {
   const size = Number(value ?? 0);
 

@@ -81,7 +81,6 @@ async function loadData() {
     await loadContracts();
   } catch (error) {
     console.error("Load contracts error:", error);
-
     showError(t("contracts.messages.loadError"));
   } finally {
     loading.value = false;
@@ -101,7 +100,6 @@ async function reloadEventually(attempts = 10, delayMs = 500) {
     }
   } catch (error) {
     console.error("Reload contracts error:", error);
-
     showError(t("contracts.messages.loadError"));
   } finally {
     loading.value = false;
@@ -150,11 +148,15 @@ const summary = computed(() => {
   const withMilestones = contracts.value.filter(
     (item) => (item.milestones?.length ?? 0) > 0,
   ).length;
+  const autoRenew = contracts.value.filter(
+    (item) => item.autoRenewEnabled,
+  ).length;
 
   return {
     total,
     active,
     withMilestones,
+    autoRenew,
   };
 });
 
@@ -165,6 +167,10 @@ function formatDate(value?: string | null): string {
   if (Number.isNaN(date.getTime())) return value;
 
   return date.toLocaleDateString();
+}
+
+function formatBool(value?: boolean | null): string {
+  return value ? t("common.yes") : t("common.no");
 }
 
 function openCreateDrawer() {
@@ -230,7 +236,6 @@ async function deleteContract(contract: Contract) {
     await reloadEventually();
   } catch (error) {
     console.error("Delete contract error:", error);
-
     showError(t("contracts.messages.deleteError"));
   }
 }
@@ -252,7 +257,7 @@ onMounted(async () => {
     </div>
 
     <div
-      class="mb-bt-spacing-24 grid shrink-0 grid-cols-1 gap-bt-spacing-16 md:grid-cols-3"
+      class="mb-bt-spacing-24 grid shrink-0 grid-cols-1 gap-bt-spacing-16 md:grid-cols-4"
     >
       <div
         class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
@@ -284,6 +289,17 @@ onMounted(async () => {
         </div>
         <div class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-accent-600">
           {{ summary.withMilestones }}
+        </div>
+      </div>
+
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
+        <div class="text-sm text-bt-grey-500">
+          {{ $t("contracts.summary.autoRenew") }}
+        </div>
+        <div class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-warning-700">
+          {{ summary.autoRenew }}
         </div>
       </div>
     </div>
@@ -339,7 +355,7 @@ onMounted(async () => {
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[1200px]">
+        <table v-else class="w-full border-collapse min-w-[1450px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
@@ -356,6 +372,12 @@ onMounted(async () => {
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("contracts.table.status") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("contracts.table.autoRenew") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("contracts.table.expiryNoticeDays") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("contracts.table.milestones") }}
@@ -403,6 +425,23 @@ onMounted(async () => {
                 </span>
               </td>
 
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <span
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
+                  :class="
+                    contract.autoRenewEnabled
+                      ? 'bg-bt-success-100 text-bt-success-700'
+                      : 'bg-bt-grey-200 text-bt-grey-700'
+                  "
+                >
+                  {{ formatBool(contract.autoRenewEnabled) }}
+                </span>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ contract.expiryNoticeDays }}
+              </td>
+
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ contract.milestones?.length ?? 0 }}
               </td>
@@ -439,7 +478,7 @@ onMounted(async () => {
 
             <tr v-if="!filteredContracts.length">
               <td
-                colspan="7"
+                colspan="9"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
               >
                 {{ $t("contracts.empty") }}

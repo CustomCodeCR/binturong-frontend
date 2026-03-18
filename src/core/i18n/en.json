@@ -1858,6 +1858,7 @@
     "searchPlaceholder": "Search by code, client, status, or description",
     "empty": "No contracts found.",
     "summary": {
+      "autoRenew": "Auto-renew",
       "total": "Total Contracts",
       "active": "Active Contracts",
       "withMilestones": "With Milestones",
@@ -1872,7 +1873,9 @@
       "endDate": "End Date",
       "status": "Status",
       "milestones": "Milestones",
-      "options": "Options"
+      "options": "Options",
+      "autoRenew": "Auto-renew",
+      "expiryNoticeDays": "Expiry notice days"
     },
     "fields": {
       "code": "Code",
@@ -1883,7 +1886,14 @@
       "endDate": "End Date",
       "status": "Status",
       "description": "Description",
-      "notes": "Notes"
+      "notes": "Notes",
+      "autoRenewEnabled": "Auto-renew",
+      "autoRenewEveryDays": "Renew every (days)",
+      "expiryNoticeDays": "Expiry notice (days)",
+      "expiryAlertActive": "Alert active",
+      "expiryLastNotifiedAtUtc": "Last notification",
+      "renewedAtUtc": "Last renewal",
+      "responsibleUserId": "Responsible user"
     },
     "actions": {
       "search": "Search",
@@ -1908,7 +1918,9 @@
       "required": "Code, client, start date, end date, status, and description are required.",
       "invalidRange": "The end date must be greater than or equal to the start date.",
       "invalidMilestone": "All milestones must have description, amount, percentage, and scheduled date.",
-      "maxLength": "Description and notes cannot exceed 255 characters"
+      "maxLength": "Description and notes cannot exceed 255 characters",
+      "invalidExpiryNoticeDays": "Expiry notice days must be 0 or greater",
+      "invalidAutoRenewEveryDays": "Auto renew days must be greater than 0"
     },
     "modal": {
       "createTitle": "Create Contract",

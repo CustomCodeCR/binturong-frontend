@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useToastStore } from "@/core/stores/toastStore";
+import { useAuthStore } from "@/core/stores/authStore";
 
 import { SelectService } from "@/core/services/selectService";
 import { ContractsService } from "@/core/services/contractsService";
@@ -14,6 +15,7 @@ import type { ContractMilestoneCreateRequest } from "@/core/interfaces/contracts
 const { t } = useI18n();
 const drawerStore = useDrawerStore();
 const toastStore = useToastStore();
+const authStore = useAuthStore();
 
 const loadingCatalogs = ref(false);
 const loading = ref(false);
@@ -31,6 +33,10 @@ const endDate = ref("");
 const status = ref("Active");
 const description = ref("");
 const notes = ref("");
+
+const autoRenewEnabled = ref(false);
+const autoRenewEveryDays = ref(365);
+const expiryNoticeDays = ref(30);
 
 const milestones = ref<ContractMilestoneCreateRequest[]>([
   {
@@ -78,9 +84,7 @@ async function loadCatalogs() {
   try {
     const [clientsResponse, quotesResponse, salesOrdersResponse] =
       await Promise.all([
-        SelectService.selectClients({
-          onlyActive: true,
-        }),
+        SelectService.selectClients({ onlyActive: true }),
         SelectService.selectQuotes(),
         SelectService.selectSalesOrders(),
       ]);
@@ -109,6 +113,7 @@ async function submit() {
   const normalizedStatus = status.value.trim();
   const normalizedDescription = description.value.trim();
   const normalizedNotes = notes.value.trim();
+  const responsibleUserId = authStore.userId?.trim() ?? "";
 
   if (
     !normalizedCode ||
@@ -116,7 +121,8 @@ async function submit() {
     !startDate.value ||
     !endDate.value ||
     !normalizedStatus ||
-    !normalizedDescription
+    !normalizedDescription ||
+    !responsibleUserId
   ) {
     toastStore.addToast({
       severity: "error",
@@ -140,6 +146,24 @@ async function submit() {
       severity: "error",
       title: t("toast.error"),
       message: t("contracts.validation.invalidRange"),
+    });
+    return;
+  }
+
+  if (expiryNoticeDays.value < 0) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("contracts.validation.invalidExpiryNoticeDays"),
+    });
+    return;
+  }
+
+  if (autoRenewEnabled.value && autoRenewEveryDays.value <= 0) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("contracts.validation.invalidAutoRenewEveryDays"),
     });
     return;
   }
@@ -175,7 +199,7 @@ async function submit() {
   loading.value = true;
 
   try {
-    const payload = {
+    const created = await ContractsService.create({
       code: normalizedCode,
       clientId: normalizedClientId,
       quoteId: normalizedQuoteId || undefined,
@@ -185,10 +209,14 @@ async function submit() {
       status: normalizedStatus,
       description: normalizedDescription,
       notes: normalizedNotes,
+      responsibleUserId,
+      autoRenewEnabled: autoRenewEnabled.value,
+      autoRenewEveryDays: autoRenewEnabled.value
+        ? Number(autoRenewEveryDays.value)
+        : 365,
+      expiryNoticeDays: Number(expiryNoticeDays.value),
       milestones: normalizedMilestones,
-    };
-
-    const created = await ContractsService.create(payload);
+    });
 
     toastStore.addToast({
       severity: "success",
@@ -244,6 +272,8 @@ watch(endDate, (value) => {
 });
 
 onMounted(async () => {
+  await authStore.initialize();
+
   startDate.value = getLocalDateForInput();
   endDate.value = addDays(startDate.value, 30);
 
@@ -388,6 +418,40 @@ onMounted(async () => {
           <input
             v-model="endDate"
             type="date"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          />
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">
+          <input v-model="autoRenewEnabled" type="checkbox" />
+          <span class="text-bt-primary-700">
+            {{ $t("contracts.fields.autoRenewEnabled") }}
+          </span>
+        </div>
+
+        <div>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("contracts.fields.autoRenewEveryDays") }}
+          </label>
+          <input
+            v-model.number="autoRenewEveryDays"
+            type="number"
+            min="1"
+            step="1"
+            :disabled="!autoRenewEnabled"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
+          />
+        </div>
+
+        <div>
+          <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+            {{ $t("contracts.fields.expiryNoticeDays") }}
+          </label>
+          <input
+            v-model.number="expiryNoticeDays"
+            type="number"
+            min="0"
+            step="1"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           />
         </div>

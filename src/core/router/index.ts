@@ -128,6 +128,11 @@ export const router = createRouter({
           name: "sales",
           component: () => import("@/modules/sales/views/SalesOrdersView.vue"),
         },
+        {
+          path: "billing",
+          name: "billing",
+          component: () => import("@/modules/billing/views/BillingView.vue"),
+        },
       ],
     },
   ],

@@ -7,6 +7,7 @@ export interface InvoicesBrowseQuery {
 export interface InvoiceLine {
   invoiceDetailId: string;
   productId: string;
+  productName: string;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -25,7 +26,7 @@ export interface Invoice {
   clientId: string;
   clientName: string;
 
-  branchId: string;
+  branchId: string | null;
   branchName: string | null;
 
   salesOrderId: string | null;
@@ -42,6 +43,8 @@ export interface Invoice {
   discounts: number;
   total: number;
 
+  notes?: string | null;
+
   taxStatus: string;
   internalStatus: string;
 
@@ -54,13 +57,11 @@ export interface Invoice {
 
   paidAmount: number;
   pendingAmount: number;
-
-  notes?: string | null;
 }
 
 export interface InvoiceCreateRequest {
   clientId: string;
-  branchId: string;
+  branchId?: string | null;
   salesOrderId?: string | null;
   contractId?: string | null;
 
@@ -70,7 +71,7 @@ export interface InvoiceCreateRequest {
   currency: string;
   exchangeRate: number;
 
-  notes: string;
+  notes?: string | null;
 
   lines: {
     productId: string;
@@ -110,7 +111,7 @@ export interface InvoiceEmitResponse {
 }
 
 export interface QuoteToInvoiceRequest {
-  branchId: string;
+  branchId?: string | null;
   issueDate: string;
   documentType: string;
   mode: string;

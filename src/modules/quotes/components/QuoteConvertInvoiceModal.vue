@@ -20,8 +20,8 @@ const branches = ref<SelectOption[]>([]);
 
 const branchId = ref("");
 const issueDate = ref("");
-const documentType = ref("INVOICE");
-const mode = ref("normal");
+const documentType = ref("FE");
+const mode = ref("Normal");
 
 const loadingCatalogs = ref(false);
 const loading = ref(false);
@@ -76,12 +76,12 @@ async function submit() {
     return;
   }
 
-  const normalizedBranchId = branchId.value.trim();
+  const normalizedBranchId = branchId.value.trim() || null;
   const normalizedIssueDate = toUtcIsoString(issueDate.value);
-  const normalizedDocumentType = "INVOICE";
-  const normalizedMode = "normal";
+  const normalizedDocumentType = documentType.value.trim() || "FE";
+  const normalizedMode = mode.value.trim() || "Normal";
 
-  if (!normalizedBranchId || !normalizedIssueDate) {
+  if (!normalizedIssueDate) {
     modalStore.onError?.({
       code: 400,
       message: t("quotes.convertInvoice.validation.required"),

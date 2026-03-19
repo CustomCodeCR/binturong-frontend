@@ -2155,5 +2155,118 @@
         "total": "Total"
       }
     }
+  },
+  "billing": {
+    "title": "Facturación",
+    "subtitle": "Cree, revise y emita facturas electrónicas.",
+    "searchPlaceholder": "Buscar por cliente, sucursal, consecutivo, clave, estado o notas",
+    "empty": "No se encontraron facturas.",
+    "summary": {
+      "totalInvoices": "Facturas totales",
+      "pendingInvoices": "Facturas pendientes",
+      "totalAmount": "Monto total",
+      "pendingAmount": "Saldo pendiente"
+    },
+    "sections": {
+      "sourceData": "Origen y datos de factura",
+      "summary": "Resumen de facturación"
+    },
+    "table": {
+      "reference": "Referencia",
+      "client": "Cliente",
+      "branch": "Sucursal",
+      "issueDate": "Fecha de emisión",
+      "taxStatus": "Estado tributario",
+      "internalStatus": "Estado interno",
+      "total": "Total",
+      "pendingAmount": "Saldo pendiente",
+      "options": "Opciones"
+    },
+    "fields": {
+      "salesOrder": "Orden de venta",
+      "client": "Cliente",
+      "branch": "Sucursal",
+      "issueDate": "Fecha de emisión",
+      "documentType": "Tipo de documento",
+      "currency": "Moneda",
+      "exchangeRate": "Tipo de cambio",
+      "notes": "Notas",
+      "subtotal": "Subtotal",
+      "discounts": "Descuentos",
+      "taxes": "Impuestos",
+      "total": "Total",
+      "lineTotal": "Total de línea",
+      "consecutive": "Consecutivo",
+      "taxKey": "Clave tributaria",
+      "taxStatus": "Estado tributario",
+      "internalStatus": "Estado interno",
+      "paidAmount": "Monto pagado",
+      "pendingAmount": "Saldo pendiente"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "newInvoice": "Nueva factura",
+      "viewDetails": "Ver detalle",
+      "emit": "Emitir factura"
+    },
+    "placeholders": {
+      "selectSalesOrder": "Seleccione una orden de venta",
+      "selectClient": "Seleccione un cliente",
+      "selectBranch": "Seleccione una sucursal",
+      "selectProduct": "Seleccione un producto"
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las facturas.",
+      "loadDetailError": "No se pudo cargar el detalle de la factura.",
+      "loadCatalogsError": "No se pudieron cargar los catálogos.",
+      "loadSalesOrderError": "No se pudo cargar la información de la orden de venta.",
+      "preloadingFromSalesOrder": "Cargando información desde la orden de venta seleccionada...",
+      "createSuccess": "Factura creada correctamente.",
+      "createError": "No se pudo crear la factura.",
+      "emitSuccess": "Factura emitida correctamente.",
+      "emitError": "No se pudo emitir la factura."
+    },
+    "validation": {
+      "requiredHeader": "Cliente, sucursal, fecha de emisión, moneda y tipo de documento son obligatorios.",
+      "requiredLines": "Debe agregar al menos una línea de factura.",
+      "invalidLine": "Todas las líneas deben tener producto, descripción, cantidad, precio unitario, descuento e impuesto válidos."
+    },
+    "drawer": {
+      "createTitle": "Crear factura",
+      "createDescription": "Primero cree la factura y luego emítala ante Hacienda.",
+      "detailsTitle": "Detalle de factura",
+      "detailsDescription": "Revise la factura {code}."
+    },
+    "emitModal": {
+      "title": "Emitir factura electrónica",
+      "description": "Emita la factura {code} y envíela por el proceso tributario.",
+      "currentStatus": "Estado tributario actual",
+      "mode": "Modo de emisión",
+      "helpText": "Use modo normal para emisión estándar, o contingencia si el servicio externo no está disponible.",
+      "modes": {
+        "normal": "Normal",
+        "contingency": "Contingencia"
+      }
+    },
+    "lines": {
+      "title": "Líneas de factura",
+      "addLine": "Agregar línea",
+      "product": "Producto",
+      "description": "Descripción",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "discountPerc": "Descuento %",
+      "taxPerc": "Impuesto %",
+      "empty": "No se encontraron líneas.",
+      "table": {
+        "description": "Descripción",
+        "quantity": "Cantidad",
+        "unitPrice": "Precio unitario",
+        "discountPerc": "Descuento %",
+        "taxPerc": "Impuesto %",
+        "total": "Total"
+      }
+    }
   }
 }

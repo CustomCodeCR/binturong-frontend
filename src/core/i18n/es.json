@@ -2445,5 +2445,162 @@
         "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
       }
     }
+  },
+  "payroll": {
+    "title": "Planillas",
+    "subtitle": "Calcule planillas, registre horas extra, ajuste comisiones y gestione boletas de pago.",
+    "empty": "No se encontraron planillas.",
+    "summary": {
+      "totalPayrolls": "Planillas totales",
+      "totalEmployees": "Total de empleados",
+      "totalNet": "Total neto de planilla",
+      "totalCommissions": "Total de comisiones"
+    },
+    "filters": {
+      "periodCode": "Buscar por código de período",
+      "status": "Buscar por estado"
+    },
+    "actions": {
+      "refresh": "Recargar",
+      "newPayroll": "Nueva planilla",
+      "newOvertime": "Registrar horas extra",
+      "calculate": "Calcular planilla",
+      "viewDetails": "Ver detalle",
+      "adjustCommission": "Ajustar comisión",
+      "sendPayslip": "Enviar boleta",
+      "generatePayslip": "Generar boleta",
+      "viewHistory": "Ver historial",
+      "loadHistory": "Cargar historial"
+    },
+    "fields": {
+      "periodCode": "Código de período",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "payrollType": "Tipo de planilla",
+      "status": "Estado",
+      "attendanceConfirmed": "Asistencia confirmada",
+      "attendanceConfirmedHint": "Active esta opción solo después de validar los registros de asistencia del período."
+    },
+    "types": {
+      "weekly": "Semanal",
+      "biweekly": "Quincenal",
+      "monthly": "Mensual"
+    },
+    "table": {
+      "periodCode": "Período",
+      "startDate": "Fecha inicio",
+      "endDate": "Fecha fin",
+      "payrollType": "Tipo",
+      "status": "Estado",
+      "employees": "Empleados",
+      "totalNet": "Total neto",
+      "updatedAt": "Actualizado",
+      "options": "Opciones"
+    },
+    "detail": {
+      "employeeName": "Empleado",
+      "grossSalary": "Salario bruto",
+      "overtimeHours": "Horas extra",
+      "commissionAmount": "Comisión",
+      "deductions": "Deducciones",
+      "employerContrib": "Contribución patronal",
+      "netSalary": "Salario neto",
+      "actions": "Acciones"
+    },
+    "modal": {
+      "title": "Crear o calcular planilla",
+      "description": "Cree una planilla en borrador o calcule la planilla completa para un período.",
+      "modes": {
+        "calculate": "Calcular",
+        "createDraft": "Crear borrador"
+      }
+    },
+    "drawer": {
+      "title": "Detalle de planilla",
+      "description": "Revise los datos de planilla, el desglose por empleado y el historial de pagos.",
+      "tabs": {
+        "details": "Detalles",
+        "history": "Historial del empleado"
+      },
+      "employeeBreakdown": "Desglose por empleado",
+      "emptyDetails": "No se encontraron detalles de planilla."
+    },
+    "history": {
+      "empty": "No se encontró historial de planilla para este empleado.",
+      "fields": {
+        "employee": "Empleado",
+        "from": "Desde",
+        "to": "Hasta"
+      },
+      "placeholders": {
+        "selectEmployee": "Seleccione un empleado"
+      },
+      "table": {
+        "periodCode": "Período",
+        "startDate": "Fecha inicio",
+        "endDate": "Fecha fin",
+        "status": "Estado",
+        "commission": "Comisión",
+        "netSalary": "Salario neto"
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el historial de planillas del empleado."
+      }
+    },
+    "overtime": {
+      "modal": {
+        "title": "Registrar horas extra",
+        "description": "Registre horas extra para un empleado."
+      },
+      "fields": {
+        "employee": "Empleado",
+        "workDate": "Fecha de trabajo",
+        "hours": "Horas",
+        "notes": "Notas"
+      },
+      "placeholders": {
+        "selectEmployee": "Seleccione un empleado"
+      },
+      "messages": {
+        "createSuccess": "Horas extra registradas correctamente.",
+        "createError": "No se pudieron registrar las horas extra."
+      },
+      "validation": {
+        "required": "Empleado, fecha de trabajo y horas son obligatorios.",
+        "invalidHours": "Las horas deben ser mayores que 0 y menores o iguales a 16."
+      }
+    },
+    "commissions": {
+      "modal": {
+        "title": "Ajustar comisión",
+        "description": "Ajuste el monto de comisión para {employee}."
+      },
+      "fields": {
+        "amount": "Monto de comisión"
+      },
+      "messages": {
+        "updateSuccess": "Comisión actualizada correctamente.",
+        "updateError": "No se pudo actualizar la comisión."
+      },
+      "validation": {
+        "invalidAmount": "El monto de comisión debe ser un número válido mayor o igual a 0."
+      }
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar las planillas.",
+      "loadDetailError": "No se pudo cargar el detalle de la planilla.",
+      "createSuccess": "Planilla procesada correctamente.",
+      "createError": "No se pudo procesar la planilla.",
+      "calculateError": "No se pudo calcular la planilla.",
+      "sendEmailSuccess": "Boleta enviada correctamente por correo.",
+      "sendEmailError": "No se pudo enviar la boleta por correo.",
+      "generatePdfSuccess": "La solicitud de generación de boleta fue procesada.",
+      "generatePdfWarning": "El endpoint de PDF aún no está configurado para devolver un archivo descargable en el cliente actual."
+    },
+    "validation": {
+      "required": "Código de período, tipo de planilla, fecha de inicio y fecha de fin son obligatorios.",
+      "invalidDateRange": "La fecha de fin no puede ser menor que la fecha de inicio.",
+      "attendanceRequired": "Debe confirmar la asistencia antes de calcular la planilla."
+    }
   }
 }

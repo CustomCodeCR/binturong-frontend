@@ -2442,5 +2442,162 @@
         "invoiceAlreadyPaid": "The selected invoice has already been paid."
       }
     }
+  },
+  "payroll": {
+    "title": "Payroll",
+    "subtitle": "Calculate payroll, register overtime, adjust commissions, and manage payment slips.",
+    "empty": "No payroll records found.",
+    "summary": {
+      "totalPayrolls": "Total Payrolls",
+      "totalEmployees": "Total Employees",
+      "totalNet": "Total Net Payroll",
+      "totalCommissions": "Total Commissions"
+    },
+    "filters": {
+      "periodCode": "Search by period code",
+      "status": "Search by status"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "newPayroll": "New Payroll",
+      "newOvertime": "Register Overtime",
+      "calculate": "Calculate Payroll",
+      "viewDetails": "View Details",
+      "adjustCommission": "Adjust Commission",
+      "sendPayslip": "Send Payslip",
+      "generatePayslip": "Generate Payslip",
+      "viewHistory": "View History",
+      "loadHistory": "Load History"
+    },
+    "fields": {
+      "periodCode": "Period Code",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "payrollType": "Payroll Type",
+      "status": "Status",
+      "attendanceConfirmed": "Attendance confirmed",
+      "attendanceConfirmedHint": "Enable this option only after validating attendance records for the period."
+    },
+    "types": {
+      "weekly": "Weekly",
+      "biweekly": "Biweekly",
+      "monthly": "Monthly"
+    },
+    "table": {
+      "periodCode": "Period",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "payrollType": "Type",
+      "status": "Status",
+      "employees": "Employees",
+      "totalNet": "Total Net",
+      "updatedAt": "Updated At",
+      "options": "Options"
+    },
+    "detail": {
+      "employeeName": "Employee",
+      "grossSalary": "Gross Salary",
+      "overtimeHours": "Overtime Hours",
+      "commissionAmount": "Commission",
+      "deductions": "Deductions",
+      "employerContrib": "Employer Contribution",
+      "netSalary": "Net Salary",
+      "actions": "Actions"
+    },
+    "modal": {
+      "title": "Create or Calculate Payroll",
+      "description": "Create a draft payroll or calculate the payroll for a full period.",
+      "modes": {
+        "calculate": "Calculate",
+        "createDraft": "Create Draft"
+      }
+    },
+    "drawer": {
+      "title": "Payroll Details",
+      "description": "Review payroll data, employee breakdown, and payment history.",
+      "tabs": {
+        "details": "Details",
+        "history": "Employee History"
+      },
+      "employeeBreakdown": "Employee Breakdown",
+      "emptyDetails": "No payroll details found."
+    },
+    "history": {
+      "empty": "No payroll history found for this employee.",
+      "fields": {
+        "employee": "Employee",
+        "from": "From",
+        "to": "To"
+      },
+      "placeholders": {
+        "selectEmployee": "Select an employee"
+      },
+      "table": {
+        "periodCode": "Period",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "status": "Status",
+        "commission": "Commission",
+        "netSalary": "Net Salary"
+      },
+      "messages": {
+        "loadError": "Could not load employee payroll history."
+      }
+    },
+    "overtime": {
+      "modal": {
+        "title": "Register Overtime",
+        "description": "Register overtime hours for an employee."
+      },
+      "fields": {
+        "employee": "Employee",
+        "workDate": "Work Date",
+        "hours": "Hours",
+        "notes": "Notes"
+      },
+      "placeholders": {
+        "selectEmployee": "Select an employee"
+      },
+      "messages": {
+        "createSuccess": "Overtime registered successfully.",
+        "createError": "Could not register overtime."
+      },
+      "validation": {
+        "required": "Employee, work date, and hours are required.",
+        "invalidHours": "Hours must be greater than 0 and less than or equal to 16."
+      }
+    },
+    "commissions": {
+      "modal": {
+        "title": "Adjust Commission",
+        "description": "Adjust the commission amount for {employee}."
+      },
+      "fields": {
+        "amount": "Commission Amount"
+      },
+      "messages": {
+        "updateSuccess": "Commission updated successfully.",
+        "updateError": "Could not update commission."
+      },
+      "validation": {
+        "invalidAmount": "The commission amount must be a valid number greater than or equal to 0."
+      }
+    },
+    "messages": {
+      "loadError": "Could not load payroll records.",
+      "loadDetailError": "Could not load payroll detail.",
+      "createSuccess": "Payroll processed successfully.",
+      "createError": "Could not process payroll.",
+      "calculateError": "Could not calculate payroll.",
+      "sendEmailSuccess": "Payslip email sent successfully.",
+      "sendEmailError": "Could not send payslip email.",
+      "generatePdfSuccess": "Payslip generation request completed.",
+      "generatePdfWarning": "The PDF endpoint is not yet configured to return a downloadable file in the current client."
+    },
+    "validation": {
+      "required": "Period code, payroll type, start date, and end date are required.",
+      "invalidDateRange": "End date cannot be earlier than start date.",
+      "attendanceRequired": "Attendance must be confirmed before calculating payroll."
+    }
   }
 }

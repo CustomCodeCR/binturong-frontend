@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { useDrawerStore } from "@/core/stores/drawerStore";
@@ -25,13 +25,28 @@ const toastStore = useToastStore();
 const loadingOrder = ref(false);
 const salesOrder = ref<SalesOrder | null>(null);
 
+const sellerName = computed(() => {
+  const order = salesOrder.value as
+    | (SalesOrder & { sellerName?: string | null })
+    | null;
+
+  return order?.sellerName || order?.sellerUserId || "-";
+});
+
+const canConfirm = computed(() => {
+  const status = String(salesOrder.value?.status ?? "")
+    .trim()
+    .toLowerCase();
+  return !status.includes("confirm");
+});
+
 function formatDateTime(value?: string | null): string {
   if (!value) return "-";
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return date.toLocaleString();
+  return date.toLocaleString("es-CR");
 }
 
 function formatMoney(value?: number | null): string {
@@ -68,7 +83,7 @@ async function loadSalesOrder() {
 }
 
 function openConfirmModal() {
-  if (!salesOrder.value) return;
+  if (!salesOrder.value || !canConfirm.value) return;
 
   modalStore.open({
     component: SalesOrderConfirmModal,
@@ -85,15 +100,6 @@ function openConfirmModal() {
       });
 
       await loadSalesOrder();
-
-      window.dispatchEvent(
-        new CustomEvent("sales-order-updated", {
-          detail: {
-            salesOrderId: salesOrder.value?.salesOrderId,
-            action: "confirmed",
-          },
-        }),
-      );
     },
     onError: (error) => {
       toastStore.addToast({
@@ -147,7 +153,7 @@ watch(
     </div>
 
     <template v-else-if="salesOrder">
-      <div class="mb-bt-spacing-16 flex justify-end">
+      <div v-if="canConfirm" class="mb-bt-spacing-16 flex justify-end">
         <button
           type="button"
           class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600"
@@ -211,7 +217,7 @@ watch(
             {{ $t("sales.fields.seller") }}
           </div>
           <div class="text-bt-primary-700 font-bt-semibold">
-            {{ salesOrder.sellerUserId || "-" }}
+            {{ sellerName }}
           </div>
         </div>
 

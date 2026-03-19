@@ -32,14 +32,20 @@ const salesOrders = ref<SalesOrder[]>([]);
 const search = ref("");
 
 async function loadSalesOrders() {
+  const response = await SalesOrdersService.browse({
+    page: 1,
+    pageSize: 100,
+    search: search.value.trim() || undefined,
+  });
+
+  salesOrders.value = Array.isArray(response) ? [...response] : [];
+}
+
+async function loadData() {
   loading.value = true;
 
   try {
-    salesOrders.value = await SalesOrdersService.browse({
-      page: 1,
-      pageSize: 100,
-      search: search.value.trim() || undefined,
-    });
+    await loadSalesOrders();
   } catch {
     toastStore.addToast({
       severity: "error",
@@ -51,6 +57,60 @@ async function loadSalesOrders() {
   }
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function reloadEventually(
+  loader: () => Promise<void>,
+  attempts = 10,
+  delayMs = 500,
+) {
+  loading.value = true;
+
+  try {
+    for (let index = 0; index < attempts; index += 1) {
+      await loader();
+
+      if (index < attempts - 1) {
+        await sleep(delayMs);
+      }
+    }
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("sales.messages.loadError"),
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function showSuccess(message: string) {
+  toastStore.addToast({
+    severity: "success",
+    title: t("toast.success"),
+    message,
+  });
+}
+
+function showError(message: string) {
+  toastStore.addToast({
+    severity: "error",
+    title: t("toast.error"),
+    message,
+  });
+}
+
+function isConfirmedStatus(status?: string | null): boolean {
+  return (
+    String(status ?? "")
+      .trim()
+      .toLowerCase() === "confirmed"
+  );
+}
+
 const filteredSalesOrders = computed(() => {
   const term = search.value.trim().toLowerCase();
 
@@ -60,11 +120,15 @@ const filteredSalesOrders = computed(() => {
 
   return salesOrders.value.filter((item) => {
     return (
-      item.code.toLowerCase().includes(term) ||
+      (item.code ?? "").toLowerCase().includes(term) ||
       (item.clientName ?? "").toLowerCase().includes(term) ||
       (item.branchName ?? "").toLowerCase().includes(term) ||
-      item.status.toLowerCase().includes(term) ||
-      (item.notes ?? "").toLowerCase().includes(term)
+      (item.status ?? "").toLowerCase().includes(term) ||
+      (item.notes ?? "").toLowerCase().includes(term) ||
+      ((item as SalesOrder & { sellerName?: string | null }).sellerName ?? "")
+        .toLowerCase()
+        .includes(term) ||
+      (item.sellerUserId ?? "").toLowerCase().includes(term)
     );
   });
 });
@@ -73,7 +137,9 @@ const summary = computed(() => {
   const total = salesOrders.value.length;
 
   const confirmed = salesOrders.value.filter((item) =>
-    item.status.toLowerCase().includes("confirm"),
+    String(item.status ?? "")
+      .toLowerCase()
+      .includes("confirm"),
   ).length;
 
   const totalAmount = salesOrders.value.reduce(
@@ -94,7 +160,7 @@ function formatDateTime(value?: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return date.toLocaleString();
+  return date.toLocaleString("es-CR");
 }
 
 function formatMoney(value?: number | null): string {
@@ -108,6 +174,31 @@ function formatMoney(value?: number | null): string {
   });
 }
 
+function getSellerDisplayName(order: SalesOrder): string {
+  const sellerName = (order as SalesOrder & { sellerName?: string | null })
+    .sellerName;
+
+  return sellerName || order.sellerUserId || "-";
+}
+
+function getOrderActions(order: SalesOrder) {
+  const actions = [
+    {
+      label: t("sales.actions.viewDetails"),
+      action: () => openDetailsDrawer(order),
+    },
+  ];
+
+  if (!isConfirmedStatus(order.status)) {
+    actions.push({
+      label: t("sales.actions.confirm"),
+      action: () => openConfirmModal(order),
+    });
+  }
+
+  return actions;
+}
+
 function openCreateDrawer() {
   drawerStore.openDrawer({
     component: SalesOrderCreateDrawer,
@@ -117,20 +208,11 @@ function openCreateDrawer() {
     size: "xl",
     props: {},
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("sales.messages.createSuccess"),
-      });
-
-      await loadSalesOrders();
+      showSuccess(t("sales.messages.createSuccess"));
+      await reloadEventually(loadSalesOrders);
     },
     onError: (error: any) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("sales.messages.createError"),
-      });
+      showError(error?.message ?? t("sales.messages.createError"));
     },
   });
 }
@@ -147,6 +229,12 @@ function openDetailsDrawer(order: SalesOrder) {
     props: {
       salesOrderId: order.salesOrderId,
     },
+    onSuccess: async () => {
+      await reloadEventually(loadSalesOrders);
+    },
+    onError: (error: any) => {
+      showError(error?.message ?? t("sales.messages.loadError"));
+    },
   });
 }
 
@@ -155,30 +243,20 @@ function openConfirmModal(order: SalesOrder) {
     component: SalesOrderConfirmModal,
     props: {
       salesOrderId: order.salesOrderId,
-      currentSellerUserId: order.sellerUserId ?? "",
       code: order.code,
     },
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("sales.messages.confirmSuccess"),
-      });
-
-      await loadSalesOrders();
+      showSuccess(t("sales.messages.confirmSuccess"));
+      await reloadEventually(loadSalesOrders);
     },
-    onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("sales.messages.confirmError"),
-      });
+    onError: (error: any) => {
+      showError(error?.message ?? t("sales.messages.confirmError"));
     },
   });
 }
 
 onMounted(async () => {
-  await loadSalesOrders();
+  await loadData();
 });
 </script>
 
@@ -271,13 +349,13 @@ onMounted(async () => {
             type="text"
             :placeholder="$t('sales.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            @keyup.enter="loadSalesOrders"
+            @keyup.enter="loadData"
           />
 
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-            @click="loadSalesOrders"
+            @click="loadData"
           >
             {{ $t("sales.actions.search") }}
           </button>
@@ -285,7 +363,7 @@ onMounted(async () => {
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
-            @click="loadSalesOrders"
+            @click="loadData"
           >
             {{ $t("sales.actions.refresh") }}
           </button>
@@ -364,7 +442,7 @@ onMounted(async () => {
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ order.sellerUserId || "-" }}
+                {{ getSellerDisplayName(order) }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
@@ -386,18 +464,7 @@ onMounted(async () => {
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12">
-                <SalesOrderActionMenu
-                  :items="[
-                    {
-                      label: t('sales.actions.viewDetails'),
-                      action: () => openDetailsDrawer(order),
-                    },
-                    {
-                      label: t('sales.actions.confirm'),
-                      action: () => openConfirmModal(order),
-                    },
-                  ]"
-                >
+                <SalesOrderActionMenu :items="getOrderActions(order)">
                   <template #trigger>
                     <button
                       type="button"

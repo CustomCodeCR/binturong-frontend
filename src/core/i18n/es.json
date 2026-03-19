@@ -2090,7 +2090,8 @@
       "discounts": "Descuentos",
       "taxes": "Impuestos",
       "total": "Total",
-      "lineTotal": "Total de línea"
+      "lineTotal": "Total de línea",
+      "warehouse": "Bodega"
     },
     "actions": {
       "search": "Buscar",
@@ -2103,7 +2104,8 @@
       "selectClient": "Seleccione un cliente",
       "selectBranch": "Seleccione una sucursal",
       "selectSeller": "Seleccione un vendedor",
-      "selectProduct": "Seleccione un producto"
+      "selectProduct": "Seleccione un producto",
+      "selectWarehouse": "Seleccione una bodega"
     },
     "messages": {
       "loadError": "No se pudieron cargar las órdenes de venta.",
@@ -2112,14 +2114,17 @@
       "createSuccess": "Orden de venta creada correctamente.",
       "createError": "No se pudo crear la orden de venta.",
       "confirmSuccess": "Orden de venta confirmada correctamente.",
-      "confirmError": "No se pudo confirmar la orden de venta."
+      "confirmError": "No se pudo confirmar la orden de venta.",
+      "inventoryUpdated": "La orden fue confirmada y el inventario fue actualizado.",
+      "inventoryMovementInfo": "Al confirmar esta orden se realizará automáticamente la salida de inventario por cada línea."
     },
     "validation": {
       "clientRequired": "Debe seleccionar un cliente antes de continuar.",
       "sellerRequired": "Debe seleccionar el vendedor responsable.",
       "headerRequired": "Cliente, sucursal, vendedor, moneda y tipo de cambio son obligatorios.",
       "linesRequired": "Debe agregar al menos una línea.",
-      "invalidLine": "Todas las líneas deben tener producto, cantidad, precio unitario, descuento e impuesto válidos."
+      "invalidLine": "Todas las líneas deben tener producto, cantidad, precio unitario, descuento e impuesto válidos.",
+      "warehouseRequired": "Debe seleccionar una bodega."
     },
     "drawer": {
       "createTitle": "Crear orden de venta",

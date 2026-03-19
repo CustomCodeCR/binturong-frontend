@@ -2087,7 +2087,8 @@
       "discounts": "Discounts",
       "taxes": "Taxes",
       "total": "Total",
-      "lineTotal": "Line Total"
+      "lineTotal": "Line Total",
+      "warehouse": "Warehouse"
     },
     "actions": {
       "search": "Search",
@@ -2100,7 +2101,8 @@
       "selectClient": "Select a client",
       "selectBranch": "Select a branch",
       "selectSeller": "Select a seller",
-      "selectProduct": "Select a product"
+      "selectProduct": "Select a product",
+      "selectWarehouse": "Select a warehouse"
     },
     "messages": {
       "loadError": "Could not load sales orders.",
@@ -2109,14 +2111,17 @@
       "createSuccess": "Sales order created successfully.",
       "createError": "Could not create sales order.",
       "confirmSuccess": "Sales order confirmed successfully.",
-      "confirmError": "Could not confirm sales order."
+      "confirmError": "Could not confirm sales order.",
+      "inventoryUpdated": "The order was confirmed and inventory was updated.",
+      "inventoryMovementInfo": "When this order is confirmed, an inventory output movement will be created automatically for each line."
     },
     "validation": {
       "clientRequired": "You must select a client before continuing.",
       "sellerRequired": "You must select the responsible seller.",
       "headerRequired": "Client, branch, seller, currency, and exchange rate are required.",
       "linesRequired": "At least one line is required.",
-      "invalidLine": "All lines must have product, quantity, unit price, discount, and tax values."
+      "invalidLine": "All lines must have product, quantity, unit price, discount, and tax values.",
+      "warehouseRequired": "You must select a warehouse."
     },
     "drawer": {
       "createTitle": "Create Sales Order",

@@ -2268,5 +2268,182 @@
         "total": "Total"
       }
     }
+  },
+  "payments": {
+    "title": "Control de pagos",
+    "subtitle": "Registre pagos, consulte el historial y gestione notas de crédito y débito.",
+    "searchPlaceholder": "Buscar por cliente, método de pago, factura, referencia o notas",
+    "empty": "No se encontraron pagos.",
+    "tabs": {
+      "payments": "Pagos",
+      "creditNotes": "Notas de crédito",
+      "debitNotes": "Notas de débito"
+    },
+    "summary": {
+      "totalPayments": "Pagos totales",
+      "totalCollected": "Total cobrado",
+      "cashPayments": "Pagos en efectivo",
+      "transferPayments": "Pagos por transferencia"
+    },
+    "filters": {
+      "allClients": "Todos los clientes",
+      "allPaymentMethods": "Todos los métodos de pago"
+    },
+    "actions": {
+      "refresh": "Recargar",
+      "newPayment": "Registrar pago",
+      "register": "Registrar",
+      "viewDetails": "Ver detalle",
+      "exportPdf": "Exportar PDF",
+      "exportExcel": "Exportar Excel"
+    },
+    "fields": {
+      "invoice": "Factura",
+      "client": "Cliente",
+      "paymentMethod": "Método de pago",
+      "paymentDate": "Fecha de pago",
+      "amount": "Monto",
+      "amountTendered": "Monto entregado",
+      "changeAmount": "Vuelto",
+      "pendingAmount": "Saldo pendiente",
+      "reference": "Referencia",
+      "notes": "Notas",
+      "isBankConfirmed": "Confirmado por banco",
+      "isPosAvailable": "POS disponible",
+      "isApproved": "Aprobado",
+      "posAuthCode": "Código de autorización POS",
+      "totalAmount": "Monto total"
+    },
+    "placeholders": {
+      "selectInvoice": "Seleccione una factura",
+      "selectClient": "Seleccione un cliente",
+      "selectPaymentMethod": "Seleccione un método de pago"
+    },
+    "modes": {
+      "cash": "Efectivo",
+      "transfer": "Transferencia",
+      "card": "Tarjeta",
+      "partial": "Pago parcial"
+    },
+    "table": {
+      "client": "Cliente",
+      "method": "Método",
+      "paymentDate": "Fecha de pago",
+      "totalAmount": "Monto total",
+      "reference": "Referencia",
+      "appliedInvoices": "Facturas aplicadas",
+      "invoice": "Factura",
+      "appliedAmount": "Monto aplicado",
+      "options": "Opciones"
+    },
+    "drawer": {
+      "detailsTitle": "Detalle del pago",
+      "detailsDescription": "Revise el pago {reference}.",
+      "appliedInvoicesTitle": "Facturas aplicadas",
+      "emptyAppliedInvoices": "No se encontraron facturas aplicadas."
+    },
+    "modal": {
+      "title": "Registrar pago",
+      "description": "Seleccione el tipo de pago y registre la transacción contra una factura."
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los pagos.",
+      "loadDetailError": "No se pudo cargar el detalle del pago.",
+      "loadCatalogsError": "No se pudieron cargar los catálogos.",
+      "loadInvoiceError": "No se pudo cargar la información de la factura.",
+      "registerSuccess": "Pago registrado correctamente.",
+      "registerError": "No se pudo registrar el pago.",
+      "exportPdfError": "No se pudo exportar el reporte PDF.",
+      "exportExcelError": "No se pudo exportar el reporte Excel."
+    },
+    "validation": {
+      "requiredHeader": "Factura, cliente, método de pago y fecha de pago son obligatorios.",
+      "invoiceRequired": "Se requiere una factura válida.",
+      "amountRequired": "Se requiere un monto válido.",
+      "cashInsufficient": "El monto entregado es menor al saldo pendiente.",
+      "partialExceedsBalance": "El pago parcial supera el saldo restante."
+    },
+    "creditNotes": {
+      "empty": "No se encontraron notas de crédito.",
+      "actions": {
+        "new": "Nueva nota de crédito"
+      },
+      "modal": {
+        "title": "Crear nota de crédito",
+        "description": "Cree y emita una nota de crédito asociada a una factura."
+      },
+      "fields": {
+        "invoice": "Factura",
+        "reason": "Motivo",
+        "totalAmount": "Monto total",
+        "issueDate": "Fecha de emisión",
+        "selectedInvoiceBalance": "Saldo de la factura"
+      },
+      "placeholders": {
+        "selectInvoice": "Seleccione una factura",
+        "selectReason": "Seleccione una razón"
+      },
+      "reasons": {
+        "return": "Devolución",
+        "priceCorrection": "Corrección de precio",
+        "serviceCanceled": "Servicio cancelado"
+      },
+      "table": {
+        "invoice": "Factura",
+        "consecutive": "Consecutivo",
+        "issueDate": "Fecha de emisión",
+        "reason": "Motivo",
+        "totalAmount": "Monto total",
+        "taxStatus": "Estado tributario"
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las notas de crédito.",
+        "createSuccess": "Nota de crédito creada correctamente.",
+        "createError": "No se pudo crear la nota de crédito."
+      },
+      "validation": {
+        "required": "Factura, motivo, monto total y fecha de emisión son obligatorios.",
+        "amountRequired": "El monto debe ser mayor a 0.",
+        "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
+      }
+    },
+    "debitNotes": {
+      "empty": "No se encontraron notas de débito.",
+      "actions": {
+        "new": "Nueva nota de débito"
+      },
+      "modal": {
+        "title": "Crear nota de débito",
+        "description": "Cree y emita una nota de débito asociada a una factura."
+      },
+      "fields": {
+        "invoice": "Factura",
+        "reason": "Motivo",
+        "totalAmount": "Monto total",
+        "issueDate": "Fecha de emisión",
+        "selectedInvoiceBalance": "Monto base de la factura"
+      },
+      "placeholders": {
+        "selectInvoice": "Seleccione una factura"
+      },
+      "table": {
+        "invoice": "Factura",
+        "consecutive": "Consecutivo",
+        "issueDate": "Fecha de emisión",
+        "reason": "Motivo",
+        "totalAmount": "Monto total",
+        "taxStatus": "Estado tributario"
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las notas de débito.",
+        "createSuccess": "Nota de débito creada correctamente.",
+        "createError": "No se pudo crear la nota de débito."
+      },
+      "validation": {
+        "required": "Factura, motivo, monto total y fecha de emisión son obligatorios.",
+        "amountRequired": "El monto debe ser mayor a 0.",
+        "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
+      }
+    }
   }
 }

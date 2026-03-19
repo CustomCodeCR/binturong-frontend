@@ -2265,5 +2265,182 @@
         "total": "Total"
       }
     }
+  },
+  "payments": {
+    "title": "Payment Control",
+    "subtitle": "Register payments, review payment history, and manage credit/debit notes.",
+    "searchPlaceholder": "Search by client, payment method, invoice, reference, or notes",
+    "empty": "No payments found.",
+    "tabs": {
+      "payments": "Payments",
+      "creditNotes": "Credit Notes",
+      "debitNotes": "Debit Notes"
+    },
+    "summary": {
+      "totalPayments": "Total Payments",
+      "totalCollected": "Total Collected",
+      "cashPayments": "Cash Payments",
+      "transferPayments": "Transfer Payments"
+    },
+    "filters": {
+      "allClients": "All clients",
+      "allPaymentMethods": "All payment methods"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "newPayment": "Register Payment",
+      "register": "Register",
+      "viewDetails": "View Details",
+      "exportPdf": "Export PDF",
+      "exportExcel": "Export Excel"
+    },
+    "fields": {
+      "invoice": "Invoice",
+      "client": "Client",
+      "paymentMethod": "Payment Method",
+      "paymentDate": "Payment Date",
+      "amount": "Amount",
+      "amountTendered": "Amount Tendered",
+      "changeAmount": "Change",
+      "pendingAmount": "Pending Amount",
+      "reference": "Reference",
+      "notes": "Notes",
+      "isBankConfirmed": "Bank confirmed",
+      "isPosAvailable": "POS available",
+      "isApproved": "Approved",
+      "posAuthCode": "POS auth code",
+      "totalAmount": "Total Amount"
+    },
+    "placeholders": {
+      "selectInvoice": "Select an invoice",
+      "selectClient": "Select a client",
+      "selectPaymentMethod": "Select a payment method"
+    },
+    "modes": {
+      "cash": "Cash",
+      "transfer": "Transfer",
+      "card": "Card",
+      "partial": "Partial Payment"
+    },
+    "table": {
+      "client": "Client",
+      "method": "Method",
+      "paymentDate": "Payment Date",
+      "totalAmount": "Total Amount",
+      "reference": "Reference",
+      "appliedInvoices": "Applied Invoices",
+      "invoice": "Invoice",
+      "appliedAmount": "Applied Amount",
+      "options": "Options"
+    },
+    "drawer": {
+      "detailsTitle": "Payment Details",
+      "detailsDescription": "Review payment {reference}.",
+      "appliedInvoicesTitle": "Applied Invoices",
+      "emptyAppliedInvoices": "No applied invoices found."
+    },
+    "modal": {
+      "title": "Register Payment",
+      "description": "Choose the payment type and register the transaction against an invoice."
+    },
+    "messages": {
+      "loadError": "Could not load payments.",
+      "loadDetailError": "Could not load payment detail.",
+      "loadCatalogsError": "Could not load catalogs.",
+      "loadInvoiceError": "Could not load invoice information.",
+      "registerSuccess": "Payment registered successfully.",
+      "registerError": "Could not register payment.",
+      "exportPdfError": "Could not export PDF report.",
+      "exportExcelError": "Could not export Excel report."
+    },
+    "validation": {
+      "requiredHeader": "Invoice, client, payment method, and payment date are required.",
+      "invoiceRequired": "A valid invoice is required.",
+      "amountRequired": "A valid amount is required.",
+      "cashInsufficient": "The amount tendered is less than the pending amount.",
+      "partialExceedsBalance": "The partial payment exceeds the remaining balance."
+    },
+    "creditNotes": {
+      "empty": "No credit notes found.",
+      "actions": {
+        "new": "New Credit Note"
+      },
+      "modal": {
+        "title": "Create Credit Note",
+        "description": "Create and emit a credit note linked to an invoice."
+      },
+      "fields": {
+        "invoice": "Invoice",
+        "reason": "Reason",
+        "totalAmount": "Total Amount",
+        "issueDate": "Issue Date",
+        "selectedInvoiceBalance": "Invoice balance"
+      },
+      "placeholders": {
+        "selectInvoice": "Select an invoice",
+        "selectReason": "Select a reason"
+      },
+      "reasons": {
+        "return": "Return",
+        "priceCorrection": "Price correction",
+        "serviceCanceled": "Service canceled"
+      },
+      "table": {
+        "invoice": "Invoice",
+        "consecutive": "Consecutive",
+        "issueDate": "Issue Date",
+        "reason": "Reason",
+        "totalAmount": "Total Amount",
+        "taxStatus": "Tax Status"
+      },
+      "messages": {
+        "loadError": "Could not load credit notes.",
+        "createSuccess": "Credit note created successfully.",
+        "createError": "Could not create credit note."
+      },
+      "validation": {
+        "required": "Invoice, reason, total amount, and issue date are required.",
+        "amountRequired": "Amount must be greater than 0.",
+        "invoiceAlreadyPaid": "The selected invoice has already been paid."
+      }
+    },
+    "debitNotes": {
+      "empty": "No debit notes found.",
+      "actions": {
+        "new": "New Debit Note"
+      },
+      "modal": {
+        "title": "Create Debit Note",
+        "description": "Create and emit a debit note linked to an invoice."
+      },
+      "fields": {
+        "invoice": "Invoice",
+        "reason": "Reason",
+        "totalAmount": "Total Amount",
+        "issueDate": "Issue Date",
+        "selectedInvoiceBalance": "Invoice base amount"
+      },
+      "placeholders": {
+        "selectInvoice": "Select an invoice"
+      },
+      "table": {
+        "invoice": "Invoice",
+        "consecutive": "Consecutive",
+        "issueDate": "Issue Date",
+        "reason": "Reason",
+        "totalAmount": "Total Amount",
+        "taxStatus": "Tax Status"
+      },
+      "messages": {
+        "loadError": "Could not load debit notes.",
+        "createSuccess": "Debit note created successfully.",
+        "createError": "Could not create debit note."
+      },
+      "validation": {
+        "required": "Invoice, reason, total amount, and issue date are required.",
+        "amountRequired": "Amount must be greater than 0.",
+        "invoiceAlreadyPaid": "The selected invoice has already been paid."
+      }
+    }
   }
 }

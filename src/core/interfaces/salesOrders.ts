@@ -11,8 +11,11 @@ export interface SalesOrdersBrowseQuery extends QueryObject {
 
 // -------------------- Requests / Responses --------------------
 
+export type SalesOrderLineItemType = "Product" | "Service" | string;
+
 export interface SalesOrderLineCreateRequest {
-  productId: string;
+  itemType: SalesOrderLineItemType;
+  itemId: string;
   quantity: number;
   unitPrice: number;
   discountPerc: number;
@@ -21,11 +24,11 @@ export interface SalesOrderLineCreateRequest {
 
 export interface SalesOrderCreateRequest {
   clientId: string;
-  branchId: string;
-  sellerUserId: string;
+  branchId: string | null;
+  sellerUserId: string | null;
   currency: string;
   exchangeRate: number;
-  notes: string;
+  notes: string | null;
   lines: SalesOrderLineCreateRequest[];
 }
 
@@ -34,10 +37,10 @@ export interface SalesOrderCreateResponse {
 }
 
 export interface SalesOrderFromQuoteRequest {
-  branchId: string;
+  branchId: string | null;
   currency: string;
   exchangeRate: number;
-  notes: string;
+  notes: string | null;
 }
 
 export interface SalesOrderFromQuoteResponse {
@@ -52,8 +55,14 @@ export interface SalesOrderConfirmRequest {
 
 export interface SalesOrderLine {
   salesOrderDetailId: string;
-  productId: string;
-  productName: string | null;
+
+  itemType: SalesOrderLineItemType;
+
+  productId: string | null;
+  serviceId: string | null;
+
+  itemName: string | null;
+
   quantity: number;
   unitPrice: number;
   discountPerc: number;
@@ -71,12 +80,13 @@ export interface SalesOrder {
   clientId: string;
   clientName: string | null;
 
-  branchId: string;
+  branchId: string | null;
   branchName: string | null;
 
   sellerUserId: string | null;
+  sellerName: string | null;
 
-  orderDate: string; // ISO datetime
+  orderDate: string;
   status: string;
 
   currency: string;
@@ -89,8 +99,8 @@ export interface SalesOrder {
 
   notes: string | null;
 
-  createdAt: string; // ISO datetime
-  updatedAt: string; // ISO datetime
+  createdAt: string;
+  updatedAt: string;
 
   lines: SalesOrderLine[];
 }

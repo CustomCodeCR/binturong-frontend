@@ -9,10 +9,15 @@ import { useAuthStore } from "@/core/stores/authStore";
 import { SalesOrdersService } from "@/core/services/salesOrdersService";
 import { SelectService } from "@/core/services/selectService";
 import { ProductsService } from "@/core/services/productsService";
+import { ServicesService } from "@/core/services/servicesService";
 
 import type { SelectOption } from "@/core/interfaces/select";
-import type { SalesOrderLineCreateRequest } from "@/core/interfaces/salesOrders";
+import type {
+  SalesOrderLineCreateRequest,
+  SalesOrderLineItemType,
+} from "@/core/interfaces/salesOrders";
 import type { Product } from "@/core/interfaces/products";
+import type { Service } from "@/core/interfaces/services";
 
 const { t } = useI18n();
 const drawerStore = useDrawerStore();
@@ -23,7 +28,10 @@ const clients = ref<SelectOption[]>([]);
 const branches = ref<SelectOption[]>([]);
 const users = ref<SelectOption[]>([]);
 const products = ref<SelectOption[]>([]);
+const services = ref<SelectOption[]>([]);
+
 const productCatalog = ref<Product[]>([]);
+const serviceCatalog = ref<Service[]>([]);
 
 const loadingCatalogs = ref(false);
 const loadingExchangeRate = ref(false);
@@ -38,7 +46,8 @@ const notes = ref("");
 
 const lines = ref<SalesOrderLineCreateRequest[]>([
   {
-    productId: "",
+    itemType: "Product",
+    itemId: "",
     quantity: 1,
     unitPrice: 0,
     discountPerc: 0,
@@ -96,7 +105,8 @@ function getLineTotal(line: SalesOrderLineCreateRequest): number {
 
 function addLine() {
   lines.value.push({
-    productId: "",
+    itemType: "Product",
+    itemId: "",
     quantity: 1,
     unitPrice: 0,
     discountPerc: 0,
@@ -112,25 +122,76 @@ function closeDrawer() {
   drawerStore.closeDrawer();
 }
 
+function normalizeItemType(value?: string | null): SalesOrderLineItemType {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (normalized === "service") {
+    return "Service";
+  }
+
+  return "Product";
+}
+
+function getItemOptions(itemType: SalesOrderLineItemType): SelectOption[] {
+  return normalizeItemType(itemType) === "Service"
+    ? services.value
+    : products.value;
+}
+
 function findProduct(productId: string): Product | undefined {
   return productCatalog.value.find(
     (product) => product.productId === productId || product.id === productId,
   );
 }
 
-function applyProductDefaults(line: SalesOrderLineCreateRequest) {
-  const selectedProduct = findProduct(String(line.productId ?? "").trim());
+function findService(serviceId: string): Service | undefined {
+  return serviceCatalog.value.find(
+    (service) => service.serviceId === serviceId || service.id === serviceId,
+  );
+}
 
-  if (!selectedProduct) {
+function applyItemDefaults(line: SalesOrderLineCreateRequest) {
+  const itemType = normalizeItemType(line.itemType);
+  const itemId = String(line.itemId ?? "").trim();
+
+  if (!itemId) {
     return;
   }
 
-  line.unitPrice = Number(selectedProduct.basePrice ?? 0);
-  line.taxPerc = Number(selectedProduct.taxPercentage ?? 0);
+  if (itemType === "Product") {
+    const selectedProduct = findProduct(itemId);
+
+    if (!selectedProduct) {
+      return;
+    }
+
+    line.unitPrice = Number(selectedProduct.basePrice ?? 0);
+    line.taxPerc = Number(selectedProduct.taxPercentage ?? 0);
+    return;
+  }
+
+  const selectedService = findService(itemId);
+
+  if (!selectedService) {
+    return;
+  }
+
+  line.unitPrice = Number(selectedService.basePrice ?? 0);
+  line.taxPerc = Number(selectedService.taxPercentage ?? 0);
 }
 
-function onProductChange(line: SalesOrderLineCreateRequest) {
-  applyProductDefaults(line);
+function onItemTypeChange(line: SalesOrderLineCreateRequest) {
+  line.itemType = normalizeItemType(line.itemType);
+  line.itemId = "";
+  line.unitPrice = 0;
+  line.discountPerc = 0;
+  line.taxPerc = 0;
+}
+
+function onItemChange(line: SalesOrderLineCreateRequest) {
+  applyItemDefaults(line);
 }
 
 async function loadCatalogs() {
@@ -142,13 +203,20 @@ async function loadCatalogs() {
       branchesResponse,
       usersResponse,
       productsResponse,
+      servicesResponse,
       productsCatalogResponse,
+      servicesCatalogResponse,
     ] = await Promise.all([
       SelectService.selectClients({ onlyActive: true }),
       SelectService.selectBranches({ onlyActive: true }),
       SelectService.selectUsers({ onlyActive: true }),
       SelectService.selectProducts({ onlyActive: true }),
+      SelectService.selectServices({ onlyActive: true }),
       ProductsService.browse({
+        page: 1,
+        pageSize: 500,
+      }),
+      ServicesService.browse({
         page: 1,
         pageSize: 500,
       }),
@@ -158,6 +226,7 @@ async function loadCatalogs() {
     branches.value = branchesResponse ?? [];
     users.value = usersResponse ?? [];
     products.value = productsResponse ?? [];
+    services.value = servicesResponse ?? [];
 
     if (Array.isArray(productsCatalogResponse)) {
       productCatalog.value = productsCatalogResponse;
@@ -181,6 +250,30 @@ async function loadCatalogs() {
       ).data;
     } else {
       productCatalog.value = [];
+    }
+
+    if (Array.isArray(servicesCatalogResponse)) {
+      serviceCatalog.value = servicesCatalogResponse;
+    } else if (
+      servicesCatalogResponse &&
+      typeof servicesCatalogResponse === "object" &&
+      "items" in servicesCatalogResponse &&
+      Array.isArray((servicesCatalogResponse as { items: Service[] }).items)
+    ) {
+      serviceCatalog.value = (
+        servicesCatalogResponse as { items: Service[] }
+      ).items;
+    } else if (
+      servicesCatalogResponse &&
+      typeof servicesCatalogResponse === "object" &&
+      "data" in servicesCatalogResponse &&
+      Array.isArray((servicesCatalogResponse as { data: Service[] }).data)
+    ) {
+      serviceCatalog.value = (
+        servicesCatalogResponse as { data: Service[] }
+      ).data;
+    } else {
+      serviceCatalog.value = [];
     }
   } catch (error: any) {
     toastStore.addToast({
@@ -254,17 +347,21 @@ async function submit() {
     return;
   }
 
-  const normalizedLines = lines.value.map((line) => ({
-    productId: String(line.productId ?? "").trim(),
-    quantity: Number(line.quantity),
-    unitPrice: Number(line.unitPrice),
-    discountPerc: Number(line.discountPerc),
-    taxPerc: Number(line.taxPerc),
-  }));
+  const normalizedLines: SalesOrderLineCreateRequest[] = lines.value.map(
+    (line) => ({
+      itemType: normalizeItemType(line.itemType),
+      itemId: String(line.itemId ?? "").trim(),
+      quantity: Number(line.quantity),
+      unitPrice: Number(line.unitPrice),
+      discountPerc: Number(line.discountPerc),
+      taxPerc: Number(line.taxPerc),
+    }),
+  );
 
   const invalidLine = normalizedLines.some(
     (line) =>
-      !line.productId ||
+      !line.itemType ||
+      !line.itemId ||
       Number.isNaN(line.quantity) ||
       line.quantity <= 0 ||
       Number.isNaN(line.unitPrice) ||
@@ -293,7 +390,7 @@ async function submit() {
       sellerUserId: normalizedSellerUserId,
       currency: normalizedCurrency,
       exchangeRate: normalizedExchangeRate,
-      notes: notes.value.trim(),
+      notes: notes.value.trim() || null,
       lines: normalizedLines,
     });
 
@@ -321,22 +418,43 @@ watch(
   lines,
   (currentLines) => {
     for (const line of currentLines) {
-      if (!line.productId) {
+      const itemId = String(line.itemId ?? "").trim();
+      const itemType = normalizeItemType(line.itemType);
+
+      if (!itemId) {
         continue;
       }
 
-      const selectedProduct = findProduct(String(line.productId).trim());
+      if (itemType === "Product") {
+        const selectedProduct = findProduct(itemId);
 
-      if (!selectedProduct) {
+        if (!selectedProduct) {
+          continue;
+        }
+
+        if (Number(line.unitPrice) <= 0) {
+          line.unitPrice = Number(selectedProduct.basePrice ?? 0);
+        }
+
+        if (Number(line.taxPerc) < 0 || Number.isNaN(Number(line.taxPerc))) {
+          line.taxPerc = Number(selectedProduct.taxPercentage ?? 0);
+        }
+
+        continue;
+      }
+
+      const selectedService = findService(itemId);
+
+      if (!selectedService) {
         continue;
       }
 
       if (Number(line.unitPrice) <= 0) {
-        line.unitPrice = Number(selectedProduct.basePrice ?? 0);
+        line.unitPrice = Number(selectedService.basePrice ?? 0);
       }
 
       if (Number(line.taxPerc) < 0 || Number.isNaN(Number(line.taxPerc))) {
-        line.taxPerc = Number(selectedProduct.taxPercentage ?? 0);
+        line.taxPerc = Number(selectedService.taxPercentage ?? 0);
       }
     }
   },
@@ -576,28 +694,48 @@ onMounted(async () => {
               class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16"
             >
               <div
-                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-bt-spacing-12 items-end"
+                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-bt-spacing-12 items-end"
               >
+                <div>
+                  <label
+                    class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
+                  >
+                    {{ $t("sales.lines.itemType") }}
+                  </label>
+                  <select
+                    v-model="line.itemType"
+                    class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                    @change="onItemTypeChange(line)"
+                  >
+                    <option value="Product">
+                      {{ $t("sales.lines.productType") }}
+                    </option>
+                    <option value="Service">
+                      {{ $t("sales.lines.serviceType") }}
+                    </option>
+                  </select>
+                </div>
+
                 <div class="xl:col-span-2">
                   <label
                     class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
                   >
-                    {{ $t("sales.lines.product") }}
+                    {{ $t("sales.lines.item") }}
                   </label>
                   <select
-                    v-model="line.productId"
+                    v-model="line.itemId"
                     class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-                    @change="onProductChange(line)"
+                    @change="onItemChange(line)"
                   >
                     <option value="">
-                      {{ $t("sales.placeholders.selectProduct") }}
+                      {{ $t("sales.placeholders.selectItem") }}
                     </option>
                     <option
-                      v-for="product in products"
-                      :key="product.id"
-                      :value="product.id"
+                      v-for="item in getItemOptions(line.itemType)"
+                      :key="item.id"
+                      :value="item.id"
                     >
-                      {{ product.label }}
+                      {{ item.label }}
                     </option>
                   </select>
                 </div>

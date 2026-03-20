@@ -26,11 +26,7 @@ const loadingOrder = ref(false);
 const salesOrder = ref<SalesOrder | null>(null);
 
 const sellerName = computed(() => {
-  const order = salesOrder.value as
-    | (SalesOrder & { sellerName?: string | null })
-    | null;
-
-  return order?.sellerName || order?.sellerUserId || "-";
+  return salesOrder.value?.sellerName || salesOrder.value?.sellerUserId || "-";
 });
 
 const canConfirm = computed(() => {
@@ -58,6 +54,10 @@ function formatMoney(value?: number | null): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+function getLineDisplayName(line: SalesOrder["lines"][number]): string {
+  return line.itemName || line.productId || line.serviceId || "-";
 }
 
 function closeDrawer() {
@@ -297,7 +297,10 @@ watch(
           <thead>
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.lines.table.product") }}
+                {{ $t("sales.lines.table.item") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("sales.lines.table.itemType") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("sales.lines.table.quantity") }}
@@ -324,7 +327,10 @@ watch(
               class="border-t border-bt-grey-200"
             >
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.productName || line.productId }}
+                {{ getLineDisplayName(line) }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ line.itemType }}
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ line.quantity }}
@@ -347,7 +353,7 @@ watch(
 
             <tr v-if="!salesOrder.lines.length">
               <td
-                colspan="6"
+                colspan="7"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
               >
                 {{ $t("sales.lines.empty") }}

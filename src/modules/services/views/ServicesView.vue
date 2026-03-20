@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   MoreHorizontal,
-  ShoppingBag,
+  Wrench,
   CircleDollarSign,
-  UserRound,
+  Layers3,
 } from "lucide-vue-next";
 
-import { SalesOrdersService } from "@/core/services/salesOrdersService";
+import { ServicesService } from "@/core/services/servicesService";
 
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useModalStore } from "@/core/stores/modalStore";
 import { useToastStore } from "@/core/stores/toastStore";
 
-import SalesOrderCreateDrawer from "@/modules/sales/components/SalesOrderCreateDrawer.vue";
-import SalesOrderDetailsDrawer from "@/modules/sales/components/SalesOrderDetailsDrawer.vue";
-import SalesOrderConfirmModal from "@/modules/sales/components/SalesOrderConfirmModal.vue";
-import SalesOrderActionMenu from "@/modules/sales/components/SalesOrderActionMenu.vue";
+import ServiceFormModal from "@/modules/services/components/ServiceFormModal.vue";
+import ServiceDetailsDrawer from "@/modules/services/components/ServiceDetailsDrawer.vue";
+import ServiceRowActionMenu from "@/modules/services/components/ServiceRowActionMenu.vue";
 
-import type { SalesOrder } from "@/core/interfaces/salesOrders";
+import type { Service } from "@/core/interfaces/services";
 
 const { t } = useI18n();
 
@@ -28,29 +27,29 @@ const modalStore = useModalStore();
 const toastStore = useToastStore();
 
 const loading = ref(false);
-const salesOrders = ref<SalesOrder[]>([]);
+const services = ref<Service[]>([]);
 const search = ref("");
 
-async function loadSalesOrders() {
-  const response = await SalesOrdersService.browse({
+async function loadServices() {
+  const response = await ServicesService.browse({
     page: 1,
     pageSize: 100,
     search: search.value.trim() || undefined,
   });
 
-  salesOrders.value = Array.isArray(response) ? [...response] : [];
+  services.value = Array.isArray(response) ? [...response] : [];
 }
 
 async function loadData() {
   loading.value = true;
 
   try {
-    await loadSalesOrders();
+    await loadServices();
   } catch {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("sales.messages.loadError"),
+      message: t("services.messages.loadError"),
     });
   } finally {
     loading.value = false;
@@ -80,7 +79,7 @@ async function reloadEventually(
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("sales.messages.loadError"),
+      message: t("services.messages.loadError"),
     });
   } finally {
     loading.value = false;
@@ -103,64 +102,6 @@ function showError(message: string) {
   });
 }
 
-function isConfirmedStatus(status?: string | null): boolean {
-  return (
-    String(status ?? "")
-      .trim()
-      .toLowerCase() === "confirmed"
-  );
-}
-
-const filteredSalesOrders = computed(() => {
-  const term = search.value.trim().toLowerCase();
-
-  if (!term) {
-    return salesOrders.value;
-  }
-
-  return salesOrders.value.filter((item) => {
-    return (
-      (item.code ?? "").toLowerCase().includes(term) ||
-      (item.clientName ?? "").toLowerCase().includes(term) ||
-      (item.branchName ?? "").toLowerCase().includes(term) ||
-      (item.status ?? "").toLowerCase().includes(term) ||
-      (item.notes ?? "").toLowerCase().includes(term) ||
-      (item.sellerName ?? "").toLowerCase().includes(term) ||
-      (item.sellerUserId ?? "").toLowerCase().includes(term)
-    );
-  });
-});
-
-const summary = computed(() => {
-  const total = salesOrders.value.length;
-
-  const confirmed = salesOrders.value.filter((item) =>
-    String(item.status ?? "")
-      .toLowerCase()
-      .includes("confirm"),
-  ).length;
-
-  const totalAmount = salesOrders.value.reduce(
-    (acc, item) => acc + Number(item.total || 0),
-    0,
-  );
-
-  return {
-    total,
-    confirmed,
-    totalAmount,
-  };
-});
-
-function formatDateTime(value?: string | null): string {
-  if (!value) return "-";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleString("es-CR");
-}
-
 function formatMoney(value?: number | null): string {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
     return "-";
@@ -172,86 +113,149 @@ function formatMoney(value?: number | null): string {
   });
 }
 
-function getSellerDisplayName(order: SalesOrder): string {
-  return order.sellerName || order.sellerUserId || "-";
-}
+function getAvailabilityClass(status?: string | null): string {
+  const normalized = String(status ?? "")
+    .trim()
+    .toLowerCase();
 
-function getOrderActions(order: SalesOrder) {
-  const actions = [
-    {
-      label: t("sales.actions.viewDetails"),
-      action: () => openDetailsDrawer(order),
-    },
-  ];
-
-  if (!isConfirmedStatus(order.status)) {
-    actions.push({
-      label: t("sales.actions.confirm"),
-      action: () => openConfirmModal(order),
-    });
+  if (normalized === "active" || normalized === "available") {
+    return "bg-bt-success-100 text-bt-success-700";
   }
 
-  return actions;
+  if (normalized === "maintenance") {
+    return "bg-bt-warning-100 text-bt-warning-700";
+  }
+
+  return "bg-bt-error-100 text-bt-error-700";
 }
 
-function openCreateDrawer() {
-  drawerStore.openDrawer({
-    component: SalesOrderCreateDrawer,
-    title: t("sales.drawer.createTitle"),
-    description: t("sales.drawer.createDescription"),
-    direction: "right",
-    size: "xl",
-    props: {},
+const filteredServices = computed(() => {
+  const term = search.value.trim().toLowerCase();
+
+  if (!term) {
+    return services.value;
+  }
+
+  return services.value.filter((service) => {
+    return (
+      (service.code ?? "").toLowerCase().includes(term) ||
+      (service.name ?? "").toLowerCase().includes(term) ||
+      (service.description ?? "").toLowerCase().includes(term) ||
+      (service.categoryName ?? "").toLowerCase().includes(term) ||
+      (service.availabilityStatus ?? "").toLowerCase().includes(term) ||
+      String(service.standardTimeMin ?? "")
+        .toLowerCase()
+        .includes(term) ||
+      String(service.baseRate ?? "")
+        .toLowerCase()
+        .includes(term) ||
+      (service.isActive
+        ? t("services.status.active")
+        : t("services.status.inactive")
+      )
+        .toLowerCase()
+        .includes(term)
+    );
+  });
+});
+
+const summary = computed(() => {
+  const total = services.value.length;
+
+  const active = services.value.filter((item) => item.isActive).length;
+
+  const averageRate =
+    total === 0
+      ? 0
+      : services.value.reduce(
+          (acc, item) => acc + Number(item.baseRate || 0),
+          0,
+        ) / total;
+
+  return {
+    total,
+    active,
+    averageRate,
+  };
+});
+
+function getServiceActions(service: Service) {
+  return [
+    {
+      label: t("services.actions.viewDetails"),
+      action: () => openDetailsDrawer(service),
+    },
+    {
+      label: t("services.actions.edit"),
+      action: () => openEditModal(service),
+    },
+  ];
+}
+
+function openCreateModal() {
+  modalStore.open({
+    component: ServiceFormModal,
+    props: {
+      service: null,
+    },
     onSuccess: async () => {
-      showSuccess(t("sales.messages.createSuccess"));
-      await reloadEventually(loadSalesOrders);
+      showSuccess(t("services.messages.createSuccess"));
+      await reloadEventually(loadServices);
     },
     onError: (error: any) => {
-      showError(error?.message ?? t("sales.messages.createError"));
+      showError(error?.message ?? t("services.messages.createError"));
     },
   });
 }
 
-function openDetailsDrawer(order: SalesOrder) {
+function openEditModal(service: Service) {
+  modalStore.open({
+    component: ServiceFormModal,
+    props: {
+      service,
+    },
+    onSuccess: async () => {
+      showSuccess(t("services.messages.updateSuccess"));
+      await reloadEventually(loadServices);
+    },
+    onError: (error: any) => {
+      showError(error?.message ?? t("services.messages.updateError"));
+    },
+  });
+}
+
+function openDetailsDrawer(service: Service) {
   drawerStore.openDrawer({
-    component: SalesOrderDetailsDrawer,
-    title: t("sales.drawer.detailsTitle"),
-    description: t("sales.drawer.detailsDescription", {
-      code: order.code,
+    component: ServiceDetailsDrawer,
+    title: t("services.drawer.title"),
+    description: t("services.drawer.description", {
+      name: service.name,
     }),
     direction: "right",
     size: "xl",
     props: {
-      salesOrderId: order.salesOrderId,
+      serviceId: service.serviceId,
     },
     onSuccess: async () => {
-      await reloadEventually(loadSalesOrders);
+      await reloadEventually(loadServices);
     },
     onError: (error: any) => {
-      showError(error?.message ?? t("sales.messages.loadError"));
+      showError(error?.message ?? t("services.messages.loadError"));
     },
   });
 }
 
-function openConfirmModal(order: SalesOrder) {
-  modalStore.open({
-    component: SalesOrderConfirmModal,
-    props: {
-      salesOrderId: order.salesOrderId,
-      code: order.code,
-    },
-    onSuccess: async () => {
-      showSuccess(t("sales.messages.confirmSuccess"));
-      await reloadEventually(loadSalesOrders);
-    },
-    onError: (error: any) => {
-      showError(error?.message ?? t("sales.messages.confirmError"));
-    },
-  });
+async function handleServicesUpdated() {
+  await loadData();
 }
 
 onMounted(async () => {
   await loadData();
+  window.addEventListener("services-updated", handleServicesUpdated);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("services-updated", handleServicesUpdated);
 });
 </script>
 
@@ -259,10 +263,10 @@ onMounted(async () => {
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
     <div class="mb-bt-spacing-24 shrink-0">
       <h1 class="text-2xl font-bt-bold text-bt-primary-700">
-        {{ $t("sales.title") }}
+        {{ $t("services.title") }}
       </h1>
       <p class="text-bt-grey-600 mt-bt-spacing-8">
-        {{ $t("sales.subtitle") }}
+        {{ $t("services.subtitle") }}
       </p>
     </div>
 
@@ -276,11 +280,11 @@ onMounted(async () => {
           <div
             class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600"
           >
-            <ShoppingBag :size="22" />
+            <Wrench :size="22" />
           </div>
           <div>
             <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.summary.totalOrders") }}
+              {{ $t("services.summary.total") }}
             </div>
             <div class="text-2xl font-bt-bold text-bt-primary-700">
               {{ summary.total }}
@@ -296,14 +300,14 @@ onMounted(async () => {
           <div
             class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700"
           >
-            <UserRound :size="22" />
+            <Layers3 :size="22" />
           </div>
           <div>
             <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.summary.confirmedOrders") }}
+              {{ $t("services.summary.active") }}
             </div>
             <div class="text-2xl font-bt-bold text-bt-success-700">
-              {{ summary.confirmed }}
+              {{ summary.active }}
             </div>
           </div>
         </div>
@@ -320,10 +324,10 @@ onMounted(async () => {
           </div>
           <div>
             <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.summary.totalAmount") }}
+              {{ $t("services.summary.averageRate") }}
             </div>
             <div class="text-2xl font-bt-bold text-bt-accent-700">
-              {{ formatMoney(summary.totalAmount) }}
+              {{ formatMoney(summary.averageRate) }}
             </div>
           </div>
         </div>
@@ -342,7 +346,7 @@ onMounted(async () => {
           <input
             v-model="search"
             type="text"
-            :placeholder="$t('sales.searchPlaceholder')"
+            :placeholder="$t('services.filters.search')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             @keyup.enter="loadData"
           />
@@ -352,7 +356,7 @@ onMounted(async () => {
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
             @click="loadData"
           >
-            {{ $t("sales.actions.search") }}
+            {{ $t("services.actions.search") }}
           </button>
 
           <button
@@ -360,16 +364,16 @@ onMounted(async () => {
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
             @click="loadData"
           >
-            {{ $t("sales.actions.refresh") }}
+            {{ $t("services.actions.refresh") }}
           </button>
         </div>
 
         <button
           type="button"
           class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
-          @click="openCreateDrawer"
+          @click="openCreateModal"
         >
-          {{ $t("sales.actions.newSale") }}
+          {{ $t("services.actions.newService") }}
         </button>
       </div>
 
@@ -385,81 +389,100 @@ onMounted(async () => {
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.code") }}
+                {{ $t("services.table.code") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.client") }}
+                {{ $t("services.table.name") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.branch") }}
+                {{ $t("services.table.category") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.seller") }}
+                {{ $t("services.table.standardTimeMin") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.date") }}
+                {{ $t("services.table.baseRate") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.status") }}
+                {{ $t("services.table.availabilityStatus") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.total") }}
+                {{ $t("services.table.status") }}
               </th>
               <th
                 class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
               >
-                {{ $t("sales.table.options") }}
+                {{ $t("services.table.options") }}
               </th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="order in filteredSalesOrders"
-              :key="order.salesOrderId"
+              v-for="service in filteredServices"
+              :key="service.serviceId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <div class="font-bt-semibold text-bt-primary-700">
-                  {{ order.code }}
+                  {{ service.code }}
                 </div>
                 <div class="text-xs text-bt-grey-500">
-                  {{ order.salesOrderId }}
+                  {{ service.serviceId }}
                 </div>
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ order.clientName || "-" }}
+                <div class="font-bt-semibold text-bt-primary-700">
+                  {{ service.name }}
+                </div>
+                <div class="text-xs text-bt-grey-500">
+                  {{ service.description || "-" }}
+                </div>
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ order.branchName || "-" }}
+                {{ service.categoryName || "-" }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ getSellerDisplayName(order) }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ formatDateTime(order.orderDate) }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12">
-                <span
-                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-info-100 text-bt-info-700"
-                >
-                  {{ order.status }}
-                </span>
+                {{ service.standardTimeMin ?? "-" }}
               </td>
 
               <td
                 class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
               >
-                {{ formatMoney(order.total) }}
+                {{ formatMoney(service.baseRate) }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12">
-                <SalesOrderActionMenu :items="getOrderActions(order)">
+                <span
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
+                  :class="getAvailabilityClass(service.availabilityStatus)"
+                >
+                  {{ service.availabilityStatus || "-" }}
+                </span>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <span
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
+                  :class="
+                    service.isActive
+                      ? 'bg-bt-success-100 text-bt-success-700'
+                      : 'bg-bt-error-100 text-bt-error-700'
+                  "
+                >
+                  {{
+                    service.isActive
+                      ? $t("services.status.active")
+                      : $t("services.status.inactive")
+                  }}
+                </span>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <ServiceRowActionMenu :items="getServiceActions(service)">
                   <template #trigger>
                     <button
                       type="button"
@@ -468,16 +491,16 @@ onMounted(async () => {
                       <MoreHorizontal :size="18" />
                     </button>
                   </template>
-                </SalesOrderActionMenu>
+                </ServiceRowActionMenu>
               </td>
             </tr>
 
-            <tr v-if="!filteredSalesOrders.length && !loading">
+            <tr v-if="!filteredServices.length && !loading">
               <td
                 colspan="8"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
               >
-                {{ $t("sales.empty") }}
+                {{ $t("services.empty") }}
               </td>
             </tr>
           </tbody>

@@ -29,7 +29,8 @@
     "taxes": "Taxes",
     "categories": "Categories",
     "products": "Products",
-    "paymentMethods": "Payment Methods"
+    "paymentMethods": "Payment Methods",
+    "services": "Services"
   },
   "common": {
     "loading": "Loading...",
@@ -1024,7 +1025,8 @@
       "description": "Review profile and attendance history for {fullName}.",
       "tabs": {
         "details": "Details",
-        "history": "Attendance History"
+        "history": "Attendance History",
+        "workHistory": "Work History"
       }
     },
     "history": {
@@ -1053,6 +1055,27 @@
     "placeholders": {
       "selectBranch": "Select a branch",
       "selectUser": "Select a user"
+    },
+    "workHistory": {
+      "empty": "No work history available.",
+      "summary": {
+        "totalJobs": "Total Jobs"
+      },
+      "actions": {
+        "export": "Export History"
+      },
+      "messages": {
+        "loadError": "Could not load employee work history.",
+        "exportError": "Could not export employee work history."
+      },
+      "table": {
+        "code": "Service Order",
+        "client": "Client",
+        "status": "Status",
+        "scheduledDate": "Scheduled Date",
+        "closedDate": "Closed Date",
+        "services": "Services"
+      }
     }
   },
   "suppliers": {
@@ -2102,7 +2125,8 @@
       "selectBranch": "Select a branch",
       "selectSeller": "Select a seller",
       "selectProduct": "Select a product",
-      "selectWarehouse": "Select a warehouse"
+      "selectWarehouse": "Select a warehouse",
+      "selectItem": "Select an item"
     },
     "messages": {
       "loadError": "Could not load sales orders.",
@@ -2143,7 +2167,13 @@
       "discountPerc": "Discount %",
       "taxPerc": "Tax %",
       "empty": "No lines found.",
+      "itemType": "Type",
+      "item": "Item",
+      "productType": "Product",
+      "serviceType": "Service",
       "table": {
+        "item": "Item",
+        "itemType": "Type",
         "product": "Product",
         "quantity": "Quantity",
         "unitPrice": "Unit Price",
@@ -2598,6 +2628,172 @@
       "required": "Period code, payroll type, start date, and end date are required.",
       "invalidDateRange": "End date cannot be earlier than start date.",
       "attendanceRequired": "Attendance must be confirmed before calculating payroll."
+    }
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "Manage service catalog, service orders, service times, and technical assignments.",
+    "uncategorized": "Uncategorized",
+    "empty": "No services found.",
+    "emptyByCategory": "No services available in this category.",
+    "summary": {
+      "total": "Total Services",
+      "active": "Active",
+      "inactive": "Inactive",
+      "averageRate": "Average Rate"
+    },
+    "filters": {
+      "search": "Search by code, name, or description",
+      "categoryId": "Filter by category id",
+      "allStatuses": "All statuses"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "availability": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "category": "Category",
+      "isCategoryProtected": "Protected category",
+      "standardTimeMin": "Estimated Time (min)",
+      "baseRate": "Base Rate",
+      "availabilityStatus": "Availability",
+      "isActive": "Active"
+    },
+    "table": {
+      "code": "Code",
+      "name": "Service",
+      "standardTimeMin": "Estimated Time",
+      "baseRate": "Rate",
+      "availabilityStatus": "Availability",
+      "status": "Status",
+      "options": "Options",
+      "category": "Category"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "newService": "New Service",
+      "edit": "Edit",
+      "viewDetails": "View Details",
+      "search": "Search"
+    },
+    "modal": {
+      "createTitle": "Create Service",
+      "createDescription": "Register a new service in the catalog.",
+      "editTitle": "Edit Service",
+      "editDescription": "Update the selected service."
+    },
+    "drawer": {
+      "title": "Service Details",
+      "description": "Review service information and linked service orders.",
+      "tabs": {
+        "details": "Details",
+        "orders": "Service Orders"
+      }
+    },
+    "placeholders": {
+      "selectCategory": "Select a category"
+    },
+    "orders": {
+      "empty": "No service orders found for this service.",
+      "drawer": {
+        "createTitle": "Create Service Order",
+        "createDescription": "Create a new service order with services, materials, checklists, and photos.",
+        "detailsTitle": "Service order details",
+        "detailsDescription": "Order information for {code}"
+      },
+      "sections": {
+        "general": "General Information",
+        "summary": "Quick Summary",
+        "services": "Services",
+        "materials": "Materials",
+        "checklist": "Checklist"
+      },
+      "summary": {
+        "services": "Services",
+        "estimatedItems": "Estimated Items",
+        "materials": "Materials",
+        "checklists": "Checklists",
+        "estimatedMaterialsCost": "Estimated materials cost",
+        "total": "Total",
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "fields": {
+        "code": "Code",
+        "client": "Client",
+        "branch": "Branch",
+        "contract": "Contract",
+        "scheduledDate": "Scheduled Date",
+        "serviceAddress": "Service Address",
+        "notes": "Notes",
+        "service": "Service",
+        "quantity": "Quantity",
+        "status": "Status",
+        "description": "Description",
+        "product": "Product",
+        "estimatedCost": "Estimated cost",
+        "isCompleted": "Completed"
+      },
+      "placeholders": {
+        "selectClient": "Select a client",
+        "selectBranch": "Select a branch",
+        "selectContract": "Select a contract",
+        "selectService": "Select a service",
+        "selectProduct": "Select a product"
+      },
+      "actions": {
+        "newOrder": "New Service Order",
+        "addService": "Add Service",
+        "addMaterial": "Add material",
+        "addChecklist": "Add checklist"
+      },
+      "table": {
+        "code": "Code",
+        "client": "Client",
+        "status": "Status",
+        "scheduledDate": "Scheduled Date",
+        "address": "Address",
+        "options": "Options",
+        "branch": "Branch",
+        "contract": "Contract",
+        "items": "Services"
+      },
+      "messages": {
+        "loadError": "Could not load service orders.",
+        "createSuccess": "Service order created successfully.",
+        "createError": "Could not create service order.",
+        "loadDetailError": "Could not load the service order details.",
+        "loadCatalogsError": "Could not load the service order catalogs."
+      },
+      "validation": {
+        "required": "Code, client, scheduled date, and service address are required.",
+        "servicesRequired": "At least one valid service is required."
+      },
+      "emptyServices": "No services added.",
+      "emptyMaterials": "No materials added.",
+      "emptyChecklist": "No checklist items added."
+    },
+    "messages": {
+      "loadError": "Could not load services.",
+      "loadDetailError": "Could not load service detail.",
+      "createSuccess": "Service created successfully.",
+      "createError": "Could not create service.",
+      "updateSuccess": "Service updated successfully.",
+      "updateError": "Could not update service."
+    },
+    "validation": {
+      "required": "Code, name, category, estimated time, and rate are required.",
+      "invalidTime": "Estimated time must be greater than 0.",
+      "invalidRate": "Rate must be greater than or equal to 0.",
+      "protectedCategory": "This service belongs to a protected category and cannot change category."
     }
   }
 }

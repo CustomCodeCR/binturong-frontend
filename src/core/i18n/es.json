@@ -29,7 +29,8 @@
     "taxes": "Impuestos",
     "categories": "Categorías",
     "products": "Productos",
-    "paymentMethods": "Metodos de Pagos"
+    "paymentMethods": "Metodos de Pagos",
+    "services": "Servicios"
   },
   "common": {
     "loading": "Cargando...",
@@ -1025,7 +1026,8 @@
       "description": "Revise el perfil e historial de asistencia de {fullName}.",
       "tabs": {
         "details": "Detalle",
-        "history": "Historial de asistencia"
+        "history": "Historial de asistencia",
+        "workHistory": "Historial de trabajos"
       }
     },
     "history": {
@@ -1054,6 +1056,27 @@
     "placeholders": {
       "selectBranch": "Seleccione una sucursal",
       "selectUser": "Seleccione un usuario"
+    },
+    "workHistory": {
+      "empty": "No hay historial de trabajo disponible.",
+      "summary": {
+        "totalJobs": "Trabajos totales"
+      },
+      "actions": {
+        "export": "Exportar historial"
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el historial de trabajo del empleado.",
+        "exportError": "No se pudo exportar el historial de trabajo del empleado."
+      },
+      "table": {
+        "code": "Orden de servicio",
+        "client": "Cliente",
+        "status": "Estado",
+        "scheduledDate": "Fecha programada",
+        "closedDate": "Fecha de cierre",
+        "services": "Servicios"
+      }
     }
   },
   "suppliers": {
@@ -2105,7 +2128,8 @@
       "selectBranch": "Seleccione una sucursal",
       "selectSeller": "Seleccione un vendedor",
       "selectProduct": "Seleccione un producto",
-      "selectWarehouse": "Seleccione una bodega"
+      "selectWarehouse": "Seleccione una bodega",
+      "selectItem": "Seleccione un ítem"
     },
     "messages": {
       "loadError": "No se pudieron cargar las órdenes de venta.",
@@ -2146,7 +2170,13 @@
       "discountPerc": "Descuento %",
       "taxPerc": "Impuesto %",
       "empty": "No se encontraron líneas.",
+      "itemType": "Tipo",
+      "item": "Ítem",
+      "productType": "Producto",
+      "serviceType": "Servicio",
       "table": {
+        "item": "Ítem",
+        "itemType": "Tipo",
         "product": "Producto",
         "quantity": "Cantidad",
         "unitPrice": "Precio unitario",
@@ -2601,6 +2631,172 @@
       "required": "Código de período, tipo de planilla, fecha de inicio y fecha de fin son obligatorios.",
       "invalidDateRange": "La fecha de fin no puede ser menor que la fecha de inicio.",
       "attendanceRequired": "Debe confirmar la asistencia antes de calcular la planilla."
+    }
+  },
+  "services": {
+    "title": "Servicios",
+    "subtitle": "Gestione el catálogo de servicios, órdenes de servicio, tiempos estimados y asignaciones técnicas.",
+    "uncategorized": "Sin categoría",
+    "empty": "No se encontraron servicios.",
+    "emptyByCategory": "No hay servicios disponibles en esta categoría.",
+    "summary": {
+      "total": "Servicios totales",
+      "active": "Activos",
+      "inactive": "Inactivos",
+      "averageRate": "Tarifa promedio"
+    },
+    "filters": {
+      "search": "Buscar por código, nombre o descripción",
+      "categoryId": "Filtrar por id de categoría",
+      "allStatuses": "Todos los estados"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "availability": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "maintenance": "Mantenimiento"
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "category": "Categoría",
+      "isCategoryProtected": "Categoría protegida",
+      "standardTimeMin": "Tiempo estimado (min)",
+      "baseRate": "Tarifa base",
+      "availabilityStatus": "Disponibilidad",
+      "isActive": "Activo"
+    },
+    "table": {
+      "code": "Código",
+      "name": "Servicio",
+      "standardTimeMin": "Tiempo estimado",
+      "baseRate": "Tarifa",
+      "availabilityStatus": "Disponibilidad",
+      "status": "Estado",
+      "options": "Opciones",
+      "category": "Categoría"
+    },
+    "actions": {
+      "refresh": "Recargar",
+      "newService": "Nuevo servicio",
+      "edit": "Editar",
+      "viewDetails": "Ver detalle",
+      "search": "Buscar"
+    },
+    "modal": {
+      "createTitle": "Crear servicio",
+      "createDescription": "Registre un nuevo servicio en el catálogo.",
+      "editTitle": "Editar servicio",
+      "editDescription": "Actualice el servicio seleccionado."
+    },
+    "drawer": {
+      "title": "Detalle del servicio",
+      "description": "Revise la información del servicio y sus órdenes relacionadas.",
+      "tabs": {
+        "details": "Detalles",
+        "orders": "Órdenes de servicio"
+      }
+    },
+    "placeholders": {
+      "selectCategory": "Seleccione una categoría"
+    },
+    "orders": {
+      "empty": "No se encontraron órdenes de servicio para este servicio.",
+      "drawer": {
+        "createTitle": "Crear orden de servicio",
+        "createDescription": "Cree una nueva orden de servicio con servicios, materiales, checklist y fotos.",
+        "detailsTitle": "Detalle de orden de servicio",
+        "detailsDescription": "Información de la orden {code}"
+      },
+      "sections": {
+        "general": "Información general",
+        "summary": "Resumen rápido",
+        "services": "Servicios",
+        "materials": "Materiales",
+        "checklist": "Checklist"
+      },
+      "summary": {
+        "services": "Servicios",
+        "estimatedItems": "Ítems estimados",
+        "materials": "Materiales",
+        "checklists": "Checklists",
+        "estimatedMaterialsCost": "Costo estimado materiales",
+        "total": "Total",
+        "open": "Abiertas",
+        "closed": "Cerradas"
+      },
+      "fields": {
+        "code": "Código",
+        "client": "Cliente",
+        "branch": "Sucursal",
+        "contract": "Contrato",
+        "scheduledDate": "Fecha programada",
+        "serviceAddress": "Dirección del servicio",
+        "notes": "Notas",
+        "service": "Servicio",
+        "quantity": "Cantidad",
+        "status": "Estado",
+        "description": "Descripción",
+        "product": "Producto",
+        "estimatedCost": "Costo estimado",
+        "isCompleted": "Completado"
+      },
+      "placeholders": {
+        "selectClient": "Seleccione un cliente",
+        "selectBranch": "Seleccione una sucursal",
+        "selectContract": "Seleccione un contrato",
+        "selectService": "Seleccione un servicio",
+        "selectProduct": "Seleccione un producto"
+      },
+      "actions": {
+        "newOrder": "Nueva orden de servicio",
+        "addService": "Agregar servicio",
+        "addMaterial": "Agregar material",
+        "addChecklist": "Agregar checklist"
+      },
+      "table": {
+        "code": "Código",
+        "client": "Cliente",
+        "status": "Estado",
+        "scheduledDate": "Fecha programada",
+        "address": "Dirección",
+        "options": "Opciones",
+        "branch": "Sucursal",
+        "contract": "Contrato",
+        "items": "Servicios"
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las órdenes de servicio.",
+        "createSuccess": "Orden de servicio creada correctamente.",
+        "createError": "No se pudo crear la orden de servicio.",
+        "loadDetailError": "No se pudo cargar el detalle de la orden de servicio.",
+        "loadCatalogsError": "No se pudieron cargar los catálogos de la orden de servicio."
+      },
+      "validation": {
+        "required": "Código, cliente, fecha programada y dirección del servicio son obligatorios.",
+        "servicesRequired": "Debe agregar al menos un servicio válido."
+      },
+      "emptyServices": "No hay servicios agregados.",
+      "emptyMaterials": "No hay materiales agregados.",
+      "emptyChecklist": "No hay checklist agregado."
+    },
+    "messages": {
+      "loadError": "No se pudieron cargar los servicios.",
+      "loadDetailError": "No se pudo cargar el detalle del servicio.",
+      "createSuccess": "Servicio creado correctamente.",
+      "createError": "No se pudo crear el servicio.",
+      "updateSuccess": "Servicio actualizado correctamente.",
+      "updateError": "No se pudo actualizar el servicio."
+    },
+    "validation": {
+      "required": "Código, nombre, categoría, tiempo estimado y tarifa son obligatorios.",
+      "invalidTime": "El tiempo estimado debe ser mayor que 0.",
+      "invalidRate": "La tarifa debe ser mayor o igual a 0.",
+      "protectedCategory": "Este servicio pertenece a una categoría protegida y no puede cambiar de categoría."
     }
   }
 }

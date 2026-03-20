@@ -1320,8 +1320,99 @@ export const Endpoints: Record<string, Endpoint> = {
     path: "/api/sales-orders/select",
     method: "GET",
   },
-  selectInvoices: {
+  selectInvoice: {
     path: "/api/invoices/select",
     method: "GET",
+  },
+  // Services
+  browseServices: {
+    method: "GET",
+    path: "/api/services",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readServiceById: {
+    method: "GET",
+    path: "/api/services/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createService: {
+    method: "POST",
+    path: "/api/services",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  updateService: {
+    method: "PUT",
+    path: "/api/services/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  // Service Orders
+  browseServiceOrders: {
+    method: "GET",
+    path: "/api/service-orders",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readServiceOrderById: {
+    method: "GET",
+    path: "/api/service-orders/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createServiceOrder: {
+    method: "POST",
+    path: "/api/service-orders",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  assignServiceOrderTechnician: {
+    method: "POST",
+    path: "/api/service-orders/{{id}}/assign-technician",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  // Employee Work History
+  readEmployeeWorkHistory: {
+    method: "GET",
+    path: "/api/employees/{{id}}/work-history",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportEmployeeWorkHistory: {
+    method: "GET",
+    path: "/api/employees/{{id}}/work-history/export",
+    headers: {
+      Accept: "text/csv, application/octet-stream",
+    },
+  },
+  selectServices: {
+    method: "GET",
+    path: "/api/services/select",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  selectContracts: {
+    method: "GET",
+    path: "/api/contracts/select",
+    headers: {
+      Accept: "application/json",
+    },
   },
 };

@@ -143,6 +143,11 @@ export const router = createRouter({
           name: "payroll",
           component: () => import("@/modules/payroll/views/PayrollView.vue"),
         },
+        {
+          path: "services",
+          name: "services",
+          component: () => import("@/modules/services/views/ServicesView.vue"),
+        },
       ],
     },
   ],

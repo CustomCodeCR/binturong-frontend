@@ -24,6 +24,7 @@ import {
   BadgePercent,
   Tags,
   Package,
+  Wrench,
 } from "lucide-vue-next";
 
 export interface SidebarItem {
@@ -105,6 +106,12 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
         icon: Briefcase,
         to: "/employees",
         name: "employees",
+      },
+      {
+        labelKey: "sidebar.services",
+        icon: Wrench,
+        to: "/services",
+        name: "services",
       },
       {
         labelKey: "sidebar.payroll",

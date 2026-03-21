@@ -3012,5 +3012,67 @@
         "description": "Discount movement details for order {code}."
       }
     }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Monitor key indicators, monthly sales, active contracts, and critical inventory.",
+    "lastUpdated": "Last updated",
+    "actions": {
+      "refresh": "Refresh",
+      "refreshing": "Refreshing..."
+    },
+    "filters": {
+      "branch": "Branch",
+      "allBranches": "All branches",
+      "autoRefresh": "Auto refresh",
+      "enabled": "Enabled",
+      "interval": "Interval"
+    },
+    "permission": {
+      "title": "Access denied",
+      "description": "You do not have permission to view this dashboard."
+    },
+    "messages": {
+      "loadError": "Failed to load dashboard.",
+      "refreshSuccess": "Dashboard refreshed successfully."
+    },
+    "mainIndicators": {
+      "monthlySalesTotal": "Monthly sales",
+      "monthlySalesSubtitle": "Accumulated total amount",
+      "activeContractsCount": "Active contracts",
+      "activeContractsSubtitle": "Currently valid contracts",
+      "criticalInventoryCount": "Critical inventory",
+      "criticalInventorySubtitle": "Products with stock alerts"
+    },
+    "monthlySales": {
+      "title": "Monthly sales",
+      "totalSalesAmount": "Total sold",
+      "salesOrdersCount": "Sales count",
+      "servicesSoldQuantity": "Services sold",
+      "empty": "No records"
+    },
+    "contracts": {
+      "title": "Active contracts",
+      "activeContractsCount": "Active",
+      "expiringSoonCount": "Expiring soon",
+      "expiredCount": "Expired",
+      "empty": "There are no active contracts"
+    },
+    "inventory": {
+      "title": "Critical inventory",
+      "noAlerts": "No alerts",
+      "noMatches": "There are no critical products for that filter.",
+      "filters": {
+        "allCategories": "All categories",
+        "uncategorized": "Uncategorized"
+      },
+      "currentStockBadge": "Current: {stock}",
+      "minStockBadge": "Minimum: {stock}",
+      "fields": {
+        "branchId": "Branch",
+        "maxStock": "Max stock",
+        "minStock": "Min stock"
+      }
+    }
   }
 }

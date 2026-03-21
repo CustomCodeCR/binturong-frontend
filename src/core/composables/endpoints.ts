@@ -1552,4 +1552,11 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "text/csv, application/octet-stream",
     },
   },
+  readDashboard: {
+    method: "GET",
+    path: "/api/dashboard",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

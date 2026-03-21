@@ -3016,5 +3016,67 @@
         "description": "Detalle del movimiento de descuento de la orden {code}."
       }
     }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Monitorea indicadores principales, ventas del mes, contratos activos e inventario crítico.",
+    "lastUpdated": "Última actualización",
+    "actions": {
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando..."
+    },
+    "filters": {
+      "branch": "Sucursal",
+      "allBranches": "Todas las sucursales",
+      "autoRefresh": "Actualización automática",
+      "enabled": "Habilitada",
+      "interval": "Intervalo"
+    },
+    "permission": {
+      "title": "Acceso denegado",
+      "description": "No tienes permisos para visualizar este dashboard."
+    },
+    "messages": {
+      "loadError": "No se pudo cargar el dashboard.",
+      "refreshSuccess": "Dashboard actualizado correctamente."
+    },
+    "mainIndicators": {
+      "monthlySalesTotal": "Ventas del mes",
+      "monthlySalesSubtitle": "Monto total acumulado",
+      "activeContractsCount": "Contratos activos",
+      "activeContractsSubtitle": "Contratos actualmente vigentes",
+      "criticalInventoryCount": "Inventario crítico",
+      "criticalInventorySubtitle": "Productos con alerta de stock"
+    },
+    "monthlySales": {
+      "title": "Ventas del mes",
+      "totalSalesAmount": "Total vendido",
+      "salesOrdersCount": "Cantidad de ventas",
+      "servicesSoldQuantity": "Servicios vendidos",
+      "empty": "Sin registros"
+    },
+    "contracts": {
+      "title": "Contratos activos",
+      "activeContractsCount": "Activos",
+      "expiringSoonCount": "Próximos a vencer",
+      "expiredCount": "Vencidos",
+      "empty": "No hay contratos activos"
+    },
+    "inventory": {
+      "title": "Inventario crítico",
+      "noAlerts": "Sin alertas",
+      "noMatches": "No hay productos críticos para ese filtro.",
+      "filters": {
+        "allCategories": "Todas las categorías",
+        "uncategorized": "Sin categoría"
+      },
+      "currentStockBadge": "Actual: {stock}",
+      "minStockBadge": "Mínimo: {stock}",
+      "fields": {
+        "branchId": "Sucursal",
+        "maxStock": "Stock máximo",
+        "minStock": "Stock mínimo"
+      }
+    }
   }
 }

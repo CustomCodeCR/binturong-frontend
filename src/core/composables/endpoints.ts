@@ -1559,4 +1559,86 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  getFinancialReport: {
+    method: "GET",
+    path: "/api/reports/financial",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportFinancialReportPdf: {
+    method: "GET",
+    path: "/api/reports/financial/export-pdf",
+    headers: {
+      Accept: "application/pdf",
+    },
+  },
+  getInventoryReport: {
+    method: "GET",
+    path: "/api/reports/inventory",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportInventoryReportExcel: {
+    method: "GET",
+    path: "/api/reports/inventory/export-excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
+  getClientReport: {
+    method: "GET",
+    path: "/api/reports/clients/{{clientId}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportClientReportExcel: {
+    method: "GET",
+    path: "/api/reports/clients/{{clientId}}/export-excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
+  getServiceOrdersReport: {
+    method: "GET",
+    path: "/api/reports/service-orders",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportServiceOrdersReportExcel: {
+    method: "GET",
+    path: "/api/reports/service-orders/export-excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
+  browseReportSchedules: {
+    method: "GET",
+    path: "/api/reports/schedules",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createReportSchedule: {
+    method: "POST",
+    path: "/api/reports/schedules",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  updateReportSchedule: {
+    method: "PUT",
+    path: "/api/reports/schedules/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
 };

@@ -31,7 +31,8 @@
     "products": "Productos",
     "paymentMethods": "Metodos de Pagos",
     "services": "Servicios",
-    "discounts": "Descuentos"
+    "discounts": "Descuentos",
+    "reports": "Reportes"
   },
   "common": {
     "loading": "Cargando...",
@@ -3076,6 +3077,219 @@
         "branchId": "Sucursal",
         "maxStock": "Stock máximo",
         "minStock": "Stock mínimo"
+      }
+    }
+  },
+  "reports": {
+    "title": "Reportes",
+    "subtitle": "Consulta reportes financieros, inventario, clientes, órdenes de trabajo y programaciones automáticas.",
+    "tabs": {
+      "financial": "Financiero",
+      "inventory": "Inventario",
+      "client": "Clientes",
+      "serviceOrders": "Órdenes de trabajo",
+      "schedules": "Programaciones"
+    },
+    "actions": {
+      "refresh": "Actualizar",
+      "generate": "Generar",
+      "exportPdf": "Exportar PDF",
+      "exportExcel": "Exportar Excel",
+      "viewReport": "Ver reporte",
+      "search": "Buscar",
+      "edit": "Editar",
+      "activate": "Activar",
+      "deactivate": "Desactivar"
+    },
+    "filters": {
+      "allBranches": "Todas las sucursales",
+      "allCategories": "Todas las categorías"
+    },
+    "placeholders": {
+      "selectClient": "Seleccione un cliente",
+      "selectEmployee": "Seleccione un técnico",
+      "allEmployees": "Todos los técnicos"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "types": {
+      "financial": "Financiero",
+      "inventory": "Inventario",
+      "client": "Cliente",
+      "serviceOrders": "Órdenes de trabajo"
+    },
+    "frequencies": {
+      "daily": "Diaria",
+      "weekly": "Semanal",
+      "monthly": "Mensual"
+    },
+    "messages": {
+      "catalogsError": "No se pudieron cargar los catálogos del módulo."
+    },
+    "financial": {
+      "fields": {
+        "from": "Desde",
+        "to": "Hasta"
+      },
+      "summary": {
+        "sales": "Ventas",
+        "expenses": "Gastos",
+        "profit": "Utilidad"
+      },
+      "empty": "Sin información disponible",
+      "validation": {
+        "rangeRequired": "Debe seleccionar un rango de fechas."
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el reporte financiero.",
+        "exportError": "No se pudo exportar el reporte financiero."
+      }
+    },
+    "inventory": {
+      "fields": {
+        "category": "Categoría"
+      },
+      "table": {
+        "product": "Producto",
+        "category": "Categoría",
+        "stock": "Existencias",
+        "updatedAt": "Actualizado"
+      },
+      "empty": "Sin información disponible",
+      "messages": {
+        "loadError": "No se pudo cargar el reporte de inventario.",
+        "exportError": "No se pudo exportar el reporte de inventario."
+      }
+    },
+    "client": {
+      "fields": {
+        "client": "Cliente"
+      },
+      "preview": {
+        "title": "Historial del cliente",
+        "description": "Selecciona un cliente y abre el drawer para ver compras, servicios y facturas.",
+        "loaded": "Puedes cambiar el cliente o volver a abrir el reporte."
+      },
+      "drawer": {
+        "title": "Reporte de cliente",
+        "description": "Detalle completo del historial del cliente"
+      },
+      "sections": {
+        "purchases": "Compras",
+        "services": "Servicios",
+        "invoices": "Facturas"
+      },
+      "table": {
+        "code": "Código",
+        "date": "Fecha",
+        "status": "Estado",
+        "total": "Total",
+        "contract": "Contrato",
+        "consecutive": "Consecutivo",
+        "paidAmount": "Pagado",
+        "pendingAmount": "Pendiente"
+      },
+      "noPurchases": "No hay compras registradas.",
+      "noServices": "No hay servicios registrados.",
+      "noInvoices": "No hay facturas registradas.",
+      "empty": "No existen registros previos",
+      "validation": {
+        "clientRequired": "Debe seleccionar un cliente."
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el reporte del cliente.",
+        "exportError": "No se pudo exportar el historial del cliente."
+      }
+    },
+    "serviceOrders": {
+      "fields": {
+        "from": "Desde",
+        "to": "Hasta",
+        "employee": "Técnico"
+      },
+      "summary": {
+        "completed": "Completadas",
+        "pending": "Pendientes",
+        "canceled": "Canceladas"
+      },
+      "drawer": {
+        "title": "Reporte de órdenes de trabajo",
+        "description": "Detalle del período seleccionado"
+      },
+      "table": {
+        "code": "Código",
+        "client": "Cliente",
+        "date": "Fecha programada",
+        "status": "Estado",
+        "technicians": "Técnicos",
+        "services": "Servicios"
+      },
+      "empty": "Sin información disponible",
+      "validation": {
+        "rangeRequired": "Debe seleccionar un rango de fechas."
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el reporte de órdenes de trabajo.",
+        "exportError": "No se pudo exportar el reporte de órdenes de trabajo."
+      }
+    },
+    "schedules": {
+      "searchPlaceholder": "Buscar programación por nombre, frecuencia o correo",
+      "actions": {
+        "newSchedule": "Nueva programación"
+      },
+      "summary": {
+        "total": "Programaciones",
+        "active": "Activas",
+        "failed": "Con error"
+      },
+      "modal": {
+        "createTitle": "Nueva programación",
+        "createDescription": "Configura el envío automático de reportes por correo.",
+        "editTitle": "Editar programación",
+        "editDescription": "Actualiza la configuración de envío automático."
+      },
+      "fields": {
+        "name": "Nombre",
+        "reportType": "Tipo de reporte",
+        "frequency": "Frecuencia",
+        "recipientEmail": "Correo destinatario",
+        "timeOfDayUtc": "Hora (UTC)",
+        "isActive": "Programación activa",
+        "branch": "Sucursal",
+        "category": "Categoría",
+        "client": "Cliente",
+        "employee": "Técnico"
+      },
+      "table": {
+        "name": "Nombre",
+        "reportType": "Tipo",
+        "frequency": "Frecuencia",
+        "recipient": "Correo",
+        "time": "Hora",
+        "status": "Estado",
+        "lastAttempt": "Último intento",
+        "options": "Opciones"
+      },
+      "empty": "No hay programaciones registradas.",
+      "validation": {
+        "nameRequired": "El nombre es obligatorio.",
+        "recipientRequired": "El correo destinatario es obligatorio.",
+        "timeRequired": "La hora es obligatoria.",
+        "clientRequired": "Debe seleccionar un cliente.",
+        "employeeRequired": "Debe seleccionar un técnico."
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las programaciones.",
+        "createSuccess": "Programación creada correctamente.",
+        "createError": "No se pudo crear la programación.",
+        "updateSuccess": "Programación actualizada correctamente.",
+        "updateError": "No se pudo actualizar la programación.",
+        "activateSuccess": "Programación activada correctamente.",
+        "deactivateSuccess": "Programación desactivada correctamente.",
+        "statusError": "No se pudo actualizar el estado de la programación."
       }
     }
   }

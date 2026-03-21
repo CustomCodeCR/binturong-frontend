@@ -31,7 +31,8 @@
     "products": "Products",
     "paymentMethods": "Payment Methods",
     "services": "Services",
-    "discounts": "Discounts"
+    "discounts": "Discounts",
+    "reports": "Reports"
   },
   "common": {
     "loading": "Loading...",
@@ -3072,6 +3073,219 @@
         "branchId": "Branch",
         "maxStock": "Max stock",
         "minStock": "Min stock"
+      }
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Review financial, inventory, client, work order, and automatic scheduled reports.",
+    "tabs": {
+      "financial": "Financial",
+      "inventory": "Inventory",
+      "client": "Clients",
+      "serviceOrders": "Work orders",
+      "schedules": "Schedules"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "generate": "Generate",
+      "exportPdf": "Export PDF",
+      "exportExcel": "Export Excel",
+      "viewReport": "View report",
+      "search": "Search",
+      "edit": "Edit",
+      "activate": "Activate",
+      "deactivate": "Deactivate"
+    },
+    "filters": {
+      "allBranches": "All branches",
+      "allCategories": "All categories"
+    },
+    "placeholders": {
+      "selectClient": "Select a client",
+      "selectEmployee": "Select a technician",
+      "allEmployees": "All technicians"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "types": {
+      "financial": "Financial",
+      "inventory": "Inventory",
+      "client": "Client",
+      "serviceOrders": "Work orders"
+    },
+    "frequencies": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "messages": {
+      "catalogsError": "Failed to load module catalogs."
+    },
+    "financial": {
+      "fields": {
+        "from": "From",
+        "to": "To"
+      },
+      "summary": {
+        "sales": "Sales",
+        "expenses": "Expenses",
+        "profit": "Profit"
+      },
+      "empty": "No information available",
+      "validation": {
+        "rangeRequired": "You must select a date range."
+      },
+      "messages": {
+        "loadError": "Failed to load financial report.",
+        "exportError": "Failed to export financial report."
+      }
+    },
+    "inventory": {
+      "fields": {
+        "category": "Category"
+      },
+      "table": {
+        "product": "Product",
+        "category": "Category",
+        "stock": "Stock",
+        "updatedAt": "Updated at"
+      },
+      "empty": "No information available",
+      "messages": {
+        "loadError": "Failed to load inventory report.",
+        "exportError": "Failed to export inventory report."
+      }
+    },
+    "client": {
+      "fields": {
+        "client": "Client"
+      },
+      "preview": {
+        "title": "Client history",
+        "description": "Select a client and open the drawer to view purchases, services, and invoices.",
+        "loaded": "You can change the client or open the report again."
+      },
+      "drawer": {
+        "title": "Client report",
+        "description": "Full client history detail"
+      },
+      "sections": {
+        "purchases": "Purchases",
+        "services": "Services",
+        "invoices": "Invoices"
+      },
+      "table": {
+        "code": "Code",
+        "date": "Date",
+        "status": "Status",
+        "total": "Total",
+        "contract": "Contract",
+        "consecutive": "Consecutive",
+        "paidAmount": "Paid",
+        "pendingAmount": "Pending"
+      },
+      "noPurchases": "No purchases found.",
+      "noServices": "No services found.",
+      "noInvoices": "No invoices found.",
+      "empty": "There are no previous records",
+      "validation": {
+        "clientRequired": "You must select a client."
+      },
+      "messages": {
+        "loadError": "Failed to load client report.",
+        "exportError": "Failed to export client history."
+      }
+    },
+    "serviceOrders": {
+      "fields": {
+        "from": "From",
+        "to": "To",
+        "employee": "Technician"
+      },
+      "summary": {
+        "completed": "Completed",
+        "pending": "Pending",
+        "canceled": "Canceled"
+      },
+      "drawer": {
+        "title": "Work orders report",
+        "description": "Selected range detail"
+      },
+      "table": {
+        "code": "Code",
+        "client": "Client",
+        "date": "Scheduled date",
+        "status": "Status",
+        "technicians": "Technicians",
+        "services": "Services"
+      },
+      "empty": "No information available",
+      "validation": {
+        "rangeRequired": "You must select a date range."
+      },
+      "messages": {
+        "loadError": "Failed to load work orders report.",
+        "exportError": "Failed to export work orders report."
+      }
+    },
+    "schedules": {
+      "searchPlaceholder": "Search schedule by name, frequency, or email",
+      "actions": {
+        "newSchedule": "New schedule"
+      },
+      "summary": {
+        "total": "Schedules",
+        "active": "Active",
+        "failed": "With errors"
+      },
+      "modal": {
+        "createTitle": "New schedule",
+        "createDescription": "Configure automatic report delivery by email.",
+        "editTitle": "Edit schedule",
+        "editDescription": "Update the automatic delivery configuration."
+      },
+      "fields": {
+        "name": "Name",
+        "reportType": "Report type",
+        "frequency": "Frequency",
+        "recipientEmail": "Recipient email",
+        "timeOfDayUtc": "Time (UTC)",
+        "isActive": "Schedule active",
+        "branch": "Branch",
+        "category": "Category",
+        "client": "Client",
+        "employee": "Technician"
+      },
+      "table": {
+        "name": "Name",
+        "reportType": "Type",
+        "frequency": "Frequency",
+        "recipient": "Email",
+        "time": "Time",
+        "status": "Status",
+        "lastAttempt": "Last attempt",
+        "options": "Options"
+      },
+      "empty": "There are no schedules.",
+      "validation": {
+        "nameRequired": "Name is required.",
+        "recipientRequired": "Recipient email is required.",
+        "timeRequired": "Time is required.",
+        "clientRequired": "You must select a client.",
+        "employeeRequired": "You must select a technician."
+      },
+      "messages": {
+        "loadError": "Failed to load schedules.",
+        "createSuccess": "Schedule created successfully.",
+        "createError": "Failed to create schedule.",
+        "updateSuccess": "Schedule updated successfully.",
+        "updateError": "Failed to update schedule.",
+        "activateSuccess": "Schedule activated successfully.",
+        "deactivateSuccess": "Schedule deactivated successfully.",
+        "statusError": "Failed to update schedule status."
       }
     }
   }

@@ -25,6 +25,7 @@ import {
   Tags,
   Package,
   Wrench,
+  FileBarChart2,
 } from "lucide-vue-next";
 
 export interface SidebarItem {
@@ -58,6 +59,12 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
         icon: LayoutDashboard,
         to: "/home",
         name: "dashboard",
+      },
+      {
+        labelKey: "sidebar.reports",
+        icon: FileBarChart2,
+        to: "/reports",
+        name: "reports",
       },
       {
         labelKey: "sidebar.users",

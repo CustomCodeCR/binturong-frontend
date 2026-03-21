@@ -148,6 +148,12 @@ export const router = createRouter({
           name: "services",
           component: () => import("@/modules/services/views/ServicesView.vue"),
         },
+        {
+          path: "discounts",
+          name: "discounts",
+          component: () =>
+            import("@/modules/discounts/views/DiscountsView.vue"),
+        },
       ],
     },
   ],

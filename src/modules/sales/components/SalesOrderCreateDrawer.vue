@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { BadgePercent } from "lucide-vue-next";
 
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useToastStore } from "@/core/stores/toastStore";
@@ -18,6 +19,7 @@ import type {
 } from "@/core/interfaces/salesOrders";
 import type { Product } from "@/core/interfaces/products";
 import type { Service } from "@/core/interfaces/services";
+import type { DiscountPolicy } from "@/core/interfaces/discounts";
 
 const { t } = useI18n();
 const drawerStore = useDrawerStore();
@@ -26,12 +28,13 @@ const authStore = useAuthStore();
 
 const clients = ref<SelectOption[]>([]);
 const branches = ref<SelectOption[]>([]);
-const users = ref<SelectOption[]>([]);
 const products = ref<SelectOption[]>([]);
 const services = ref<SelectOption[]>([]);
+const discountPolicies = ref<SelectOption[]>([]);
 
 const productCatalog = ref<Product[]>([]);
 const serviceCatalog = ref<Service[]>([]);
+const discountPoliciesCatalog = ref<DiscountPolicy[]>([]);
 
 const loadingCatalogs = ref(false);
 const loadingExchangeRate = ref(false);
@@ -44,7 +47,14 @@ const currency = ref("CRC");
 const exchangeRate = ref(1);
 const notes = ref("");
 
-const lines = ref<SalesOrderLineCreateRequest[]>([
+const selectedGlobalPolicyId = ref("");
+const globalDiscountPerc = ref(0);
+const globalDiscountReason = ref("");
+const requestApprovalIfNeeded = ref(true);
+
+type ExtendedSalesOrderLineCreateRequest = SalesOrderLineCreateRequest;
+
+const lines = ref<ExtendedSalesOrderLineCreateRequest[]>([
   {
     itemType: "Product",
     itemId: "",
@@ -61,30 +71,62 @@ const currentSellerLabel = computed(() => {
   );
 });
 
+const selectedGlobalPolicy = computed<DiscountPolicy | null>(() => {
+  return (
+    discountPoliciesCatalog.value.find(
+      (item) =>
+        item.policyId === selectedGlobalPolicyId.value ||
+        item.id === selectedGlobalPolicyId.value,
+    ) ?? null
+  );
+});
+
 const subtotal = computed(() => {
   return lines.value.reduce((acc, line) => {
     return acc + Number(line.quantity) * Number(line.unitPrice);
   }, 0);
 });
 
+const globalDiscountAmount = computed(() => {
+  return subtotal.value * (Number(globalDiscountPerc.value || 0) / 100);
+});
+
+const subtotalAfterGlobalDiscount = computed(() => {
+  return subtotal.value - globalDiscountAmount.value;
+});
+
 const totalDiscount = computed(() => {
-  return lines.value.reduce((acc, line) => {
-    const lineSubtotal = Number(line.quantity) * Number(line.unitPrice);
-    return acc + lineSubtotal * (Number(line.discountPerc) / 100);
-  }, 0);
+  return globalDiscountAmount.value;
 });
 
 const totalTaxes = computed(() => {
-  return lines.value.reduce((acc, line) => {
+  const baseTaxes = lines.value.reduce((acc, line) => {
     const lineSubtotal = Number(line.quantity) * Number(line.unitPrice);
-    const discount = lineSubtotal * (Number(line.discountPerc) / 100);
-    const taxable = lineSubtotal - discount;
-    return acc + taxable * (Number(line.taxPerc) / 100);
+    return acc + lineSubtotal * (Number(line.taxPerc) / 100);
   }, 0);
+
+  if (subtotal.value <= 0) {
+    return 0;
+  }
+
+  const globalFactor = 1 - Number(globalDiscountPerc.value || 0) / 100;
+  return baseTaxes * globalFactor;
 });
 
 const total = computed(() => {
-  return subtotal.value - totalDiscount.value + totalTaxes.value;
+  return subtotalAfterGlobalDiscount.value + totalTaxes.value;
+});
+
+const globalRequiresApproval = computed(() => {
+  if (!selectedGlobalPolicy.value) {
+    return false;
+  }
+
+  return (
+    Number(globalDiscountPerc.value || 0) >
+      Number(selectedGlobalPolicy.value.maxDiscountPercentage || 0) &&
+    Boolean(selectedGlobalPolicy.value.requiresApprovalAboveLimit)
+  );
 });
 
 function formatMoney(value: number): string {
@@ -94,13 +136,21 @@ function formatMoney(value: number): string {
   });
 }
 
-function getLineTotal(line: SalesOrderLineCreateRequest): number {
-  const lineSubtotal = Number(line.quantity) * Number(line.unitPrice);
-  const discount = lineSubtotal * (Number(line.discountPerc) / 100);
-  const taxable = lineSubtotal - discount;
-  const taxes = taxable * (Number(line.taxPerc) / 100);
+function getLineSubtotal(line: ExtendedSalesOrderLineCreateRequest): number {
+  return Number(line.quantity) * Number(line.unitPrice);
+}
 
-  return taxable + taxes;
+function getLineTaxableBase(line: ExtendedSalesOrderLineCreateRequest): number {
+  return getLineSubtotal(line);
+}
+
+function getLineTaxes(line: ExtendedSalesOrderLineCreateRequest): number {
+  const taxable = getLineTaxableBase(line);
+  return taxable * (Number(line.taxPerc) / 100);
+}
+
+function getLineTotal(line: ExtendedSalesOrderLineCreateRequest): number {
+  return getLineTaxableBase(line) + getLineTaxes(line);
 }
 
 function addLine() {
@@ -152,7 +202,7 @@ function findService(serviceId: string): Service | undefined {
   );
 }
 
-function applyItemDefaults(line: SalesOrderLineCreateRequest) {
+function applyItemDefaults(line: ExtendedSalesOrderLineCreateRequest) {
   const itemType = normalizeItemType(line.itemType);
   const itemId = String(line.itemId ?? "").trim();
 
@@ -167,8 +217,8 @@ function applyItemDefaults(line: SalesOrderLineCreateRequest) {
       return;
     }
 
-    line.unitPrice = Number(selectedProduct.basePrice ?? 0);
-    line.taxPerc = Number(selectedProduct.taxPercentage ?? 0);
+    line.unitPrice = Number((selectedProduct as any).basePrice ?? 0);
+    line.taxPerc = Number((selectedProduct as any).taxPercentage ?? 0);
     return;
   }
 
@@ -178,11 +228,11 @@ function applyItemDefaults(line: SalesOrderLineCreateRequest) {
     return;
   }
 
-  line.unitPrice = Number(selectedService.basePrice ?? 0);
-  line.taxPerc = Number(selectedService.taxPercentage ?? 0);
+  line.unitPrice = Number((selectedService as any).baseRate ?? 0);
+  line.taxPerc = Number((selectedService as any).taxPercentage ?? 0);
 }
 
-function onItemTypeChange(line: SalesOrderLineCreateRequest) {
+function onItemTypeChange(line: ExtendedSalesOrderLineCreateRequest) {
   line.itemType = normalizeItemType(line.itemType);
   line.itemId = "";
   line.unitPrice = 0;
@@ -190,8 +240,36 @@ function onItemTypeChange(line: SalesOrderLineCreateRequest) {
   line.taxPerc = 0;
 }
 
-function onItemChange(line: SalesOrderLineCreateRequest) {
+function onItemChange(line: ExtendedSalesOrderLineCreateRequest) {
   applyItemDefaults(line);
+}
+
+function resolvePolicyReason(policy: DiscountPolicy | null): string {
+  if (!policy) {
+    return "";
+  }
+
+  const candidate =
+    (policy as any).defaultReason ??
+    (policy as any).reason ??
+    (policy as any).description ??
+    (policy as any).name ??
+    "";
+
+  return String(candidate).trim();
+}
+
+function onGlobalPolicyChange() {
+  const policy = selectedGlobalPolicy.value;
+
+  if (!policy) {
+    globalDiscountPerc.value = 0;
+    globalDiscountReason.value = "";
+    return;
+  }
+
+  globalDiscountPerc.value = Number(policy.maxDiscountPercentage ?? 0);
+  globalDiscountReason.value = resolvePolicyReason(policy);
 }
 
 async function loadCatalogs() {
@@ -201,79 +279,58 @@ async function loadCatalogs() {
     const [
       clientsResponse,
       branchesResponse,
-      usersResponse,
       productsResponse,
       servicesResponse,
+      discountPoliciesResponse,
       productsCatalogResponse,
       servicesCatalogResponse,
+      policiesCatalogResponse,
     ] = await Promise.all([
       SelectService.selectClients({ onlyActive: true }),
       SelectService.selectBranches({ onlyActive: true }),
-      SelectService.selectUsers({ onlyActive: true }),
       SelectService.selectProducts({ onlyActive: true }),
       SelectService.selectServices({ onlyActive: true }),
+      SelectService.selectDiscountPolicies({ onlyActive: true }),
       ProductsService.browse({
         page: 1,
         pageSize: 500,
-      }),
+      } as any),
       ServicesService.browse({
         page: 1,
         pageSize: 500,
-      }),
+      } as any),
+      (async () => {
+        const svc: any = await import("@/core/services/discountsService");
+        return await svc.DiscountsService.browsePolicies({
+          page: 1,
+          pageSize: 500,
+          search: "",
+        });
+      })(),
     ]);
 
     clients.value = clientsResponse ?? [];
     branches.value = branchesResponse ?? [];
-    users.value = usersResponse ?? [];
     products.value = productsResponse ?? [];
     services.value = servicesResponse ?? [];
+    discountPolicies.value = discountPoliciesResponse ?? [];
 
     if (Array.isArray(productsCatalogResponse)) {
       productCatalog.value = productsCatalogResponse;
-    } else if (
-      productsCatalogResponse &&
-      typeof productsCatalogResponse === "object" &&
-      "items" in productsCatalogResponse &&
-      Array.isArray((productsCatalogResponse as { items: Product[] }).items)
-    ) {
-      productCatalog.value = (
-        productsCatalogResponse as { items: Product[] }
-      ).items;
-    } else if (
-      productsCatalogResponse &&
-      typeof productsCatalogResponse === "object" &&
-      "data" in productsCatalogResponse &&
-      Array.isArray((productsCatalogResponse as { data: Product[] }).data)
-    ) {
-      productCatalog.value = (
-        productsCatalogResponse as { data: Product[] }
-      ).data;
     } else {
       productCatalog.value = [];
     }
 
     if (Array.isArray(servicesCatalogResponse)) {
       serviceCatalog.value = servicesCatalogResponse;
-    } else if (
-      servicesCatalogResponse &&
-      typeof servicesCatalogResponse === "object" &&
-      "items" in servicesCatalogResponse &&
-      Array.isArray((servicesCatalogResponse as { items: Service[] }).items)
-    ) {
-      serviceCatalog.value = (
-        servicesCatalogResponse as { items: Service[] }
-      ).items;
-    } else if (
-      servicesCatalogResponse &&
-      typeof servicesCatalogResponse === "object" &&
-      "data" in servicesCatalogResponse &&
-      Array.isArray((servicesCatalogResponse as { data: Service[] }).data)
-    ) {
-      serviceCatalog.value = (
-        servicesCatalogResponse as { data: Service[] }
-      ).data;
     } else {
       serviceCatalog.value = [];
+    }
+
+    if (Array.isArray(policiesCatalogResponse)) {
+      discountPoliciesCatalog.value = policiesCatalogResponse;
+    } else {
+      discountPoliciesCatalog.value = [];
     }
   } catch (error: any) {
     toastStore.addToast({
@@ -319,6 +376,9 @@ async function submit() {
   const normalizedSellerUserId = sellerUserId.value.trim();
   const normalizedCurrency = currency.value.trim().toUpperCase();
   const normalizedExchangeRate = Number(exchangeRate.value);
+  const normalizedGlobalDiscountPerc = Number(globalDiscountPerc.value || 0);
+  const normalizedGlobalDiscountReason = globalDiscountReason.value.trim();
+  const normalizedSelectedGlobalPolicyId = selectedGlobalPolicyId.value.trim();
 
   if (!normalizedClientId) {
     toastStore.addToast({
@@ -347,16 +407,32 @@ async function submit() {
     return;
   }
 
-  const normalizedLines: SalesOrderLineCreateRequest[] = lines.value.map(
-    (line) => ({
-      itemType: normalizeItemType(line.itemType),
-      itemId: String(line.itemId ?? "").trim(),
-      quantity: Number(line.quantity),
-      unitPrice: Number(line.unitPrice),
-      discountPerc: Number(line.discountPerc),
-      taxPerc: Number(line.taxPerc),
-    }),
-  );
+  if (normalizedGlobalDiscountPerc > 0 && !normalizedSelectedGlobalPolicyId) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("sales.discounts.validation.policyRequired"),
+    });
+    return;
+  }
+
+  if (normalizedGlobalDiscountPerc > 0 && !normalizedGlobalDiscountReason) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("sales.discounts.validation.globalReasonRequired"),
+    });
+    return;
+  }
+
+  const normalizedLines = lines.value.map((line) => ({
+    itemType: normalizeItemType(line.itemType),
+    itemId: String(line.itemId ?? "").trim(),
+    quantity: Number(line.quantity),
+    unitPrice: Number(line.unitPrice),
+    discountPerc: 0,
+    taxPerc: Number(line.taxPerc),
+  }));
 
   const invalidLine = normalizedLines.some(
     (line) =>
@@ -366,8 +442,6 @@ async function submit() {
       line.quantity <= 0 ||
       Number.isNaN(line.unitPrice) ||
       line.unitPrice < 0 ||
-      Number.isNaN(line.discountPerc) ||
-      line.discountPerc < 0 ||
       Number.isNaN(line.taxPerc) ||
       line.taxPerc < 0,
   );
@@ -392,11 +466,65 @@ async function submit() {
       exchangeRate: normalizedExchangeRate,
       notes: notes.value.trim() || null,
       lines: normalizedLines,
-    });
+    } as any);
+
+    const salesOrderId = created.salesOrderId;
+
+    const discountsServiceModule: any =
+      await import("@/core/services/discountsService");
+    const discountsService = discountsServiceModule.DiscountsService;
+
+    let globalDiscountRequestedForApproval = false;
+    let globalDiscountApplied = false;
+
+    if (normalizedGlobalDiscountPerc > 0) {
+      if (globalRequiresApproval.value && requestApprovalIfNeeded.value) {
+        await discountsService.requestGlobalApproval({
+          salesOrderId,
+          discountPerc: normalizedGlobalDiscountPerc,
+          reason: normalizedGlobalDiscountReason,
+        });
+
+        globalDiscountRequestedForApproval = true;
+      } else {
+        await discountsService.applyGlobal({
+          salesOrderId,
+          discountPerc: normalizedGlobalDiscountPerc,
+          reason: normalizedGlobalDiscountReason,
+          policyId: normalizedSelectedGlobalPolicyId,
+        });
+
+        globalDiscountApplied = true;
+      }
+    }
 
     drawerStore.onSuccess?.({
-      salesOrderId: created.salesOrderId,
+      salesOrderId,
     });
+
+    if (globalDiscountRequestedForApproval) {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message:
+          t("sales.discounts.sales.messages.approvalRequested") ||
+          "Discount approval requested successfully.",
+      });
+    } else if (globalDiscountApplied) {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message:
+          t("sales.discounts.sales.messages.discountApplied") ||
+          "Discount applied successfully.",
+      });
+    } else {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("sales.messages.createSuccess"),
+      });
+    }
 
     drawerStore.closeDrawer();
   } catch (error: any) {
@@ -413,53 +541,6 @@ async function submit() {
 watch(currency, async () => {
   await loadExchangeRate();
 });
-
-watch(
-  lines,
-  (currentLines) => {
-    for (const line of currentLines) {
-      const itemId = String(line.itemId ?? "").trim();
-      const itemType = normalizeItemType(line.itemType);
-
-      if (!itemId) {
-        continue;
-      }
-
-      if (itemType === "Product") {
-        const selectedProduct = findProduct(itemId);
-
-        if (!selectedProduct) {
-          continue;
-        }
-
-        if (Number(line.unitPrice) <= 0) {
-          line.unitPrice = Number(selectedProduct.basePrice ?? 0);
-        }
-
-        if (Number(line.taxPerc) < 0 || Number.isNaN(Number(line.taxPerc))) {
-          line.taxPerc = Number(selectedProduct.taxPercentage ?? 0);
-        }
-
-        continue;
-      }
-
-      const selectedService = findService(itemId);
-
-      if (!selectedService) {
-        continue;
-      }
-
-      if (Number(line.unitPrice) <= 0) {
-        line.unitPrice = Number(selectedService.basePrice ?? 0);
-      }
-
-      if (Number(line.taxPerc) < 0 || Number.isNaN(Number(line.taxPerc))) {
-        line.taxPerc = Number(selectedService.taxPercentage ?? 0);
-      }
-    }
-  },
-  { deep: true },
-);
 
 onMounted(async () => {
   sellerUserId.value = authStore.userId ?? "";
@@ -630,43 +711,149 @@ onMounted(async () => {
 
             <div class="space-y-bt-spacing-12">
               <div class="flex items-center justify-between">
-                <span class="text-bt-grey-200">{{
-                  $t("sales.fields.subtotal")
-                }}</span>
-                <span class="font-bt-semibold">{{
-                  formatMoney(subtotal)
-                }}</span>
+                <span class="text-bt-grey-200">
+                  {{ $t("sales.fields.subtotal") }}
+                </span>
+                <span class="font-bt-semibold">
+                  {{ formatMoney(subtotal) }}
+                </span>
               </div>
 
               <div class="flex items-center justify-between">
-                <span class="text-bt-grey-200">{{
-                  $t("sales.fields.discounts")
-                }}</span>
-                <span class="font-bt-semibold">{{
-                  formatMoney(totalDiscount)
-                }}</span>
+                <span class="text-bt-grey-200">
+                  {{ $t("sales.fields.discounts") }}
+                </span>
+                <span class="font-bt-semibold">
+                  {{ formatMoney(totalDiscount) }}
+                </span>
               </div>
 
               <div class="flex items-center justify-between">
-                <span class="text-bt-grey-200">{{
-                  $t("sales.fields.taxes")
-                }}</span>
-                <span class="font-bt-semibold">{{
-                  formatMoney(totalTaxes)
-                }}</span>
+                <span class="text-bt-grey-200">
+                  {{ $t("sales.fields.taxes") }}
+                </span>
+                <span class="font-bt-semibold">
+                  {{ formatMoney(totalTaxes) }}
+                </span>
               </div>
 
               <div class="h-px bg-bt-primary-300/30 my-bt-spacing-8"></div>
 
               <div class="flex items-center justify-between">
-                <span class="text-lg font-bt-semibold">{{
-                  $t("sales.fields.total")
-                }}</span>
+                <span class="text-lg font-bt-semibold">
+                  {{ $t("sales.fields.total") }}
+                </span>
                 <span class="text-2xl font-bt-bold text-bt-accent-300">
                   {{ formatMoney(total) }}
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div
+          class="rounded-l border border-bt-grey-200 bg-bt-warning-50 p-bt-spacing-16"
+        >
+          <div class="flex items-center gap-bt-spacing-8 mb-bt-spacing-12">
+            <BadgePercent :size="18" class="text-bt-warning-700" />
+            <h3 class="font-bt-semibold text-bt-warning-700">
+              {{ $t("sales.discounts.sections.globalDiscount") }}
+            </h3>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-bt-spacing-16"
+          >
+            <div>
+              <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+                {{ $t("sales.discounts.fields.policy") }}
+              </label>
+              <select
+                v-model="selectedGlobalPolicyId"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-warning-500"
+                @change="onGlobalPolicyChange"
+              >
+                <option value="">
+                  {{ $t("sales.discounts.placeholders.selectPolicy") }}
+                </option>
+                <option
+                  v-for="policy in discountPolicies"
+                  :key="policy.id"
+                  :value="policy.id"
+                >
+                  {{ policy.label }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+                {{ $t("sales.discounts.fields.discountPerc") }}
+              </label>
+              <input
+                v-model.number="globalDiscountPerc"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-warning-500"
+              />
+            </div>
+
+            <div>
+              <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+                {{ $t("sales.discounts.fields.discountAmount") }}
+              </label>
+              <input
+                :value="formatMoney(globalDiscountAmount)"
+                type="text"
+                disabled
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-700"
+              />
+            </div>
+
+            <div>
+              <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+                {{ $t("sales.discounts.fields.globalDiscountReason") }}
+              </label>
+              <input
+                v-model="globalDiscountReason"
+                type="text"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-warning-500"
+              />
+            </div>
+          </div>
+
+          <div
+            class="mt-bt-spacing-12 flex flex-wrap items-center gap-bt-spacing-12"
+          >
+            <label
+              class="inline-flex items-center gap-bt-spacing-8 text-sm text-bt-grey-700"
+            >
+              <input v-model="requestApprovalIfNeeded" type="checkbox" />
+              {{ $t("sales.discounts.fields.requestApprovalIfNeeded") }}
+            </label>
+
+            <span
+              v-if="Number(globalDiscountPerc) > 0"
+              class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-info-100 text-bt-info-700"
+            >
+              {{ globalDiscountPerc }}%
+            </span>
+
+            <span
+              v-if="globalRequiresApproval"
+              class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-warning-100 text-bt-warning-700"
+            >
+              {{ $t("sales.discounts.labels.requiresApproval") }}
+            </span>
+
+            <span
+              v-else-if="Number(globalDiscountPerc) > 0"
+              class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-success-100 text-bt-success-700"
+            >
+              {{ $t("sales.discounts.labels.withinPolicy") }}
+            </span>
           </div>
         </div>
 
@@ -694,7 +881,7 @@ onMounted(async () => {
               class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16"
             >
               <div
-                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-bt-spacing-12 items-end"
+                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-bt-spacing-12 items-end"
               >
                 <div>
                   <label
@@ -774,21 +961,6 @@ onMounted(async () => {
                   <label
                     class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
                   >
-                    {{ $t("sales.lines.discountPerc") }}
-                  </label>
-                  <input
-                    v-model.number="line.discountPerc"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    class="block mb-bt-spacing-8 text-sm text-bt-primary-700"
-                  >
                     {{ $t("sales.lines.taxPerc") }}
                   </label>
                   <div class="flex gap-bt-spacing-8">
@@ -811,12 +983,31 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div class="mt-bt-spacing-12 flex justify-end">
-                <div class="text-right">
-                  <div class="text-sm text-bt-grey-600">
+              <div
+                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[220px_220px] gap-bt-spacing-12 mt-bt-spacing-12 justify-end"
+              >
+                <div
+                  class="rounded-m border border-bt-grey-200 bg-bt-white px-bt-spacing-16 py-bt-spacing-12"
+                >
+                  <div class="text-xs text-bt-grey-500">
+                    {{ $t("sales.fields.subtotal") }}
+                  </div>
+                  <div
+                    class="text-base font-bt-bold text-bt-primary-700 mt-bt-spacing-4"
+                  >
+                    {{ formatMoney(getLineSubtotal(line)) }}
+                  </div>
+                </div>
+
+                <div
+                  class="rounded-m border border-bt-grey-200 bg-bt-white px-bt-spacing-16 py-bt-spacing-12"
+                >
+                  <div class="text-xs text-bt-grey-500">
                     {{ $t("sales.fields.lineTotal") }}
                   </div>
-                  <div class="text-base font-bt-bold text-bt-primary-700">
+                  <div
+                    class="text-base font-bt-bold text-bt-primary-700 mt-bt-spacing-4"
+                  >
                     {{ formatMoney(getLineTotal(line)) }}
                   </div>
                 </div>

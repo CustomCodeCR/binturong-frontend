@@ -30,7 +30,8 @@
     "categories": "Categories",
     "products": "Products",
     "paymentMethods": "Payment Methods",
-    "services": "Services"
+    "services": "Services",
+    "discounts": "Discounts"
   },
   "common": {
     "loading": "Loading...",
@@ -52,7 +53,10 @@
     "required": "Required",
     "view": "View",
     "selectOption": "Select an option",
-    "delete": "Delete"
+    "delete": "Delete",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "viewDetails": "View details"
   },
   "toast": {
     "success": "Success",
@@ -2181,6 +2185,58 @@
         "taxPerc": "Tax %",
         "total": "Total"
       }
+    },
+    "discounts": {
+      "sections": {
+        "globalDiscount": "Global discount"
+      },
+      "summary": {
+        "totalDiscounts": "Discounts"
+      },
+      "fields": {
+        "policy": "Policy",
+        "discountPerc": "Discount percentage",
+        "discountAmount": "Discount amount",
+        "discountReason": "Discount reason",
+        "globalDiscountPerc": "Global discount %",
+        "globalDiscountAmount": "Global discount amount",
+        "globalDiscountReason": "Global discount reason",
+        "requestApprovalIfNeeded": "Request approval if over the limit"
+      },
+      "placeholders": {
+        "selectPolicy": "Select a policy"
+      },
+      "labels": {
+        "requiresApproval": "Requires approval",
+        "withinPolicy": "Within policy"
+      },
+      "actions": {
+        "apply": "Apply discount",
+        "globalDiscount": "Global discount",
+        "removeGlobalDiscount": "Remove global discount",
+        "lineDiscount": "Line discount",
+        "removeLineDiscount": "Remove line discount"
+      },
+      "validation": {
+        "policyRequired": "You must select a discount policy.",
+        "discountRequired": "You must enter a valid discount percentage.",
+        "lineReasonRequired": "You must enter the line discount reason.",
+        "globalReasonRequired": "You must enter the global discount reason."
+      },
+      "sales": {
+        "messages": {
+          "discountApplied": "Discount applied successfully.",
+          "discountApplyError": "Discount could not be applied.",
+          "discountRemoved": "Discount removed successfully.",
+          "discountRemoveError": "Discount could not be removed."
+        }
+      },
+      "modal": {
+        "globalTitle": "Apply global discount",
+        "globalDescription": "Configure a discount on the total order amount.",
+        "lineTitle": "Apply line discount",
+        "lineDescription": "Configure a discount for a specific line."
+      }
     }
   },
   "billing": {
@@ -2794,6 +2850,167 @@
       "invalidTime": "Estimated time must be greater than 0.",
       "invalidRate": "Rate must be greater than or equal to 0.",
       "protectedCategory": "This service belongs to a protected category and cannot change category."
+    }
+  },
+  "discounts": {
+    "title": "Discounts",
+    "subtitle": "Manage discount policies, approval requests, and history.",
+    "tabs": {
+      "policies": "Policies",
+      "approvals": "Approvals",
+      "history": "History"
+    },
+    "actions": {
+      "newPolicy": "New Policy",
+      "apply": "Apply",
+      "reject": "Reject",
+      "approve": "Approve",
+      "export": "Export",
+      "requestApproval": "Request Approval",
+      "lineDiscount": "Line Discount",
+      "globalDiscount": "Global Discount",
+      "removeLineDiscount": "Remove Line Discount",
+      "removeGlobalDiscount": "Remove Global Discount"
+    },
+    "fields": {
+      "globalDiscountPerc": "Global discount %",
+      "globalDiscountAmount": "Global discount amount",
+      "globalDiscountReason": "Global discount reason",
+      "discountReason": "Discount reason"
+    },
+    "apply": {
+      "lineTitle": "Apply line discount",
+      "lineDescription": "Set a discount for a specific product or service.",
+      "globalTitle": "Apply global discount",
+      "globalDescription": "Set a discount for the whole sales order.",
+      "fields": {
+        "policy": "Policy",
+        "discountPerc": "Discount percentage",
+        "reason": "Reason"
+      },
+      "placeholders": {
+        "selectPolicy": "Select a policy"
+      },
+      "validation": {
+        "policyRequired": "Policy is required.",
+        "reasonRequired": "Reason is required.",
+        "discountInvalid": "Discount percentage is invalid."
+      }
+    },
+    "sales": {
+      "messages": {
+        "discountApplied": "Discount applied successfully.",
+        "discountApplyError": "Discount could not be applied.",
+        "discountRemoved": "Discount removed successfully.",
+        "discountRemoveError": "Discount could not be removed."
+      }
+    },
+    "policies": {
+      "searchPlaceholder": "Search by name or percentage",
+      "empty": "No discount policies found.",
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "table": {
+        "name": "Name",
+        "maxDiscount": "Max discount",
+        "requiresApproval": "Requires approval",
+        "status": "Status"
+      },
+      "fields": {
+        "name": "Name",
+        "maxDiscountPercentage": "Max percentage",
+        "requiresApprovalAboveLimit": "Requires approval above limit",
+        "isActive": "Active"
+      },
+      "validation": {
+        "nameRequired": "Name is required.",
+        "maxDiscountInvalid": "Max discount percentage is invalid."
+      },
+      "messages": {
+        "loadError": "Could not load discount policies.",
+        "createSuccess": "Policy created successfully.",
+        "createError": "Could not create the policy.",
+        "updateSuccess": "Policy updated successfully.",
+        "updateError": "Could not update the policy.",
+        "activated": "Policy activated successfully.",
+        "deactivated": "Policy deactivated successfully."
+      },
+      "modal": {
+        "createTitle": "Create policy",
+        "createDescription": "Set up a new discount rule.",
+        "editTitle": "Edit policy",
+        "editDescription": "Update the selected policy."
+      }
+    },
+    "approvals": {
+      "searchPlaceholder": "Search by order, user, or reason",
+      "empty": "No approval requests found.",
+      "filters": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "fields": {
+        "rejectionReason": "Rejection reason"
+      },
+      "validation": {
+        "rejectionReasonRequired": "Rejection reason is required."
+      },
+      "messages": {
+        "loadError": "Could not load approval requests.",
+        "approveSuccess": "Request approved successfully.",
+        "approveError": "Could not approve the request.",
+        "rejectSuccess": "Request rejected successfully.",
+        "rejectError": "Could not reject the request."
+      },
+      "table": {
+        "salesOrder": "Sales Order",
+        "scope": "Scope",
+        "percentage": "Percentage",
+        "amount": "Amount",
+        "requestedBy": "Requested by",
+        "status": "Status",
+        "requestedAt": "Requested at"
+      },
+      "drawer": {
+        "title": "Approval details",
+        "description": "Request information associated with order {code}.",
+        "resolvedBy": "Resolved by",
+        "resolvedAt": "Resolved at"
+      },
+      "rejectModal": {
+        "title": "Reject request",
+        "description": "Provide the rejection reason for traceability."
+      }
+    },
+    "history": {
+      "searchPlaceholder": "Search by order, user, or reason",
+      "empty": "No discount history found.",
+      "filters": {
+        "allUsers": "All users"
+      },
+      "messages": {
+        "loadError": "Could not load history.",
+        "exportError": "Could not export history."
+      },
+      "table": {
+        "salesOrder": "Sales Order",
+        "scope": "Scope",
+        "action": "Action",
+        "percentage": "Percentage",
+        "amount": "Amount",
+        "reason": "Reason",
+        "user": "User",
+        "eventDate": "Date"
+      },
+      "drawer": {
+        "title": "History details",
+        "description": "Discount movement details for order {code}."
+      }
     }
   }
 }

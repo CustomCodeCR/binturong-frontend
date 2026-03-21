@@ -1415,4 +1415,141 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  browseDiscountPolicies: {
+    method: "GET",
+    path: "/api/discounts/policies",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  readDiscountPolicyById: {
+    method: "GET",
+    path: "/api/discounts/policies/{{id}}",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createDiscountPolicy: {
+    method: "POST",
+    path: "/api/discounts/policies",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  updateDiscountPolicy: {
+    method: "PUT",
+    path: "/api/discounts/policies/{{id}}",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  selectDiscountPolicies: {
+    method: "GET",
+    path: "/api/discounts/policies/select",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  browseDiscountApprovalRequests: {
+    method: "GET",
+    path: "/api/discounts/approval-requests",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  requestLineDiscountApproval: {
+    method: "POST",
+    path: "/api/discounts/approval-requests/line",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  requestGlobalDiscountApproval: {
+    method: "POST",
+    path: "/api/discounts/approval-requests/global",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  approveDiscountApprovalRequest: {
+    method: "POST",
+    path: "/api/discounts/approval-requests/{{id}}/approve",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  rejectDiscountApprovalRequest: {
+    method: "POST",
+    path: "/api/discounts/approval-requests/{{id}}/reject",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  applyLineDiscount: {
+    method: "POST",
+    path: "/api/discounts/sales-orders/line/apply",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  applyApprovedLineDiscount: {
+    method: "POST",
+    path: "/api/discounts/sales-orders/line/apply-approved",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  removeLineDiscount: {
+    method: "POST",
+    path: "/api/discounts/sales-orders/line/remove",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  applyGlobalDiscount: {
+    method: "POST",
+    path: "/api/discounts/sales-orders/global/apply",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  applyApprovedGlobalDiscount: {
+    method: "POST",
+    path: "/api/discounts/sales-orders/global/apply-approved",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  removeGlobalDiscount: {
+    method: "POST",
+    path: "/api/discounts/sales-orders/global/remove",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  browseDiscountHistory: {
+    method: "GET",
+    path: "/api/discounts/history",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportDiscountHistory: {
+    method: "GET",
+    path: "/api/discounts/history/export",
+    headers: {
+      Accept: "text/csv, application/octet-stream",
+    },
+  },
 };

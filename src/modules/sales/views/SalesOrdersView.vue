@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   CircleDollarSign,
   UserRound,
+  BadgePercent,
 } from "lucide-vue-next";
 
 import { SalesOrdersService } from "@/core/services/salesOrdersService";
@@ -36,7 +37,7 @@ async function loadSalesOrders() {
     page: 1,
     pageSize: 100,
     search: search.value.trim() || undefined,
-  });
+  } as any);
 
   salesOrders.value = Array.isArray(response) ? [...response] : [];
 }
@@ -63,8 +64,8 @@ function sleep(ms: number) {
 
 async function reloadEventually(
   loader: () => Promise<void>,
-  attempts = 10,
-  delayMs = 500,
+  attempts = 8,
+  delayMs = 400,
 ) {
   loading.value = true;
 
@@ -145,10 +146,16 @@ const summary = computed(() => {
     0,
   );
 
+  const totalDiscounts = salesOrders.value.reduce(
+    (acc, item) => acc + Number(item.discounts || 0),
+    0,
+  );
+
   return {
     total,
     confirmed,
     totalAmount,
+    totalDiscounts,
   };
 });
 
@@ -267,7 +274,7 @@ onMounted(async () => {
     </div>
 
     <div
-      class="grid grid-cols-1 md:grid-cols-3 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+      class="grid grid-cols-1 md:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
     >
       <div
         class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
@@ -328,6 +335,26 @@ onMounted(async () => {
           </div>
         </div>
       </div>
+
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
+        <div class="flex items-center gap-bt-spacing-12">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-warning-100 flex items-center justify-center text-bt-warning-700"
+          >
+            <BadgePercent :size="22" />
+          </div>
+          <div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("sales.discounts.summary.totalDiscounts") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-warning-700">
+              {{ formatMoney(summary.totalDiscounts) }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div
@@ -381,7 +408,7 @@ onMounted(async () => {
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[1300px]">
+        <table v-else class="w-full border-collapse min-w-[1500px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
@@ -401,6 +428,12 @@ onMounted(async () => {
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("sales.table.status") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("sales.discounts.fields.globalDiscountPerc") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("sales.fields.discounts") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("sales.table.total") }}
@@ -452,6 +485,22 @@ onMounted(async () => {
                 </span>
               </td>
 
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <span
+                  v-if="Number(order.globalDiscountPerc) > 0"
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-warning-100 text-bt-warning-700"
+                >
+                  {{ order.globalDiscountPerc }}%
+                </span>
+                <span v-else>-</span>
+              </td>
+
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-warning-700 font-bt-semibold"
+              >
+                {{ formatMoney(order.discounts) }}
+              </td>
+
               <td
                 class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
               >
@@ -474,7 +523,7 @@ onMounted(async () => {
 
             <tr v-if="!filteredSalesOrders.length && !loading">
               <td
-                colspan="8"
+                colspan="10"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
               >
                 {{ $t("sales.empty") }}

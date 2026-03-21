@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { MoreHorizontal } from "lucide-vue-next";
 
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useModalStore } from "@/core/stores/modalStore";
 import { useToastStore } from "@/core/stores/toastStore";
 
 import { SalesOrdersService } from "@/core/services/salesOrdersService";
+import { DiscountsService } from "@/core/services/discountsService";
 
+import DiscountActionMenu from "@/modules/discounts/components/DiscountActionMenu.vue";
 import SalesOrderConfirmModal from "@/modules/sales/components/SalesOrderConfirmModal.vue";
+import SalesOrderDiscountModal from "@/modules/sales/components/SalesOrderDiscountModal.vue";
 
 import type { SalesOrder } from "@/core/interfaces/salesOrders";
 
@@ -33,6 +37,7 @@ const canConfirm = computed(() => {
   const status = String(salesOrder.value?.status ?? "")
     .trim()
     .toLowerCase();
+
   return !status.includes("confirm");
 });
 
@@ -100,6 +105,7 @@ function openConfirmModal() {
       });
 
       await loadSalesOrder();
+      drawerStore.onSuccess?.();
     },
     onError: (error) => {
       toastStore.addToast({
@@ -109,6 +115,132 @@ function openConfirmModal() {
       });
     },
   });
+}
+
+function openGlobalDiscountModal() {
+  if (!salesOrder.value) {
+    return;
+  }
+
+  modalStore.open({
+    component: SalesOrderDiscountModal,
+    props: {
+      salesOrderId: salesOrder.value.salesOrderId,
+      scope: "Global",
+      currentDiscountPerc: salesOrder.value.globalDiscountPerc,
+      currentDiscountReason: salesOrder.value.globalDiscountReason,
+    },
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("sales.discounts.sales.messages.discountApplied"),
+      });
+
+      await loadSalesOrder();
+      drawerStore.onSuccess?.();
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message:
+          error?.message ??
+          t("sales.discounts.sales.messages.discountApplyError"),
+      });
+    },
+  });
+}
+
+function openLineDiscountModal(line: SalesOrder["lines"][number]) {
+  if (!salesOrder.value) {
+    return;
+  }
+
+  modalStore.open({
+    component: SalesOrderDiscountModal,
+    props: {
+      salesOrderId: salesOrder.value.salesOrderId,
+      salesOrderDetailId: line.salesOrderDetailId,
+      scope: "Line",
+      currentDiscountPerc: line.discountPerc,
+      currentDiscountReason: line.discountReason,
+    },
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("sales.discounts.sales.messages.discountApplied"),
+      });
+
+      await loadSalesOrder();
+      drawerStore.onSuccess?.();
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message:
+          error?.message ??
+          t("sales.discounts.sales.messages.discountApplyError"),
+      });
+    },
+  });
+}
+
+async function removeGlobalDiscount() {
+  if (!salesOrder.value) {
+    return;
+  }
+
+  try {
+    await DiscountsService.removeGlobal({
+      salesOrderId: salesOrder.value.salesOrderId,
+    });
+
+    toastStore.addToast({
+      severity: "success",
+      title: t("toast.success"),
+      message: t("sales.discounts.sales.messages.discountRemoved"),
+    });
+
+    await loadSalesOrder();
+    drawerStore.onSuccess?.();
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("sales.discounts.sales.messages.discountRemoveError"),
+    });
+  }
+}
+
+async function removeLineDiscount(line: SalesOrder["lines"][number]) {
+  if (!salesOrder.value) {
+    return;
+  }
+
+  try {
+    await DiscountsService.removeLine({
+      salesOrderId: salesOrder.value.salesOrderId,
+      salesOrderDetailId: line.salesOrderDetailId,
+    });
+
+    toastStore.addToast({
+      severity: "success",
+      title: t("toast.success"),
+      message: t("sales.discounts.sales.messages.discountRemoved"),
+    });
+
+    await loadSalesOrder();
+    drawerStore.onSuccess?.();
+  } catch {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("sales.discounts.sales.messages.discountRemoveError"),
+    });
+  }
 }
 
 onMounted(async () => {
@@ -153,13 +285,36 @@ watch(
     </div>
 
     <template v-else-if="salesOrder">
-      <div v-if="canConfirm" class="mb-bt-spacing-16 flex justify-end">
+      <div
+        class="mb-bt-spacing-16 flex flex-wrap justify-end gap-bt-spacing-12"
+      >
         <button
+          v-if="canConfirm"
           type="button"
           class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600"
           @click="openConfirmModal"
         >
           {{ $t("sales.actions.confirm") }}
+        </button>
+
+        <button
+          type="button"
+          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700"
+          @click="openGlobalDiscountModal"
+        >
+          {{ $t("sales.discounts.actions.globalDiscount") }}
+        </button>
+
+        <button
+          v-if="
+            Number(salesOrder.globalDiscountPerc) > 0 ||
+            Number(salesOrder.globalDiscountAmount) > 0
+          "
+          type="button"
+          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-error-100 text-bt-error-700 hover:bg-bt-error-300"
+          @click="removeGlobalDiscount"
+        >
+          {{ $t("sales.discounts.actions.removeGlobalDiscount") }}
         </button>
       </div>
 
@@ -245,7 +400,7 @@ watch(
       </div>
 
       <div
-        class="grid grid-cols-1 md:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24"
+        class="grid grid-cols-1 md:grid-cols-5 gap-bt-spacing-16 mb-bt-spacing-24"
       >
         <div
           class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16"
@@ -259,13 +414,24 @@ watch(
         </div>
 
         <div
-          class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16"
+          class="rounded-m border border-bt-grey-200 bg-bt-warning-100 p-bt-spacing-16"
         >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("sales.fields.discounts") }}
+          <div class="text-xs text-bt-warning-700">
+            {{ $t("sales.discounts.fields.globalDiscountPerc") }}
           </div>
           <div class="text-xl font-bt-bold text-bt-warning-700 mt-bt-spacing-8">
-            {{ formatMoney(salesOrder.discounts) }}
+            {{ salesOrder.globalDiscountPerc }}%
+          </div>
+        </div>
+
+        <div
+          class="rounded-m border border-bt-grey-200 bg-bt-warning-100 p-bt-spacing-16"
+        >
+          <div class="text-xs text-bt-warning-700">
+            {{ $t("sales.discounts.fields.globalDiscountAmount") }}
+          </div>
+          <div class="text-xl font-bt-bold text-bt-warning-700 mt-bt-spacing-8">
+            {{ formatMoney(salesOrder.globalDiscountAmount) }}
           </div>
         </div>
 
@@ -292,6 +458,18 @@ watch(
         </div>
       </div>
 
+      <div
+        v-if="salesOrder.globalDiscountReason"
+        class="mb-bt-spacing-24 rounded-m border border-bt-warning-300 bg-bt-warning-100 p-bt-spacing-16"
+      >
+        <div class="text-xs text-bt-warning-700">
+          {{ $t("sales.discounts.fields.globalDiscountReason") }}
+        </div>
+        <div class="mt-bt-spacing-8 text-bt-primary-700 font-bt-semibold">
+          {{ salesOrder.globalDiscountReason }}
+        </div>
+      </div>
+
       <div class="rounded-m border border-bt-grey-200 overflow-hidden">
         <table class="w-full border-collapse">
           <thead>
@@ -312,10 +490,21 @@ watch(
                 {{ $t("sales.lines.table.discountPerc") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("sales.discounts.fields.discountAmount") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("sales.discounts.fields.discountReason") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("sales.lines.table.taxPerc") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("sales.lines.table.total") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("common.actions") }}
               </th>
             </tr>
           </thead>
@@ -342,6 +531,12 @@ watch(
                 {{ line.discountPerc }}%
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ formatMoney((line as any).discountAmount) }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ line.discountReason || "-" }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ line.taxPerc }}%
               </td>
               <td
@@ -349,11 +544,38 @@ watch(
               >
                 {{ formatMoney(line.lineTotal) }}
               </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <DiscountActionMenu
+                  :items="[
+                    {
+                      label: t('sales.discounts.actions.lineDiscount'),
+                      action: () => openLineDiscountModal(line),
+                    },
+                    {
+                      label: t('sales.discounts.actions.removeLineDiscount'),
+                      action: () => removeLineDiscount(line),
+                      danger: true,
+                      disabled:
+                        Number(line.discountPerc) <= 0 &&
+                        Number((line as any).discountAmount) <= 0,
+                    },
+                  ]"
+                >
+                  <template #trigger>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center w-10 h-10 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition"
+                    >
+                      <MoreHorizontal :size="18" />
+                    </button>
+                  </template>
+                </DiscountActionMenu>
+              </td>
             </tr>
 
             <tr v-if="!salesOrder.lines.length">
               <td
-                colspan="7"
+                colspan="10"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
               >
                 {{ $t("sales.lines.empty") }}

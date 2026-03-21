@@ -30,7 +30,8 @@
     "categories": "Categorías",
     "products": "Productos",
     "paymentMethods": "Metodos de Pagos",
-    "services": "Servicios"
+    "services": "Servicios",
+    "discounts": "Descuentos"
   },
   "common": {
     "loading": "Cargando...",
@@ -52,7 +53,10 @@
     "required": "Requerido",
     "view": "Ver",
     "selectOption": "Seleccione una opción",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "viewDetails": "Ver detalle"
   },
   "toast": {
     "success": "Éxito",
@@ -2184,6 +2188,58 @@
         "taxPerc": "Impuesto %",
         "total": "Total"
       }
+    },
+    "discounts": {
+      "sections": {
+        "globalDiscount": "Descuento global"
+      },
+      "summary": {
+        "totalDiscounts": "Descuentos"
+      },
+      "fields": {
+        "policy": "Política",
+        "discountPerc": "Porcentaje de descuento",
+        "discountAmount": "Monto de descuento",
+        "discountReason": "Motivo del descuento",
+        "globalDiscountPerc": "Descuento global %",
+        "globalDiscountAmount": "Monto de descuento global",
+        "globalDiscountReason": "Motivo del descuento global",
+        "requestApprovalIfNeeded": "Solicitar aprobación si supera el límite"
+      },
+      "placeholders": {
+        "selectPolicy": "Seleccione una política"
+      },
+      "labels": {
+        "requiresApproval": "Requiere aprobación",
+        "withinPolicy": "Dentro de la política"
+      },
+      "actions": {
+        "apply": "Aplicar descuento",
+        "globalDiscount": "Descuento global",
+        "removeGlobalDiscount": "Eliminar descuento global",
+        "lineDiscount": "Descuento por línea",
+        "removeLineDiscount": "Eliminar descuento por línea"
+      },
+      "validation": {
+        "policyRequired": "Debe seleccionar una política de descuento.",
+        "discountRequired": "Debe ingresar un porcentaje de descuento válido.",
+        "lineReasonRequired": "Debe ingresar el motivo del descuento por línea.",
+        "globalReasonRequired": "Debe ingresar el motivo del descuento global."
+      },
+      "sales": {
+        "messages": {
+          "discountApplied": "Descuento aplicado correctamente.",
+          "discountApplyError": "No se pudo aplicar el descuento.",
+          "discountRemoved": "Descuento eliminado correctamente.",
+          "discountRemoveError": "No se pudo eliminar el descuento."
+        }
+      },
+      "modal": {
+        "globalTitle": "Aplicar descuento global",
+        "globalDescription": "Configure un descuento sobre el monto total de la orden.",
+        "lineTitle": "Aplicar descuento por línea",
+        "lineDescription": "Configure un descuento para una línea específica."
+      }
     }
   },
   "billing": {
@@ -2797,6 +2853,168 @@
       "invalidTime": "El tiempo estimado debe ser mayor que 0.",
       "invalidRate": "La tarifa debe ser mayor o igual a 0.",
       "protectedCategory": "Este servicio pertenece a una categoría protegida y no puede cambiar de categoría."
+    }
+  },
+
+  "discounts": {
+    "title": "Descuentos",
+    "subtitle": "Administra políticas, aprobaciones e historial de descuentos.",
+    "tabs": {
+      "policies": "Políticas",
+      "approvals": "Aprobaciones",
+      "history": "Historial"
+    },
+    "actions": {
+      "newPolicy": "Nueva política",
+      "apply": "Aplicar",
+      "reject": "Rechazar",
+      "approve": "Aprobar",
+      "export": "Exportar",
+      "requestApproval": "Solicitar aprobación",
+      "lineDiscount": "Descuento por línea",
+      "globalDiscount": "Descuento global",
+      "removeLineDiscount": "Quitar descuento línea",
+      "removeGlobalDiscount": "Quitar descuento global"
+    },
+    "fields": {
+      "globalDiscountPerc": "Descuento global %",
+      "globalDiscountAmount": "Monto descuento global",
+      "globalDiscountReason": "Motivo descuento global",
+      "discountReason": "Motivo descuento"
+    },
+    "apply": {
+      "lineTitle": "Aplicar descuento a línea",
+      "lineDescription": "Define un descuento específico para este producto o servicio.",
+      "globalTitle": "Aplicar descuento global",
+      "globalDescription": "Define un descuento sobre el total de la orden.",
+      "fields": {
+        "policy": "Política",
+        "discountPerc": "Porcentaje de descuento",
+        "reason": "Motivo"
+      },
+      "placeholders": {
+        "selectPolicy": "Seleccione una política"
+      },
+      "validation": {
+        "policyRequired": "La política es obligatoria.",
+        "reasonRequired": "El motivo es obligatorio.",
+        "discountInvalid": "El porcentaje de descuento no es válido."
+      }
+    },
+    "sales": {
+      "messages": {
+        "discountApplied": "Descuento aplicado correctamente.",
+        "discountApplyError": "No se pudo aplicar el descuento.",
+        "discountRemoved": "Descuento eliminado correctamente.",
+        "discountRemoveError": "No se pudo eliminar el descuento."
+      }
+    },
+    "policies": {
+      "searchPlaceholder": "Buscar por nombre o porcentaje",
+      "empty": "No hay políticas registradas.",
+      "filters": {
+        "all": "Todos",
+        "active": "Activas",
+        "inactive": "Inactivas"
+      },
+      "table": {
+        "name": "Nombre",
+        "maxDiscount": "Máximo descuento",
+        "requiresApproval": "Requiere aprobación",
+        "status": "Estado"
+      },
+      "fields": {
+        "name": "Nombre",
+        "maxDiscountPercentage": "Porcentaje máximo",
+        "requiresApprovalAboveLimit": "Requiere aprobación por encima del límite",
+        "isActive": "Activa"
+      },
+      "validation": {
+        "nameRequired": "El nombre es obligatorio.",
+        "maxDiscountInvalid": "El porcentaje máximo no es válido."
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las políticas.",
+        "createSuccess": "Política creada correctamente.",
+        "createError": "No se pudo crear la política.",
+        "updateSuccess": "Política actualizada correctamente.",
+        "updateError": "No se pudo actualizar la política.",
+        "activated": "Política activada correctamente.",
+        "deactivated": "Política desactivada correctamente."
+      },
+      "modal": {
+        "createTitle": "Crear política",
+        "createDescription": "Configura una nueva regla de descuento.",
+        "editTitle": "Editar política",
+        "editDescription": "Actualiza la configuración de la política."
+      }
+    },
+    "approvals": {
+      "searchPlaceholder": "Buscar por orden, usuario o motivo",
+      "empty": "No hay solicitudes de aprobación.",
+      "filters": {
+        "all": "Todos los estados",
+        "pending": "Pendiente",
+        "approved": "Aprobada",
+        "rejected": "Rechazada"
+      },
+      "fields": {
+        "rejectionReason": "Motivo de rechazo"
+      },
+      "validation": {
+        "rejectionReasonRequired": "El motivo de rechazo es obligatorio."
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las aprobaciones.",
+        "approveSuccess": "Solicitud aprobada correctamente.",
+        "approveError": "No se pudo aprobar la solicitud.",
+        "rejectSuccess": "Solicitud rechazada correctamente.",
+        "rejectError": "No se pudo rechazar la solicitud."
+      },
+      "table": {
+        "salesOrder": "Orden",
+        "scope": "Ámbito",
+        "percentage": "Porcentaje",
+        "amount": "Monto",
+        "requestedBy": "Solicitado por",
+        "status": "Estado",
+        "requestedAt": "Solicitado el"
+      },
+      "drawer": {
+        "title": "Detalle de aprobación",
+        "description": "Información de la solicitud asociada a la orden {code}.",
+        "resolvedBy": "Resuelto por",
+        "resolvedAt": "Resuelto el"
+      },
+      "rejectModal": {
+        "title": "Rechazar solicitud",
+        "description": "Indica el motivo del rechazo para dejar trazabilidad."
+      }
+    },
+    "history": {
+      "searchPlaceholder": "Buscar por orden, usuario o motivo",
+      "empty": "No hay historial de descuentos.",
+      "filters": {
+        "allUsers": "Todos los usuarios"
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el historial.",
+        "exportError": "No se pudo exportar el historial."
+      },
+      "table": {
+        "salesOrder": "Orden",
+        "scope": "Ámbito",
+        "action": "Acción",
+        "percentage": "Porcentaje",
+        "amount": "Monto",
+        "reason": "Motivo",
+        "user": "Usuario",
+        "eventDate": "Fecha"
+      },
+      "drawer": {
+        "title": "Detalle de historial",
+        "description": "Detalle del movimiento de descuento de la orden {code}."
+      }
     }
   }
 }

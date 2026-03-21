@@ -84,6 +84,12 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
         name: "sales",
       },
       {
+        labelKey: "sidebar.discounts",
+        icon: BadgePercent,
+        to: "/discounts",
+        name: "discounts",
+      },
+      {
         labelKey: "sidebar.branches",
         icon: Building2,
         to: "/branches",

@@ -80,6 +80,10 @@ export const SelectService = {
   selectContracts(query?: SelectQuery): Promise<SelectOption[]> {
     return callSelect(Endpoints.selectContracts, query);
   },
+
+  selectDiscountPolicies(query?: SelectQuery): Promise<SelectOption[]> {
+    return callSelect(Endpoints.selectDiscountPolicies, query);
+  },
 };
 
 function callSelect(endpoint: any, query?: SelectQuery) {

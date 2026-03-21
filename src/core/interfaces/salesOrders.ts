@@ -65,7 +65,11 @@ export interface SalesOrderLine {
 
   quantity: number;
   unitPrice: number;
+
   discountPerc: number;
+  discountAmount: number;
+  discountReason: string | null;
+
   taxPerc: number;
   lineTotal: number;
 }
@@ -96,6 +100,10 @@ export interface SalesOrder {
   taxes: number;
   discounts: number;
   total: number;
+
+  globalDiscountPerc: number;
+  globalDiscountAmount: number;
+  globalDiscountReason: string | null;
 
   notes: string | null;
 

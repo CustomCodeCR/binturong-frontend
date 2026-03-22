@@ -32,7 +32,8 @@
     "paymentMethods": "Payment Methods",
     "services": "Services",
     "discounts": "Discounts",
-    "reports": "Reports"
+    "reports": "Reports",
+    "accounting": "Accounting"
   },
   "common": {
     "loading": "Loading...",
@@ -3287,6 +3288,129 @@
         "deactivateSuccess": "Schedule deactivated successfully.",
         "statusError": "Failed to update schedule status."
       }
+    }
+  },
+  "accounting": {
+    "title": "Accounting",
+    "subtitle": "Register income and expenses, review income statement, cash flow, and reconciliation.",
+    "tabs": {
+      "entries": "Entries",
+      "incomeStatement": "Income statement",
+      "cashFlow": "Cash flow"
+    },
+    "placeholders": {
+      "selectClient": "Select a client",
+      "selectSupplier": "Select a supplier"
+    },
+    "actions": {
+      "newIncome": "New income",
+      "newExpense": "New expense",
+      "reconcile": "Reconcile",
+      "search": "Search",
+      "generate": "Generate",
+      "exportPdf": "Export PDF",
+      "exportExcel": "Export Excel",
+      "viewReconciliation": "View reconciliation",
+      "alreadyReconciled": "Already reconciled"
+    },
+    "summary": {
+      "totalIncome": "Income",
+      "totalExpenses": "Expenses",
+      "balance": "Balance",
+      "reconciled": "Reconciled"
+    },
+    "entryTypes": {
+      "income": "Income",
+      "expense": "Expense"
+    },
+    "status": {
+      "reconciled": "Reconciled",
+      "pending": "Pending"
+    },
+    "searchPlaceholder": "Search by detail, category, client, supplier, or invoice",
+    "filters": {
+      "allTypes": "All types"
+    },
+    "fields": {
+      "amount": "Amount",
+      "detail": "Detail",
+      "category": "Category",
+      "entryDate": "Entry date",
+      "client": "Client",
+      "supplier": "Supplier",
+      "invoiceNumber": "Invoice number",
+      "receiptFileS3Key": "Receipt / S3 key",
+      "from": "From",
+      "to": "To"
+    },
+    "table": {
+      "entryType": "Type",
+      "amount": "Amount",
+      "detail": "Detail",
+      "category": "Category",
+      "clientSupplier": "Client / Supplier",
+      "invoiceNumber": "Invoice",
+      "entryDate": "Date",
+      "reconciled": "Reconciled",
+      "options": "Options"
+    },
+    "modal": {
+      "incomeTitle": "Register income",
+      "incomeDescription": "Register income from a sale or service and post it to accounting.",
+      "expenseTitle": "Register expense",
+      "expenseDescription": "Register an expense from a purchase, payment, or service and post it to accounting."
+    },
+    "incomeStatement": {
+      "totalIncome": "Total income",
+      "totalExpenses": "Total expenses",
+      "grossProfit": "Gross profit",
+      "netProfit": "Net profit"
+    },
+    "cashFlow": {
+      "totalIncome": "Period income",
+      "totalExpenses": "Period expenses",
+      "balance": "Period balance",
+      "chartTitle": "Cash flow comparison",
+      "chartDescription": "Visual daily summary with income, expenses, and balance.",
+      "income": "Income",
+      "expense": "Expense"
+    },
+    "reconciliation": {
+      "drawerTitle": "Accounting reconciliation",
+      "drawerDescription": "Review reconciled entries and detected differences.",
+      "fields": {
+        "matchedCount": "Matched",
+        "unmatchedCount": "Differences"
+      },
+      "table": {
+        "entryType": "Type",
+        "detail": "Detail",
+        "date": "Date",
+        "invoiceNumber": "Invoice",
+        "amount": "Amount"
+      },
+      "empty": "No pending differences were found."
+    },
+    "emptyEntries": "There are no accounting entries.",
+    "emptyIncomeStatement": "There are no posted movements.",
+    "emptyCashFlow": "There is no cash flow data.",
+    "validation": {
+      "requiredIncome": "You must complete amount, detail, category, date, client, and invoice.",
+      "requiredExpense": "You must complete amount, detail, category, date, and supplier.",
+      "rangeRequired": "You must select a date range."
+    },
+    "messages": {
+      "loadCatalogsError": "Failed to load catalogs.",
+      "loadEntriesError": "Failed to load accounting entries.",
+      "createIncomeSuccess": "Income registered successfully.",
+      "createIncomeError": "Failed to register income.",
+      "createExpenseSuccess": "Expense registered successfully.",
+      "createExpenseError": "Failed to register expense.",
+      "loadIncomeStatementError": "Failed to load income statement.",
+      "exportIncomeStatementError": "Failed to export income statement.",
+      "loadCashFlowError": "Failed to load cash flow.",
+      "exportCashFlowError": "Failed to export cash flow.",
+      "reconciliationLoadError": "Failed to load reconciliation."
     }
   }
 }

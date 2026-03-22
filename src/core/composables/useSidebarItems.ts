@@ -26,6 +26,7 @@ import {
   Package,
   Wrench,
   FileBarChart2,
+  Landmark,
 } from "lucide-vue-next";
 
 export interface SidebarItem {
@@ -77,6 +78,12 @@ const SIDEBAR_NAVIGATION: SidebarSection[] = [
         icon: Shield,
         to: "/roles",
         name: "roles",
+      },
+      {
+        labelKey: "sidebar.accounting",
+        icon: Landmark,
+        to: "/accounting",
+        name: "accounting",
       },
       {
         labelKey: "sidebar.purchases",

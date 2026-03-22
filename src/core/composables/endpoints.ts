@@ -1641,4 +1641,63 @@ export const Endpoints: Record<string, Endpoint> = {
       "Content-Type": "application/json",
     },
   },
+  browseAccountingEntries: {
+    method: "GET",
+    path: "/api/accounting/entries",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  createIncomeEntry: {
+    method: "POST",
+    path: "/api/accounting/income",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  createExpenseEntry: {
+    method: "POST",
+    path: "/api/accounting/expense",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  },
+  getIncomeStatement: {
+    method: "GET",
+    path: "/api/accounting/income-statement",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportIncomeStatementPdf: {
+    method: "GET",
+    path: "/api/accounting/income-statement/export-pdf",
+    headers: {
+      Accept: "application/pdf",
+    },
+  },
+  getCashFlow: {
+    method: "GET",
+    path: "/api/accounting/cash-flow",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  exportCashFlowExcel: {
+    method: "GET",
+    path: "/api/accounting/cash-flow/export-excel",
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  },
+  getAccountingReconciliationSummary: {
+    method: "GET",
+    path: "/api/accounting/reconciliation-summary",
+    headers: {
+      Accept: "application/json",
+    },
+  },
 };

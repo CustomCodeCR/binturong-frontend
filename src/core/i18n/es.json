@@ -32,7 +32,8 @@
     "paymentMethods": "Metodos de Pagos",
     "services": "Servicios",
     "discounts": "Descuentos",
-    "reports": "Reportes"
+    "reports": "Reportes",
+    "accounting": "Contabilidad"
   },
   "common": {
     "loading": "Cargando...",
@@ -3291,6 +3292,129 @@
         "deactivateSuccess": "Programación desactivada correctamente.",
         "statusError": "No se pudo actualizar el estado de la programación."
       }
+    }
+  },
+  "accounting": {
+    "title": "Contabilidad",
+    "subtitle": "Registra ingresos y egresos, consulta estado de resultados, flujo de caja y conciliación.",
+    "tabs": {
+      "entries": "Movimientos",
+      "incomeStatement": "Estado de resultados",
+      "cashFlow": "Flujo de caja"
+    },
+    "placeholders": {
+      "selectClient": "Seleccione un cliente",
+      "selectSupplier": "Seleccione un proveedor"
+    },
+    "actions": {
+      "newIncome": "Nuevo ingreso",
+      "newExpense": "Nuevo egreso",
+      "reconcile": "Conciliar",
+      "search": "Buscar",
+      "generate": "Generar",
+      "exportPdf": "Exportar PDF",
+      "exportExcel": "Exportar Excel",
+      "viewReconciliation": "Ver conciliación",
+      "alreadyReconciled": "Ya conciliado"
+    },
+    "summary": {
+      "totalIncome": "Ingresos",
+      "totalExpenses": "Egresos",
+      "balance": "Balance",
+      "reconciled": "Conciliados"
+    },
+    "entryTypes": {
+      "income": "Ingreso",
+      "expense": "Egreso"
+    },
+    "status": {
+      "reconciled": "Conciliado",
+      "pending": "Pendiente"
+    },
+    "searchPlaceholder": "Buscar por detalle, categoría, cliente, proveedor o factura",
+    "filters": {
+      "allTypes": "Todos los tipos"
+    },
+    "fields": {
+      "amount": "Monto",
+      "detail": "Detalle",
+      "category": "Categoría",
+      "entryDate": "Fecha de movimiento",
+      "client": "Cliente",
+      "supplier": "Proveedor",
+      "invoiceNumber": "Número de factura",
+      "receiptFileS3Key": "Comprobante / llave S3",
+      "from": "Desde",
+      "to": "Hasta"
+    },
+    "table": {
+      "entryType": "Tipo",
+      "amount": "Monto",
+      "detail": "Detalle",
+      "category": "Categoría",
+      "clientSupplier": "Cliente / Proveedor",
+      "invoiceNumber": "Factura",
+      "entryDate": "Fecha",
+      "reconciled": "Conciliado",
+      "options": "Opciones"
+    },
+    "modal": {
+      "incomeTitle": "Registrar ingreso",
+      "incomeDescription": "Registra un ingreso por venta o servicio y refléjalo en contabilidad.",
+      "expenseTitle": "Registrar egreso",
+      "expenseDescription": "Registra un egreso por compra, pago o servicio y refléjalo en contabilidad."
+    },
+    "incomeStatement": {
+      "totalIncome": "Ingresos totales",
+      "totalExpenses": "Egresos totales",
+      "grossProfit": "Utilidad bruta",
+      "netProfit": "Utilidad neta"
+    },
+    "cashFlow": {
+      "totalIncome": "Ingresos del período",
+      "totalExpenses": "Egresos del período",
+      "balance": "Saldo del período",
+      "chartTitle": "Vista comparativa del flujo",
+      "chartDescription": "Resumen visual por fecha con ingresos, egresos y balance.",
+      "income": "Ingreso",
+      "expense": "Egreso"
+    },
+    "reconciliation": {
+      "drawerTitle": "Conciliación contable",
+      "drawerDescription": "Revisa movimientos conciliados y diferencias detectadas.",
+      "fields": {
+        "matchedCount": "Coincidencias",
+        "unmatchedCount": "Diferencias"
+      },
+      "table": {
+        "entryType": "Tipo",
+        "detail": "Detalle",
+        "date": "Fecha",
+        "invoiceNumber": "Factura",
+        "amount": "Monto"
+      },
+      "empty": "No se encontraron diferencias pendientes."
+    },
+    "emptyEntries": "No hay movimientos registrados.",
+    "emptyIncomeStatement": "No hay movimientos registrados.",
+    "emptyCashFlow": "No hay datos para el flujo de caja.",
+    "validation": {
+      "requiredIncome": "Debes completar monto, detalle, categoría, fecha, cliente y factura.",
+      "requiredExpense": "Debes completar monto, detalle, categoría, fecha y proveedor.",
+      "rangeRequired": "Debes seleccionar un rango de fechas."
+    },
+    "messages": {
+      "loadCatalogsError": "No se pudieron cargar los catálogos.",
+      "loadEntriesError": "No se pudieron cargar los movimientos contables.",
+      "createIncomeSuccess": "Ingreso registrado correctamente.",
+      "createIncomeError": "No se pudo registrar el ingreso.",
+      "createExpenseSuccess": "Egreso registrado correctamente.",
+      "createExpenseError": "No se pudo registrar el egreso.",
+      "loadIncomeStatementError": "No se pudo cargar el estado de resultados.",
+      "exportIncomeStatementError": "No se pudo exportar el estado de resultados.",
+      "loadCashFlowError": "No se pudo cargar el flujo de caja.",
+      "exportCashFlowError": "No se pudo exportar el flujo de caja.",
+      "reconciliationLoadError": "No se pudo cargar la conciliación."
     }
   }
 }

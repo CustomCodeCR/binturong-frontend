@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import { PaymentsService } from "@/core/services/paymentsService";
 import { InvoicesService } from "@/core/services/invoicesService";
 import { SelectService } from "@/core/services/selectService";
+import { AccountingService } from "@/core/services/accountingService";
 
 import { useModalStore } from "@/core/stores/modalStore";
 
@@ -243,8 +244,38 @@ async function refreshInvoicesSelect() {
 
     invoices.value = availableInvoices.map(mapInvoiceToSelectOption);
   } catch {
-    // silencioso a propósito
+    // silencioso
   }
+}
+
+async function registerAccountingIncome(
+  amountToRegister: number,
+  paymentDateIso: string,
+) {
+  if (!selectedInvoice.value) {
+    return;
+  }
+
+  await AccountingService.createIncome({
+    amount: Number(amountToRegister),
+    detail:
+      notes.value.trim() ||
+      `Payment received for invoice ${selectedInvoice.value.consecutive || selectedInvoice.value.taxKey || selectedInvoice.value.invoiceId}`,
+    category:
+      mode.value === "cash"
+        ? "Cash Payment"
+        : mode.value === "transfer"
+          ? "Bank Transfer Payment"
+          : mode.value === "card"
+            ? "Card Payment"
+            : "Partial Payment",
+    entryDateUtc: paymentDateIso,
+    clientId: selectedInvoice.value.clientId,
+    invoiceNumber:
+      selectedInvoice.value.consecutive ||
+      selectedInvoice.value.taxKey ||
+      selectedInvoice.value.invoiceId,
+  });
 }
 
 async function submit() {
@@ -301,6 +332,10 @@ async function submit() {
         notes: notes.value.trim() || null,
       });
 
+      await registerAccountingIncome(
+        Number(result.paidNow ?? pendingAmount.value),
+        normalizedPaymentDate,
+      );
       await refreshInvoicesSelect();
       modalStore.onSuccess?.(result);
       modalStore.close();
@@ -325,6 +360,10 @@ async function submit() {
         notes: notes.value.trim() || null,
       });
 
+      await registerAccountingIncome(
+        Number(result.appliedAmount ?? applied),
+        normalizedPaymentDate,
+      );
       await refreshInvoicesSelect();
       modalStore.onSuccess?.(result);
       modalStore.close();
@@ -350,6 +389,10 @@ async function submit() {
         notes: notes.value.trim() || null,
       });
 
+      await registerAccountingIncome(
+        Number(result.appliedAmount ?? applied),
+        normalizedPaymentDate,
+      );
       await refreshInvoicesSelect();
       modalStore.onSuccess?.(result);
       modalStore.close();
@@ -376,6 +419,7 @@ async function submit() {
       notes: notes.value.trim() || null,
     });
 
+    await registerAccountingIncome(partialAmount, normalizedPaymentDate);
     await refreshInvoicesSelect();
     modalStore.onSuccess?.(result);
     modalStore.close();

@@ -9,6 +9,7 @@ import { PurchasesOrdersService } from "@/core/services/purchasesOrdersService";
 import { PurchasesReceiptsService } from "@/core/services/purchasesReceiptsService";
 import { InventoryMovementsService } from "@/core/services/inventoryMovementsService";
 import { SelectService } from "@/core/services/selectService";
+import { AccountingService } from "@/core/services/accountingService";
 
 import type { PurchaseOrder } from "@/core/interfaces/purchasesOrders";
 import type { PurchaseReceiptCreateLineRequest } from "@/core/interfaces/purchasesReceipts";
@@ -64,6 +65,14 @@ const selectedOrder = computed(() => {
       (item) => String(item.purchaseOrderId) === String(purchaseOrderId.value),
     ) ?? null
   );
+});
+
+const totalExpenseAmount = computed(() => {
+  return lines.value.reduce((acc, line) => {
+    return (
+      acc + Number(line.quantityReceived ?? 0) * Number(line.unitCost ?? 0)
+    );
+  }, 0);
 });
 
 function closeModal() {
@@ -207,6 +216,19 @@ async function submit() {
       }
     }
 
+    if (Number(totalExpenseAmount.value) > 0 && selectedOrder.value) {
+      await AccountingService.createExpense({
+        amount: Number(totalExpenseAmount.value),
+        detail:
+          notes.value.trim() ||
+          `Purchase receipt for order ${selectedOrder.value.code ?? selectedOrder.value.purchaseOrderId}`,
+        category: "Purchase Receipt",
+        entryDateUtc: receiptDateUtc,
+        supplierId: String((selectedOrder.value as any).supplierId ?? ""),
+        receiptFileS3Key: null,
+      });
+    }
+
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
@@ -322,6 +344,22 @@ onMounted(async () => {
             rows="3"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           />
+        </div>
+      </div>
+
+      <div
+        class="mb-bt-spacing-16 rounded-m border border-bt-error-200 bg-bt-error-100 px-bt-spacing-16 py-bt-spacing-12"
+      >
+        <div class="text-sm text-bt-error-700">
+          {{ $t("accounting.fields.amount") }}
+        </div>
+        <div class="mt-bt-spacing-4 text-xl font-bt-bold text-bt-error-700">
+          {{
+            totalExpenseAmount.toLocaleString("es-CR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          }}
         </div>
       </div>
 

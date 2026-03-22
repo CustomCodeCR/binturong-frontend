@@ -159,6 +159,12 @@ export const router = createRouter({
           name: "reports",
           component: () => import("@/modules/reports/views/ReportsView.vue"),
         },
+        {
+          path: "/accounting",
+          name: "accounting",
+          component: () =>
+            import("@/modules/accounting/views/AccountingView.vue"),
+        },
       ],
     },
   ],

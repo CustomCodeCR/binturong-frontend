@@ -57,7 +57,7 @@ export const QuotesService = {
     return callEndpoint<NoContent>(Endpoints.acceptQuote, { params: { id } });
   },
 
-  reject(id: string): Promise<NoContent> {
+  reject(id: string, p0: { reason: string; }): Promise<NoContent> {
     return callEndpoint<NoContent>(Endpoints.expireQuote, { params: { id } });
   },
 

@@ -1926,6 +1926,12 @@
     "subtitle": "Administre contratos de clientes, hitos y documentos de respaldo.",
     "searchPlaceholder": "Buscar por código, cliente, estado o descripción",
     "empty": "No se encontraron contratos.",
+     "filtered": "resultados",
+  "filters": {
+    "allStatus": "Todos los estados",
+    "active": "Activos",
+    "inactive": "Inactivos"
+  },
     "summary": {
       "autoRenew": "Auto renovación",
       "total": "Contratos totales",
@@ -2380,6 +2386,7 @@
     "subtitle": "Registre pagos, consulte el historial y gestione notas de crédito y débito.",
     "searchPlaceholder": "Buscar por cliente, método de pago, factura, referencia o notas",
     "empty": "No se encontraron pagos.",
+      "filtered": "resultados",
     "tabs": {
       "payments": "Pagos",
       "creditNotes": "Notas de crédito",
@@ -2556,6 +2563,7 @@
     "title": "Planillas",
     "subtitle": "Calcule planillas, registre horas extra, ajuste comisiones y gestione boletas de pago.",
     "empty": "No se encontraron planillas.",
+     "filtered": "resultados",
     "summary": {
       "totalPayrolls": "Planillas totales",
       "totalEmployees": "Total de empleados",
@@ -2564,7 +2572,8 @@
     },
     "filters": {
       "periodCode": "Buscar por código de período",
-      "status": "Buscar por estado"
+      "status": "Buscar por estado",
+      "filtered": "resultados"
     },
     "actions": {
       "refresh": "Recargar",
@@ -2599,6 +2608,7 @@
       "payrollType": "Tipo",
       "status": "Estado",
       "employees": "Empleados",
+       "grossTotal": "Total bruto", 
       "totalNet": "Total neto",
       "updatedAt": "Actualizado",
       "options": "Opciones"
@@ -2715,6 +2725,7 @@
     "uncategorized": "Sin categoría",
     "empty": "No se encontraron servicios.",
     "emptyByCategory": "No hay servicios disponibles en esta categoría.",
+   "filtered": "results",
     "summary": {
       "total": "Servicios totales",
       "active": "Activos",
@@ -2724,11 +2735,14 @@
     "filters": {
       "search": "Buscar por código, nombre o descripción",
       "categoryId": "Filtrar por id de categoría",
-      "allStatuses": "Todos los estados"
+      "allStatuses": "Todos los estados",
+      "allStatus": "Todos los estados",
+      "active": "Activos",
+      "inactive": "Inactivos"
     },
     "status": {
-      "active": "Activo",
-      "inactive": "Inactivo"
+      "active": "Activos",
+      "inactive": "Inactivos"
     },
     "availability": {
       "active": "Activo",

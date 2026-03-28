@@ -1920,11 +1920,17 @@
       }
     }
   },
-  "contracts": {
+"contracts": {
     "title": "Contracts",
     "subtitle": "Manage client contracts, milestones, and supporting documents.",
     "searchPlaceholder": "Search by code, client, status, or description",
     "empty": "No contracts found.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "summary": {
       "autoRenew": "Auto-renew",
       "total": "Total Contracts",
@@ -2377,6 +2383,7 @@
     "subtitle": "Register payments, review payment history, and manage credit/debit notes.",
     "searchPlaceholder": "Search by client, payment method, invoice, reference, or notes",
     "empty": "No payments found.",
+      "filtered": "results",
     "tabs": {
       "payments": "Payments",
       "creditNotes": "Credit Notes",
@@ -2553,6 +2560,7 @@
     "title": "Payroll",
     "subtitle": "Calculate payroll, register overtime, adjust commissions, and manage payment slips.",
     "empty": "No payroll records found.",
+     "filtered": "results",
     "summary": {
       "totalPayrolls": "Total Payrolls",
       "totalEmployees": "Total Employees",
@@ -2562,7 +2570,9 @@
     "filters": {
       "periodCode": "Search by period code",
       "status": "Search by status"
+      
     },
+
     "actions": {
       "refresh": "Refresh",
       "newPayroll": "New Payroll",
@@ -2596,6 +2606,7 @@
       "payrollType": "Type",
       "status": "Status",
       "employees": "Employees",
+      "grossTotal": "Gross Total", 
       "totalNet": "Total Net",
       "updatedAt": "Updated At",
       "options": "Options"
@@ -2706,12 +2717,13 @@
       "attendanceRequired": "Attendance must be confirmed before calculating payroll."
     }
   },
-  "services": {
+"services": {
     "title": "Services",
     "subtitle": "Manage service catalog, service orders, service times, and technical assignments.",
     "uncategorized": "Uncategorized",
     "empty": "No services found.",
     "emptyByCategory": "No services available in this category.",
+    "filtered": "results",
     "summary": {
       "total": "Total Services",
       "active": "Active",
@@ -2721,7 +2733,10 @@
     "filters": {
       "search": "Search by code, name, or description",
       "categoryId": "Filter by category id",
-      "allStatuses": "All statuses"
+      "allStatuses": "All statuses",
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
     },
     "status": {
       "active": "Active",
@@ -3076,7 +3091,14 @@
       "activeContractsCount": "Active",
       "expiringSoonCount": "Expiring soon",
       "expiredCount": "Expired",
-      "empty": "There are no active contracts"
+      "empty": "There are no active contracts",
+       "filtered": "results",
+  "filters": {
+    "allStatus": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive"
+  }
+      
     },
     "inventory": {
       "title": "Critical inventory",

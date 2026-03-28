@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   MoreHorizontal,
   Wrench,
   CircleDollarSign,
   Layers3,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-vue-next";
 
 import { ServicesService } from "@/core/services/servicesService";
-
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useModalStore } from "@/core/stores/modalStore";
 import { useToastStore } from "@/core/stores/toastStore";
@@ -29,84 +30,79 @@ const toastStore = useToastStore();
 const loading = ref(false);
 const services = ref<Service[]>([]);
 const search = ref("");
+const page = ref(1);
+const pageSize = ref(10);
 
-async function loadServices() {
-  const response = await ServicesService.browse({
-    page: 1,
-    pageSize: 100,
-    search: search.value.trim() || undefined,
-  });
+// Filtro de estado
+const statusFilter = ref<"all" | "active" | "inactive">("all");
 
-  services.value = Array.isArray(response) ? [...response] : [];
-}
+const MAX_PAGE = 100;
 
-async function loadData() {
-  loading.value = true;
+// Filtrado local en tiempo real
+const filteredServices = computed(() => {
+  let result = services.value;
 
-  try {
-    await loadServices();
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("services.messages.loadError"),
-    });
-  } finally {
-    loading.value = false;
+  // Filtrar por estado
+  if (statusFilter.value === "active") {
+    result = result.filter((s) => s.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((s) => !s.isActive);
   }
-}
+
+  // Filtrar por búsqueda
+  const term = search.value.trim().toLowerCase();
+  if (term) {
+    result = result.filter(
+      (service) =>
+        (service.code ?? "").toLowerCase().includes(term) ||
+        (service.name ?? "").toLowerCase().includes(term) ||
+        (service.description ?? "").toLowerCase().includes(term) ||
+        (service.categoryName ?? "").toLowerCase().includes(term) ||
+        (service.availabilityStatus ?? "").toLowerCase().includes(term) ||
+        String(service.standardTimeMin ?? "").toLowerCase().includes(term) ||
+        String(service.baseRate ?? "").toLowerCase().includes(term),
+    );
+  }
+
+  return result;
+});
+
+const pageNumbers = computed(() => {
+  const current = page.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(MAX_PAGE, current + 2);
+  const pages: number[] = [];
+  for (let index = start; index <= end; index += 1) pages.push(index);
+  return pages;
+});
+
+const canGoPrevious = computed(() => page.value > 1);
+const canGoNext = computed(() => page.value < MAX_PAGE);
+
+const summary = computed(() => {
+  const total = services.value.length;
+  const active = services.value.filter((s) => s.isActive).length;
+  const averageRate =
+    total === 0
+      ? 0
+      : services.value.reduce((acc, s) => acc + Number(s.baseRate || 0), 0) / total;
+  return { total, active, averageRate };
+});
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function reloadEventually(
-  loader: () => Promise<void>,
-  attempts = 10,
-  delayMs = 500,
-) {
-  loading.value = true;
-
-  try {
-    for (let index = 0; index < attempts; index += 1) {
-      await loader();
-
-      if (index < attempts - 1) {
-        await sleep(delayMs);
-      }
-    }
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("services.messages.loadError"),
-    });
-  } finally {
-    loading.value = false;
-  }
-}
-
 function showSuccess(message: string) {
-  toastStore.addToast({
-    severity: "success",
-    title: t("toast.success"),
-    message,
-  });
+  toastStore.addToast({ severity: "success", title: t("toast.success"), message });
 }
 
 function showError(message: string) {
-  toastStore.addToast({
-    severity: "error",
-    title: t("toast.error"),
-    message,
-  });
+  toastStore.addToast({ severity: "error", title: t("toast.error"), message });
 }
 
 function formatMoney(value?: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return "-";
-  }
-
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
   return Number(value).toLocaleString("es-CR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -114,93 +110,76 @@ function formatMoney(value?: number | null): string {
 }
 
 function getAvailabilityClass(status?: string | null): string {
-  const normalized = String(status ?? "")
-    .trim()
-    .toLowerCase();
-
-  if (normalized === "active" || normalized === "available") {
-    return "bg-bt-success-100 text-bt-success-700";
-  }
-
-  if (normalized === "maintenance") {
-    return "bg-bt-warning-100 text-bt-warning-700";
-  }
-
+  const normalized = String(status ?? "").trim().toLowerCase();
+  if (normalized === "active" || normalized === "available") return "bg-bt-success-100 text-bt-success-700";
+  if (normalized === "maintenance") return "bg-bt-warning-100 text-bt-warning-700";
   return "bg-bt-error-100 text-bt-error-700";
 }
 
-const filteredServices = computed(() => {
-  const term = search.value.trim().toLowerCase();
-
-  if (!term) {
-    return services.value;
-  }
-
-  return services.value.filter((service) => {
-    return (
-      (service.code ?? "").toLowerCase().includes(term) ||
-      (service.name ?? "").toLowerCase().includes(term) ||
-      (service.description ?? "").toLowerCase().includes(term) ||
-      (service.categoryName ?? "").toLowerCase().includes(term) ||
-      (service.availabilityStatus ?? "").toLowerCase().includes(term) ||
-      String(service.standardTimeMin ?? "")
-        .toLowerCase()
-        .includes(term) ||
-      String(service.baseRate ?? "")
-        .toLowerCase()
-        .includes(term) ||
-      (service.isActive
-        ? t("services.status.active")
-        : t("services.status.inactive")
-      )
-        .toLowerCase()
-        .includes(term)
-    );
-  });
-});
-
-const summary = computed(() => {
-  const total = services.value.length;
-
-  const active = services.value.filter((item) => item.isActive).length;
-
-  const averageRate =
-    total === 0
-      ? 0
-      : services.value.reduce(
-          (acc, item) => acc + Number(item.baseRate || 0),
-          0,
-        ) / total;
-
-  return {
-    total,
-    active,
-    averageRate,
-  };
-});
-
 function getServiceActions(service: Service) {
   return [
-    {
-      label: t("services.actions.viewDetails"),
-      action: () => openDetailsDrawer(service),
-    },
-    {
-      label: t("services.actions.edit"),
-      action: () => openEditModal(service),
-    },
+    { label: t("services.actions.viewDetails"), action: () => openDetailsDrawer(service) },
+    { label: t("services.actions.edit"), action: () => openEditModal(service) },
   ];
+}
+
+async function fetchServices(): Promise<Service[]> {
+  const response = await ServicesService.browse({
+    page: page.value,
+    pageSize: pageSize.value,
+    // search removido: filtramos localmente
+  });
+  return Array.isArray(response) ? [...response] : [];
+}
+
+async function loadData() {
+  loading.value = true;
+  try {
+    services.value = await fetchServices();
+  } catch {
+    showError(t("services.messages.loadError"));
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function reloadEventually(attempts = 10, delayMs = 500) {
+  loading.value = true;
+  try {
+    for (let index = 0; index < attempts; index += 1) {
+      services.value = await fetchServices();
+      if (index < attempts - 1) await sleep(delayMs);
+    }
+  } catch {
+    showError(t("services.messages.loadError"));
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
+  page.value = targetPage;
+  await loadData();
+}
+
+async function goPrevious() {
+  if (!canGoPrevious.value) return;
+  await goToPage(page.value - 1);
+}
+
+async function goNext() {
+  if (!canGoNext.value) return;
+  await goToPage(page.value + 1);
 }
 
 function openCreateModal() {
   modalStore.open({
     component: ServiceFormModal,
-    props: {
-      service: null,
-    },
+    props: { service: null },
     onSuccess: async () => {
       showSuccess(t("services.messages.createSuccess"));
-      await reloadEventually(loadServices);
+      await reloadEventually();
     },
     onError: (error: any) => {
       showError(error?.message ?? t("services.messages.createError"));
@@ -211,12 +190,10 @@ function openCreateModal() {
 function openEditModal(service: Service) {
   modalStore.open({
     component: ServiceFormModal,
-    props: {
-      service,
-    },
+    props: { service },
     onSuccess: async () => {
       showSuccess(t("services.messages.updateSuccess"));
-      await reloadEventually(loadServices);
+      await reloadEventually();
     },
     onError: (error: any) => {
       showError(error?.message ?? t("services.messages.updateError"));
@@ -228,16 +205,12 @@ function openDetailsDrawer(service: Service) {
   drawerStore.openDrawer({
     component: ServiceDetailsDrawer,
     title: t("services.drawer.title"),
-    description: t("services.drawer.description", {
-      name: service.name,
-    }),
+    description: t("services.drawer.description", { name: service.name }),
     direction: "right",
     size: "xl",
-    props: {
-      serviceId: service.serviceId,
-    },
+    props: { serviceId: service.serviceId },
     onSuccess: async () => {
-      await reloadEventually(loadServices);
+      await reloadEventually();
     },
     onError: (error: any) => {
       showError(error?.message ?? t("services.messages.loadError"));
@@ -248,6 +221,11 @@ function openDetailsDrawer(service: Service) {
 async function handleServicesUpdated() {
   await loadData();
 }
+
+watch(pageSize, async () => {
+  page.value = 1;
+  await loadData();
+});
 
 onMounted(async () => {
   await loadData();
@@ -270,94 +248,67 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <div
-      class="grid grid-cols-1 md:grid-cols-3 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
-    >
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600">
             <Wrench :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("services.summary.total") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-primary-700">
-              {{ summary.total }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("services.summary.total") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-primary-700">{{ summary.total }}</div>
           </div>
         </div>
       </div>
 
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700">
             <Layers3 :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("services.summary.active") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-success-700">
-              {{ summary.active }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("services.summary.active") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-success-700">{{ summary.active }}</div>
           </div>
         </div>
       </div>
 
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600">
             <CircleDollarSign :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("services.summary.averageRate") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-accent-700">
-              {{ formatMoney(summary.averageRate) }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("services.summary.averageRate") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-accent-700">{{ formatMoney(summary.averageRate) }}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div
-      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
-    >
-      <div
-        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
-      >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
+    <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
+
+      <!-- Toolbar -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+          <!-- Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('services.filters.search')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            @keyup.enter="loadData"
           />
 
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-            @click="loadData"
+          <!-- Filtro de estado -->
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            {{ $t("services.actions.search") }}
-          </button>
+            <option value="all">{{ $t("services.filters.allStatus") }}</option>
+            <option value="active">{{ $t("services.filters.active") }}</option>
+            <option value="inactive">{{ $t("services.filters.inactive") }}</option>
+          </select>
 
           <button
             type="button"
@@ -368,52 +319,44 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
-          @click="openCreateModal"
-        >
-          {{ $t("services.actions.newService") }}
-        </button>
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openCreateModal"
+          >
+            {{ $t("services.actions.newService") }}
+          </button>
+        </div>
       </div>
 
+      <!-- Table -->
       <div class="flex-1 min-h-0 overflow-auto">
-        <div
-          v-if="loading"
-          class="py-bt-spacing-32 text-center text-bt-grey-500"
-        >
+        <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[1300px]">
+        <table v-else class="w-full border-collapse min-w-[1100px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.code") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.name") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.category") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.standardTimeMin") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.baseRate") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.availabilityStatus") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("services.table.status") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("services.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.code") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.name") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.category") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.standardTimeMin") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.baseRate") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.availabilityStatus") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("services.table.options") }}</th>
             </tr>
           </thead>
 
@@ -423,22 +366,13 @@ onBeforeUnmount(() => {
               :key="service.serviceId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12">
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ service.code }}
-                </div>
-                <div class="text-xs text-bt-grey-500">
-                  {{ service.serviceId }}
-                </div>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700">
+                {{ service.code }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ service.name }}
-                </div>
-                <div class="text-xs text-bt-grey-500">
-                  {{ service.description || "-" }}
-                </div>
+                <div class="font-bt-semibold text-bt-primary-700">{{ service.name }}</div>
+                <div class="text-xs text-bt-grey-500">{{ service.description || "-" }}</div>
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
@@ -449,9 +383,7 @@ onBeforeUnmount(() => {
                 {{ service.standardTimeMin ?? "-" }}
               </td>
 
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">
                 {{ formatMoney(service.baseRate) }}
               </td>
 
@@ -467,17 +399,9 @@ onBeforeUnmount(() => {
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
-                  :class="
-                    service.isActive
-                      ? 'bg-bt-success-100 text-bt-success-700'
-                      : 'bg-bt-error-100 text-bt-error-700'
-                  "
+                  :class="service.isActive ? 'bg-bt-success-100 text-bt-success-700' : 'bg-bt-error-100 text-bt-error-700'"
                 >
-                  {{
-                    service.isActive
-                      ? $t("services.status.active")
-                      : $t("services.status.inactive")
-                  }}
+                  {{ service.isActive ? $t("services.status.active") : $t("services.status.inactive") }}
                 </span>
               </td>
 
@@ -496,15 +420,71 @@ onBeforeUnmount(() => {
             </tr>
 
             <tr v-if="!filteredServices.length && !loading">
-              <td
-                colspan="8"
-                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-              >
+              <td colspan="8" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                 {{ $t("services.empty") }}
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
+        <div class="text-sm text-bt-grey-600">
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredServices.length }} {{ $t("services.filtered") }})
+          </span>
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+          <button
+            type="button"
+            :disabled="!canGoPrevious"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goPrevious"
+          >
+            <ChevronLeft :size="16" />
+            <span>{{ $t("pagination.previous") }}</span>
+          </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >1</button>
+
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+
+          <button
+            v-for="pageNumber in pageNumbers"
+            :key="pageNumber"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+            :class="pageNumber === page ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white' : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'"
+            @click="goToPage(pageNumber)"
+          >{{ pageNumber }}</button>
+
+          <span v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >{{ MAX_PAGE }}</button>
+
+          <button
+            type="button"
+            :disabled="!canGoNext"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goNext"
+          >
+            <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
+          </button>
+        </div>
       </div>
     </div>
   </section>

@@ -180,8 +180,8 @@
     "subtitle": "Manage roles, permissions, and permission traceability.",
     "searchPlaceholder": "Search by role name",
     "empty": "No roles found.",
-    "filtered": "results",   
-    "filters": {            
+    "filtered": "results",
+    "filters": {
       "allStatus": "All statuses",
       "active": "Active",
       "inactive": "Inactive"
@@ -892,7 +892,8 @@
         "code": "Code",
         "name": "Name",
         "status": "Status",
-        "options": "Options"
+        "options": "Options",
+        "description": "Description"
       },
       "fields": {
         "code": "Code",
@@ -1516,20 +1517,20 @@
     }
   },
   "clients": {
-  "title": "Clients",
-  "subtitle": "Manage clients, contacts, addresses, attachments, and history.",
-  "searchPlaceholder": "Search by identification, trade name, contact, email, or phone",
-  "empty": "No clients found.",
-  "filtered": "results",
-  "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
-  "status": {
-    "active": "Active",
-    "inactive": "Inactive"
-  },
+    "title": "Clients",
+    "subtitle": "Manage clients, contacts, addresses, attachments, and history.",
+    "searchPlaceholder": "Search by identification, trade name, contact, email, or phone",
+    "empty": "No clients found.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "table": {
       "identification": "Identification",
       "tradeName": "Trade Name",
@@ -1920,7 +1921,7 @@
       }
     }
   },
-"contracts": {
+  "contracts": {
     "title": "Contracts",
     "subtitle": "Manage client contracts, milestones, and supporting documents.",
     "searchPlaceholder": "Search by code, client, status, or description",
@@ -2096,7 +2097,7 @@
       "empty": "No attachments available"
     }
   },
-"sales": {
+  "sales": {
     "title": "Sales",
     "subtitle": "Manage sales orders linked to clients, branches, and sellers.",
     "searchPlaceholder": "Search by code, client, branch, status, or notes",
@@ -2383,7 +2384,7 @@
     "subtitle": "Register payments, review payment history, and manage credit/debit notes.",
     "searchPlaceholder": "Search by client, payment method, invoice, reference, or notes",
     "empty": "No payments found.",
-      "filtered": "results",
+    "filtered": "results",
     "tabs": {
       "payments": "Payments",
       "creditNotes": "Credit Notes",
@@ -2560,7 +2561,7 @@
     "title": "Payroll",
     "subtitle": "Calculate payroll, register overtime, adjust commissions, and manage payment slips.",
     "empty": "No payroll records found.",
-     "filtered": "results",
+    "filtered": "results",
     "summary": {
       "totalPayrolls": "Total Payrolls",
       "totalEmployees": "Total Employees",
@@ -2570,7 +2571,6 @@
     "filters": {
       "periodCode": "Search by period code",
       "status": "Search by status"
-      
     },
 
     "actions": {
@@ -2606,7 +2606,7 @@
       "payrollType": "Type",
       "status": "Status",
       "employees": "Employees",
-      "grossTotal": "Gross Total", 
+      "grossTotal": "Gross Total",
       "totalNet": "Total Net",
       "updatedAt": "Updated At",
       "options": "Options"
@@ -2717,7 +2717,7 @@
       "attendanceRequired": "Attendance must be confirmed before calculating payroll."
     }
   },
-"services": {
+  "services": {
     "title": "Services",
     "subtitle": "Manage service catalog, service orders, service times, and technical assignments.",
     "uncategorized": "Uncategorized",
@@ -3092,13 +3092,12 @@
       "expiringSoonCount": "Expiring soon",
       "expiredCount": "Expired",
       "empty": "There are no active contracts",
-       "filtered": "results",
-  "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  }
-      
+      "filtered": "results",
+      "filters": {
+        "allStatus": "All statuses",
+        "active": "Active",
+        "inactive": "Inactive"
+      }
     },
     "inventory": {
       "title": "Critical inventory",

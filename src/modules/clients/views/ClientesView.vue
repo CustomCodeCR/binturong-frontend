@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { MoreHorizontal } from "lucide-vue-next";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 import { ClientsService } from "@/core/services/clientsService";
 
@@ -40,6 +40,13 @@ const toastStore = useToastStore();
 const loading = ref(false);
 const clients = ref<Client[]>([]);
 const search = ref("");
+const page = ref(1);
+const pageSize = ref(10);
+
+// Filtro de estado
+const statusFilter = ref<"all" | "active" | "inactive">("all");
+
+const MAX_PAGE = 100;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -47,9 +54,9 @@ function sleep(ms: number) {
 
 async function fetchClients(): Promise<Client[]> {
   return await ClientsService.browse({
-    page: 1,
-    pageSize: 100,
-    search: search.value.trim() || undefined,
+    page: page.value,
+    pageSize: pageSize.value,
+    // ← REMOVIDO: search del backend, filtramos localmente
   });
 }
 
@@ -73,22 +80,50 @@ async function loadClients() {
   }
 }
 
+// Filtrado local (igual que UserView)
 const filteredClients = computed(() => {
-  const term = search.value.trim().toLowerCase();
-  if (!term) return clients.value;
+  let result = clients.value;
 
-  return clients.value.filter((client) => {
-    return (
-      client.identification.toLowerCase().includes(term) ||
-      client.tradeName.toLowerCase().includes(term) ||
-      client.contactName.toLowerCase().includes(term) ||
-      client.email.toLowerCase().includes(term) ||
-      client.primaryPhone.toLowerCase().includes(term) ||
-      client.industry.toLowerCase().includes(term) ||
-      client.clientType.toLowerCase().includes(term)
+  // Filtrar por estado
+  if (statusFilter.value === "active") {
+    result = result.filter((c) => c.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((c) => !c.isActive);
+  }
+
+  // Filtrar por búsqueda (en tiempo real)
+  if (search.value.trim()) {
+    const query = search.value.toLowerCase().trim();
+    result = result.filter(
+      (c) =>
+        c.identification.toLowerCase().includes(query) ||
+        c.tradeName.toLowerCase().includes(query) ||
+        c.contactName.toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        c.primaryPhone.toLowerCase().includes(query) ||
+        c.industry.toLowerCase().includes(query) ||
+        c.clientType.toLowerCase().includes(query),
     );
-  });
+  }
+
+  return result;
 });
+
+const pageNumbers = computed(() => {
+  const current = page.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(MAX_PAGE, current + 2);
+
+  const pages: number[] = [];
+  for (let index = start; index <= end; index += 1) {
+    pages.push(index);
+  }
+
+  return pages;
+});
+
+const canGoPrevious = computed(() => page.value > 1);
+const canGoNext = computed(() => page.value < MAX_PAGE);
 
 function patchClientInList(payload: ClientSuccessPayload) {
   const existingIndex = clients.value.findIndex(
@@ -227,14 +262,13 @@ async function reloadClientsUntil(
   }
 }
 
+// ← CORREGIDO: Acceso correcto al drawerStore
 function getDrawerClientId(): string | null {
-  const drawer = drawerStore.drawerState;
-
-  if (!drawer?.isOpen) {
+  if (!drawerStore.isOpen) {
     return null;
   }
 
-  const props = (drawer.props ?? {}) as { clientId?: string };
+  const props = (drawerStore.props ?? {}) as { clientId?: string };
   return props.clientId ?? null;
 }
 
@@ -441,6 +475,33 @@ async function deleteClient(client: Client) {
   }
 }
 
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
+    return;
+  }
+  page.value = targetPage;
+  await loadClients();
+}
+
+async function goPrevious() {
+  if (!canGoPrevious.value) {
+    return;
+  }
+  await goToPage(page.value - 1);
+}
+
+async function goNext() {
+  if (!canGoNext.value) {
+    return;
+  }
+  await goToPage(page.value + 1);
+}
+
+watch(pageSize, async () => {
+  page.value = 1;
+  await loadClients();
+});
+
 onMounted(async () => {
   await loadClients();
 });
@@ -466,21 +527,25 @@ onMounted(async () => {
         <div
           class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
         >
+          <!-- ← MEJORADO: Search en tiempo real (sin botón necesario) -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('clients.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            @keyup.enter="loadClients"
           />
 
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-            @click="loadClients"
+          <!-- ← NUEVO: Filtro de estado -->
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            {{ $t("clients.actions.search") }}
-          </button>
+            <option value="all">{{ $t("clients.filters.allStatus") }}</option>
+            <option value="active">{{ $t("clients.filters.active") }}</option>
+            <option value="inactive">
+              {{ $t("clients.filters.inactive") }}
+            </option>
+          </select>
 
           <button
             type="button"
@@ -492,6 +557,17 @@ onMounted(async () => {
         </div>
 
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <!-- ← NUEVO: Selector de pageSize -->
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
@@ -510,9 +586,11 @@ onMounted(async () => {
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[1300px]">
+        <!-- ← REMOVIDO: min-w excesivo, ajustado a contenido real -->
+        <table v-else class="w-full border-collapse min-w-[900px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
+              <!-- ← REMOVIDO: Columna de ID interno -->
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("clients.table.identification") }}
               </th>
@@ -543,6 +621,7 @@ onMounted(async () => {
           </thead>
 
           <tbody>
+            <!-- ← CAMBIADO: Usar filteredClients -->
             <tr
               v-for="client in filteredClients"
               :key="client.clientId"
@@ -641,6 +720,88 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- ← NUEVA: Paginación completa (igual que UserView) -->
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
+        <div class="text-sm text-bt-grey-600">
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredClients.length }} {{ $t("clients.filtered") }})
+          </span>
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+          <button
+            type="button"
+            :disabled="!canGoPrevious"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goPrevious"
+          >
+            <ChevronLeft :size="16" />
+            <span>{{ $t("pagination.previous") }}</span>
+          </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >
+            ...
+          </span>
+
+          <button
+            v-for="pageNumber in pageNumbers"
+            :key="pageNumber"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
+            @click="goToPage(pageNumber)"
+          >
+            {{ pageNumber }}
+          </button>
+
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >
+            ...
+          </span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
+
+          <button
+            type="button"
+            :disabled="!canGoNext"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goNext"
+          >
+            <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
+          </button>
+        </div>
       </div>
     </div>
   </section>

@@ -180,6 +180,12 @@
     "subtitle": "Manage roles, permissions, and permission traceability.",
     "searchPlaceholder": "Search by role name",
     "empty": "No roles found.",
+    "filtered": "results",   
+    "filters": {            
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -1510,14 +1516,20 @@
     }
   },
   "clients": {
-    "title": "Clients",
-    "subtitle": "Manage clients, contacts, addresses, attachments, and history.",
-    "searchPlaceholder": "Search by identification, trade name, contact, email, or phone",
-    "empty": "No clients found.",
-    "status": {
-      "active": "Active",
-      "inactive": "Inactive"
-    },
+  "title": "Clients",
+  "subtitle": "Manage clients, contacts, addresses, attachments, and history.",
+  "searchPlaceholder": "Search by identification, trade name, contact, email, or phone",
+  "empty": "No clients found.",
+  "filtered": "results",
+  "filters": {
+    "allStatus": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
     "table": {
       "identification": "Identification",
       "tradeName": "Trade Name",
@@ -2078,11 +2090,17 @@
       "empty": "No attachments available"
     }
   },
-  "sales": {
+"sales": {
     "title": "Sales",
     "subtitle": "Manage sales orders linked to clients, branches, and sellers.",
     "searchPlaceholder": "Search by code, client, branch, status, or notes",
     "empty": "No sales orders found.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "confirmed": "Confirmed",
+      "pending": "Pending"
+    },
     "summary": {
       "totalOrders": "Total Orders",
       "confirmedOrders": "Confirmed Orders",
@@ -3306,6 +3324,7 @@
       "newIncome": "New income",
       "newExpense": "New expense",
       "reconcile": "Reconcile",
+      "refreshActiveTab": "Refresh active tab",
       "search": "Search",
       "generate": "Generate",
       "exportPdf": "Export PDF",

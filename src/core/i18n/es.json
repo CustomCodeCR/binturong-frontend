@@ -181,6 +181,12 @@
     "subtitle": "Administre roles, permisos y trazabilidad de permisos.",
     "searchPlaceholder": "Buscar por nombre del rol",
     "empty": "No se encontraron roles.",
+     "filtered": "results",    
+    "filters": {               
+      "allStatus": "Todos los estados",
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
@@ -1514,11 +1520,17 @@
     "title": "Clientes",
     "subtitle": "Administre clientes, contactos, direcciones, adjuntos e historial.",
     "searchPlaceholder": "Buscar por identificación, nombre comercial, contacto, correo o teléfono",
-    "empty": "No se encontraron clientes.",
-    "status": {
-      "active": "Activo",
-      "inactive": "Inactivo"
-    },
+     "empty": "No se encontraron clientes.",
+  "filtered": "resultados",
+  "filters": {
+    "allStatus": "Todos los estados",
+    "active": "Activos",
+    "inactive": "Inactivos"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
     "table": {
       "identification": "Identificación",
       "tradeName": "Nombre comercial",
@@ -2086,10 +2098,16 @@
     "subtitle": "Administre órdenes de venta vinculadas a clientes, sucursales y vendedores.",
     "searchPlaceholder": "Buscar por código, cliente, sucursal, estado o notas",
     "empty": "No se encontraron órdenes de venta.",
+   "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "confirmed": "Confirmadas",
+      "pending": "Pendientes"
+    },
     "summary": {
-      "totalOrders": "Órdenes totales",
-      "confirmedOrders": "Órdenes confirmadas",
-      "totalAmount": "Monto total"
+      "totalOrders": "Total Orders",
+      "confirmedOrders": "Confirmed Orders",
+      "totalAmount": "Total Amount"
     },
     "table": {
       "code": "Código",

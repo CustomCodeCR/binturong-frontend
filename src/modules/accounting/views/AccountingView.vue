@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   MoreHorizontal,
-  Landmark,
+  RefreshCw,
   TrendingUp,
   TrendingDown,
   Scale,
@@ -44,8 +44,14 @@ const entries = ref<AccountingEntry[]>([]);
 const incomeStatement = ref<IncomeStatement | null>(null);
 const cashFlow = ref<CashFlow | null>(null);
 
+// ← Filtros locales (tiempo real)
 const search = ref("");
 const entryTypeFilter = ref("");
+
+// ← Paginación de entries
+const entryPage = ref(1);
+const entryPageSize = ref(10);
+const ENTRY_MAX_PAGE = 100;
 
 const reportFrom = ref("");
 const reportTo = ref("");
@@ -63,22 +69,18 @@ function getLocalDateInput(daysOffset = 0): string {
 
 function toUtcStartOfDay(localDate: string): string {
   if (!localDate) return "";
-
   return new Date(`${localDate}T00:00:00`).toISOString();
 }
 
 function toUtcEndOfDay(localDate: string): string {
   if (!localDate) return "";
-
   return new Date(`${localDate}T23:59:59`).toISOString();
 }
 
 function formatDateTime(value?: string | null): string {
   if (!value) return "-";
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-
   return date.toLocaleString("es-CR");
 }
 
@@ -86,7 +88,6 @@ function formatMoney(value?: number | null): string {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
     return "-";
   }
-
   return Number(value).toLocaleString("es-CR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -95,13 +96,12 @@ function formatMoney(value?: number | null): string {
 
 function formatShortDate(value?: string | null): string {
   if (!value) return "-";
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-
   return date.toLocaleDateString("es-CR");
 }
 
+// ← MEJORADO: filtro en tiempo real, sin fetch al buscar
 const filteredEntries = computed(() => {
   const term = search.value.trim().toLowerCase();
 
@@ -119,13 +119,26 @@ const filteredEntries = computed(() => {
           entry.supplierName,
           entry.invoiceNumber,
         ]
-          .map((value) => String(value ?? "").toLowerCase())
-          .some((value) => value.includes(term))
+          .map((v) => String(v ?? "").toLowerCase())
+          .some((v) => v.includes(term))
       : true;
 
     return matchesType && matchesSearch;
   });
 });
+
+// ← NUEVO: paginación computed para entries
+const entryPageNumbers = computed(() => {
+  const current = entryPage.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(ENTRY_MAX_PAGE, current + 2);
+  const pages: number[] = [];
+  for (let i = start; i <= end; i += 1) pages.push(i);
+  return pages;
+});
+
+const canEntryGoPrevious = computed(() => entryPage.value > 1);
+const canEntryGoNext = computed(() => entryPage.value < ENTRY_MAX_PAGE);
 
 const summary = computed(() => {
   const totalIncome = entries.value
@@ -146,15 +159,32 @@ const summary = computed(() => {
   };
 });
 
+// ← NUEVO: reset de página al cambiar filtros
+watch([search, entryTypeFilter], () => {
+  entryPage.value = 1;
+});
+
+// ← NUEVO: reset al cambiar pageSize
+watch(entryPageSize, async () => {
+  entryPage.value = 1;
+  await loadEntries();
+});
+
+// ← NUEVO: reset al cambiar de tab
+watch(activeTab, () => {
+  entryPage.value = 1;
+  search.value = "";
+  entryTypeFilter.value = "";
+});
+
 async function loadEntries() {
   loadingEntries.value = true;
 
   try {
     entries.value = await AccountingService.browseEntries({
-      page: 1,
-      pageSize: 200,
-      search: search.value.trim() || undefined,
-      entryType: entryTypeFilter.value || undefined,
+      page: entryPage.value,
+      pageSize: entryPageSize.value,
+      // ← REMOVIDO: search y entryType del backend, ahora filtramos localmente
     });
   } catch {
     entries.value = [];
@@ -362,6 +392,44 @@ function getEntryActions(entry: AccountingEntry) {
   ];
 }
 
+// ← ESTANDARIZADO: refresh inteligente por tab activo
+async function refreshActiveTab() {
+  if (activeTab.value === "entries") {
+    await loadEntries();
+    return;
+  }
+  if (activeTab.value === "incomeStatement") {
+    await loadIncomeStatement();
+    return;
+  }
+  if (activeTab.value === "cashFlow") {
+    await loadCashFlow();
+  }
+}
+
+// ← NUEVO: paginación de entries
+async function goToEntryPage(targetPage: number) {
+  if (
+    targetPage < 1 ||
+    targetPage > ENTRY_MAX_PAGE ||
+    targetPage === entryPage.value
+  ) {
+    return;
+  }
+  entryPage.value = targetPage;
+  await loadEntries();
+}
+
+async function entryGoPrevious() {
+  if (!canEntryGoPrevious.value) return;
+  await goToEntryPage(entryPage.value - 1);
+}
+
+async function entryGoNext() {
+  if (!canEntryGoNext.value) return;
+  await goToEntryPage(entryPage.value + 1);
+}
+
 onMounted(async () => {
   reportFrom.value = getLocalDateInput(-30);
   reportTo.value = getLocalDateInput(0);
@@ -374,6 +442,8 @@ onMounted(async () => {
 
 <template>
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
+
+    <!-- HEADER — estandarizado igual que Users -->
     <div class="mb-bt-spacing-24 shrink-0">
       <h1 class="text-2xl font-bt-bold text-bt-primary-700">
         {{ $t("accounting.title") }}
@@ -383,6 +453,7 @@ onMounted(async () => {
       </p>
     </div>
 
+    <!-- TARJETAS DE RESUMEN -->
     <div
       class="mb-bt-spacing-24 grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-4 shrink-0"
     >
@@ -467,12 +538,15 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- PANEL PRINCIPAL -->
     <div
       class="bg-bt-white rounded-l border border-bt-grey-200 p-bt-spacing-24 shadow-bt-elevation-200 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR — tabs + acciones + refresh -->
       <div
-        class="mb-bt-spacing-24 flex flex-wrap items-center justify-between gap-bt-spacing-16 shrink-0"
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
+        <!-- Tabs -->
         <div class="flex flex-wrap gap-bt-spacing-8">
           <button
             type="button"
@@ -514,10 +588,11 @@ onMounted(async () => {
           </button>
         </div>
 
-        <div class="flex flex-wrap gap-bt-spacing-12">
+        <!-- Acciones + Refresh -->
+        <div class="flex flex-wrap items-center gap-bt-spacing-12 shrink-0">
           <button
             type="button"
-            class="rounded-m bg-bt-success-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-success-700"
+            class="rounded-m bg-bt-success-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-success-700 transition"
             @click="openIncomeModal"
           >
             {{ $t("accounting.actions.newIncome") }}
@@ -525,7 +600,7 @@ onMounted(async () => {
 
           <button
             type="button"
-            class="rounded-m bg-bt-error-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-error-700"
+            class="rounded-m bg-bt-error-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-error-700 transition"
             @click="openExpenseModal"
           >
             {{ $t("accounting.actions.newExpense") }}
@@ -533,51 +608,85 @@ onMounted(async () => {
 
           <button
             type="button"
-            class="rounded-m bg-bt-warning-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-warning-700"
+            class="rounded-m bg-bt-warning-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-warning-700 transition"
             @click="openReconciliationDrawer"
           >
             {{ $t("accounting.actions.reconcile") }}
           </button>
+
+          <!-- ← ESTANDARIZADO: Refresh igual que Users/Reports -->
+          <button
+            type="button"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+            @click="refreshActiveTab"
+          >
+            <RefreshCw :size="16" />
+            {{ $t("accounting.actions.refreshActiveTab") }}
+          </button>
         </div>
       </div>
 
-      <div v-if="activeTab === 'entries'" class="flex-1 min-h-0 flex flex-col">
+      <!-- ── ENTRIES ── -->
+      <div
+        v-if="activeTab === 'entries'"
+        class="flex-1 min-h-0 flex flex-col"
+      >
+        <!-- Filtros — estandarizado igual que Users -->
         <div
-          class="mb-bt-spacing-24 grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-[1fr_220px_auto] shrink-0"
+          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
         >
-          <input
-            v-model="search"
-            type="text"
-            :placeholder="$t('accounting.searchPlaceholder')"
-            class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-
-          <select
-            v-model="entryTypeFilter"
-            class="rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          <div
+            class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
           >
-            <option value="">{{ $t("accounting.filters.allTypes") }}</option>
-            <option value="Income">
-              {{ $t("accounting.entryTypes.income") }}
-            </option>
-            <option value="Expense">
-              {{ $t("accounting.entryTypes.expense") }}
-            </option>
-          </select>
+            <!-- ← MEJORADO: filtro en tiempo real, sin botón buscar -->
+            <input
+              v-model="search"
+              type="text"
+              :placeholder="$t('accounting.searchPlaceholder')"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            />
 
-          <button
-            type="button"
-            class="rounded-m bg-bt-primary-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-primary-600"
-            @click="loadEntries"
-          >
-            {{ $t("accounting.actions.search") }}
-          </button>
+            <!-- ← MEJORADO: filtro tipo reactivo -->
+            <select
+              v-model="entryTypeFilter"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            >
+              <option value="">{{ $t("accounting.filters.allTypes") }}</option>
+              <option value="Income">
+                {{ $t("accounting.entryTypes.income") }}
+              </option>
+              <option value="Expense">
+                {{ $t("accounting.entryTypes.expense") }}
+              </option>
+            </select>
+
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+              @click="loadEntries"
+            >
+              {{ $t("users.actions.refresh") }}
+            </button>
+          </div>
+
+          <div class="flex items-center gap-bt-spacing-12 shrink-0">
+            <select
+              v-model.number="entryPageSize"
+              class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            >
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+          </div>
         </div>
 
+        <!-- Tabla -->
         <div class="flex-1 min-h-0 overflow-auto">
           <div
             v-if="loadingEntries"
-            class="py-bt-spacing-24 text-center text-bt-grey-500"
+            class="py-bt-spacing-32 text-center text-bt-grey-500"
           >
             {{ $t("common.loading") }}
           </div>
@@ -634,12 +743,15 @@ onMounted(async () => {
             </thead>
 
             <tbody>
+              <!-- ← accountingEntryId solo como :key de Vue, no se renderiza -->
               <tr
                 v-for="entry in filteredEntries"
                 :key="entry.accountingEntryId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                >
                   <span
                     class="inline-flex rounded-full px-bt-spacing-12 py-bt-spacing-4 text-xs font-bt-semibold"
                     :class="
@@ -662,23 +774,33 @@ onMounted(async () => {
                   {{ formatMoney(entry.amount) }}
                 </td>
 
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                >
                   {{ entry.detail }}
                 </td>
 
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                >
                   {{ entry.category }}
                 </td>
 
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                >
                   {{ entry.clientName || entry.supplierName || "-" }}
                 </td>
 
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                >
                   {{ entry.invoiceNumber || "-" }}
                 </td>
 
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                <td
+                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                >
                   {{ formatDateTime(entry.entryDateUtc) }}
                 </td>
 
@@ -704,7 +826,7 @@ onMounted(async () => {
                     <template #trigger>
                       <button
                         type="button"
-                        class="inline-flex h-10 w-10 items-center justify-center rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition"
                       >
                         <MoreHorizontal :size="18" />
                       </button>
@@ -713,7 +835,7 @@ onMounted(async () => {
                 </td>
               </tr>
 
-              <tr v-if="!filteredEntries.length">
+              <tr v-if="!filteredEntries.length && !loadingEntries">
                 <td
                   colspan="9"
                   class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -724,14 +846,100 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
+
+        <!-- ← NUEVO: Paginación estandarizada igual que Users -->
+        <div
+          class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+        >
+          <div class="text-sm text-bt-grey-600">
+            {{ $t("pagination.page") }} {{ entryPage }}
+            {{ $t("pagination.of") }} {{ ENTRY_MAX_PAGE }}
+            <span class="text-bt-grey-500">
+              ({{ filteredEntries.length }} {{ $t("users.filtered") }})
+            </span>
+          </div>
+
+          <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+            <button
+              type="button"
+              :disabled="!canEntryGoPrevious"
+              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+              @click="entryGoPrevious"
+            >
+              <span>{{ $t("pagination.previous") }}</span>
+            </button>
+
+            <button
+              v-if="entryPageNumbers[0] > 1"
+              type="button"
+              class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+              @click="goToEntryPage(1)"
+            >
+              1
+            </button>
+
+            <span
+              v-if="entryPageNumbers[0] > 2"
+              class="px-bt-spacing-8 text-bt-grey-500"
+            >
+              ...
+            </span>
+
+            <button
+              v-for="pageNumber in entryPageNumbers"
+              :key="pageNumber"
+              type="button"
+              class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+              :class="
+                pageNumber === entryPage
+                  ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                  : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+              "
+              @click="goToEntryPage(pageNumber)"
+            >
+              {{ pageNumber }}
+            </button>
+
+            <span
+              v-if="
+                entryPageNumbers[entryPageNumbers.length - 1] <
+                ENTRY_MAX_PAGE - 1
+              "
+              class="px-bt-spacing-8 text-bt-grey-500"
+            >
+              ...
+            </span>
+
+            <button
+              v-if="
+                entryPageNumbers[entryPageNumbers.length - 1] < ENTRY_MAX_PAGE
+              "
+              type="button"
+              class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+              @click="goToEntryPage(ENTRY_MAX_PAGE)"
+            >
+              {{ ENTRY_MAX_PAGE }}
+            </button>
+
+            <button
+              type="button"
+              :disabled="!canEntryGoNext"
+              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+              @click="entryGoNext"
+            >
+              <span>{{ $t("pagination.next") }}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
+      <!-- ── INCOME STATEMENT ── -->
       <div
         v-else-if="activeTab === 'incomeStatement'"
-        class="flex-1 min-h-0 overflow-auto"
+        class="flex-1 min-h-0 overflow-auto space-y-bt-spacing-24"
       >
         <div
-          class="mb-bt-spacing-24 grid grid-cols-1 gap-bt-spacing-16 rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 md:grid-cols-[1fr_1fr_auto]"
+          class="grid grid-cols-1 gap-bt-spacing-16 rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 md:grid-cols-[1fr_1fr_auto]"
         >
           <div>
             <label class="mb-bt-spacing-8 block text-sm text-bt-primary-700">
@@ -740,7 +948,7 @@ onMounted(async () => {
             <input
               v-model="reportFrom"
               type="date"
-              class="w-full rounded-m border border-bt-grey-300 px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
           </div>
 
@@ -751,7 +959,7 @@ onMounted(async () => {
             <input
               v-model="reportTo"
               type="date"
-              class="w-full rounded-m border border-bt-grey-300 px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
           </div>
 
@@ -774,7 +982,10 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div v-if="loadingIncomeStatement" class="text-bt-grey-500">
+        <div
+          v-if="loadingIncomeStatement"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
+        >
           {{ $t("common.loading") }}
         </div>
 
@@ -788,7 +999,10 @@ onMounted(async () => {
             }}
           </div>
 
-          <div v-else class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-4">
+          <div
+            v-else
+            class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-4"
+          >
             <div
               class="rounded-m border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16"
             >
@@ -861,9 +1075,10 @@ onMounted(async () => {
         </template>
       </div>
 
-      <div v-else class="flex-1 min-h-0 overflow-auto">
+      <!-- ── CASH FLOW ── -->
+      <div v-else class="flex-1 min-h-0 overflow-auto space-y-bt-spacing-24">
         <div
-          class="mb-bt-spacing-24 grid grid-cols-1 gap-bt-spacing-16 rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 md:grid-cols-[1fr_1fr_auto]"
+          class="grid grid-cols-1 gap-bt-spacing-16 rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 md:grid-cols-[1fr_1fr_auto]"
         >
           <div>
             <label class="mb-bt-spacing-8 block text-sm text-bt-primary-700">
@@ -872,7 +1087,7 @@ onMounted(async () => {
             <input
               v-model="reportFrom"
               type="date"
-              class="w-full rounded-m border border-bt-grey-300 px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
           </div>
 
@@ -883,7 +1098,7 @@ onMounted(async () => {
             <input
               v-model="reportTo"
               type="date"
-              class="w-full rounded-m border border-bt-grey-300 px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
           </div>
 
@@ -906,14 +1121,15 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div v-if="loadingCashFlow" class="text-bt-grey-500">
+        <div
+          v-if="loadingCashFlow"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
+        >
           {{ $t("common.loading") }}
         </div>
 
         <template v-else-if="cashFlow">
-          <div
-            class="mb-bt-spacing-24 grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3"
-          >
+          <div class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3">
             <div
               class="rounded-m border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16"
             >
@@ -972,7 +1188,7 @@ onMounted(async () => {
           </div>
 
           <div
-            class="mb-bt-spacing-24 rounded-m border border-bt-grey-200 bg-bt-white p-bt-spacing-16"
+            class="rounded-m border border-bt-grey-200 bg-bt-white p-bt-spacing-16"
           >
             <div class="mb-bt-spacing-12 flex items-center gap-bt-spacing-12">
               <div
@@ -991,12 +1207,15 @@ onMounted(async () => {
             </div>
 
             <div class="space-y-bt-spacing-12">
+              <!-- ← point.dateUtc solo como :key de Vue, no se renderiza -->
               <div
                 v-for="point in cashFlow.points"
                 :key="point.dateUtc"
                 class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-12"
               >
-                <div class="mb-bt-spacing-8 flex items-center justify-between">
+                <div
+                  class="mb-bt-spacing-8 flex items-center justify-between"
+                >
                   <span class="font-bt-semibold text-bt-primary-700">
                     {{ formatShortDate(point.dateUtc) }}
                   </span>
@@ -1006,7 +1225,9 @@ onMounted(async () => {
                   </span>
                 </div>
 
-                <div class="grid grid-cols-1 gap-bt-spacing-8 md:grid-cols-2">
+                <div
+                  class="grid grid-cols-1 gap-bt-spacing-8 md:grid-cols-2"
+                >
                   <div
                     class="rounded-m bg-bt-success-100 px-bt-spacing-12 py-bt-spacing-8 text-bt-success-700"
                   >

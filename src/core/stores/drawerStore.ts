@@ -11,6 +11,8 @@ export interface DrawerOptions {
   title?: string;
   description?: string;
   size?: DrawerSize;
+  onSuccess?: (payload?: any) => void | Promise<void>;
+  onError?: (error?: any) => void | Promise<void>;
 }
 
 export const useDrawerStore = defineStore("drawer", {
@@ -22,6 +24,8 @@ export const useDrawerStore = defineStore("drawer", {
     title: undefined as string | undefined,
     description: undefined as string | undefined,
     size: "md" as DrawerSize,
+    onSuccess: undefined as ((payload?: any) => void | Promise<void>) | undefined,
+    onError: undefined as ((error?: any) => void | Promise<void>) | undefined,
   }),
   actions: {
     openDrawer(options: DrawerOptions) {
@@ -31,6 +35,8 @@ export const useDrawerStore = defineStore("drawer", {
       this.title = options.title;
       this.description = options.description;
       this.size = options.size || "md";
+      this.onSuccess = options.onSuccess;
+      this.onError = options.onError;
       this.isOpen = true;
     },
     closeDrawer() {
@@ -38,6 +44,8 @@ export const useDrawerStore = defineStore("drawer", {
       this.component = null;
       this.props = {};
       this.title = undefined;
+      this.onSuccess = undefined;
+      this.onError = undefined;
     },
     toggleDrawer(options?: DrawerOptions) {
       if (this.isOpen) {

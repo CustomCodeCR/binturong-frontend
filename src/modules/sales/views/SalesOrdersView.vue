@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   MoreHorizontal,
@@ -7,10 +7,11 @@ import {
   CircleDollarSign,
   UserRound,
   BadgePercent,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-vue-next";
 
 import { SalesOrdersService } from "@/core/services/salesOrdersService";
-
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useModalStore } from "@/core/stores/modalStore";
 import { useToastStore } from "@/core/stores/toastStore";
@@ -31,114 +32,68 @@ const toastStore = useToastStore();
 const loading = ref(false);
 const salesOrders = ref<SalesOrder[]>([]);
 const search = ref("");
+const page = ref(1);
+const pageSize = ref(10);
 
-async function loadSalesOrders() {
-  const response = await SalesOrdersService.browse({
-    page: 1,
-    pageSize: 100,
-    search: search.value.trim() || undefined,
-  } as any);
+// Filtro de estado
+const statusFilter = ref<"all" | "confirmed" | "pending">("all");
 
-  salesOrders.value = Array.isArray(response) ? [...response] : [];
-}
+const MAX_PAGE = 100;
 
-async function loadData() {
-  loading.value = true;
-
-  try {
-    await loadSalesOrders();
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("sales.messages.loadError"),
-    });
-  } finally {
-    loading.value = false;
-  }
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function reloadEventually(
-  loader: () => Promise<void>,
-  attempts = 8,
-  delayMs = 400,
-) {
-  loading.value = true;
-
-  try {
-    for (let index = 0; index < attempts; index += 1) {
-      await loader();
-
-      if (index < attempts - 1) {
-        await sleep(delayMs);
-      }
-    }
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("sales.messages.loadError"),
-    });
-  } finally {
-    loading.value = false;
-  }
-}
-
-function showSuccess(message: string) {
-  toastStore.addToast({
-    severity: "success",
-    title: t("toast.success"),
-    message,
-  });
-}
-
-function showError(message: string) {
-  toastStore.addToast({
-    severity: "error",
-    title: t("toast.error"),
-    message,
-  });
-}
-
-function isConfirmedStatus(status?: string | null): boolean {
-  return (
-    String(status ?? "")
-      .trim()
-      .toLowerCase() === "confirmed"
-  );
-}
-
+// Filtrado local en tiempo real
 const filteredSalesOrders = computed(() => {
-  const term = search.value.trim().toLowerCase();
+  let result = salesOrders.value;
 
-  if (!term) {
-    return salesOrders.value;
+  // Filtrar por estado
+  if (statusFilter.value === "confirmed") {
+    result = result.filter((item) =>
+      String(item.status ?? "").toLowerCase().includes("confirm"),
+    );
+  } else if (statusFilter.value === "pending") {
+    result = result.filter(
+      (item) =>
+        !String(item.status ?? "").toLowerCase().includes("confirm"),
+    );
   }
 
-  return salesOrders.value.filter((item) => {
-    return (
-      (item.code ?? "").toLowerCase().includes(term) ||
-      (item.clientName ?? "").toLowerCase().includes(term) ||
-      (item.branchName ?? "").toLowerCase().includes(term) ||
-      (item.status ?? "").toLowerCase().includes(term) ||
-      (item.notes ?? "").toLowerCase().includes(term) ||
-      (item.sellerName ?? "").toLowerCase().includes(term) ||
-      (item.sellerUserId ?? "").toLowerCase().includes(term)
+  // Filtrar por búsqueda en tiempo real
+  const term = search.value.trim().toLowerCase();
+  if (term) {
+    result = result.filter(
+      (item) =>
+        (item.code ?? "").toLowerCase().includes(term) ||
+        (item.clientName ?? "").toLowerCase().includes(term) ||
+        (item.branchName ?? "").toLowerCase().includes(term) ||
+        (item.status ?? "").toLowerCase().includes(term) ||
+        (item.notes ?? "").toLowerCase().includes(term) ||
+        (item.sellerName ?? "").toLowerCase().includes(term),
     );
-  });
+  }
+
+  return result;
 });
+
+const pageNumbers = computed(() => {
+  const current = page.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(MAX_PAGE, current + 2);
+
+  const pages: number[] = [];
+  for (let index = start; index <= end; index += 1) {
+    pages.push(index);
+  }
+
+  return pages;
+});
+
+const canGoPrevious = computed(() => page.value > 1);
+const canGoNext = computed(() => page.value < MAX_PAGE);
 
 const summary = computed(() => {
   const total = salesOrders.value.length;
 
   const confirmed = salesOrders.value.filter((item) =>
-    String(item.status ?? "")
-      .toLowerCase()
-      .includes("confirm"),
+    String(item.status ?? "").toLowerCase().includes("confirm"),
   ).length;
 
   const totalAmount = salesOrders.value.reduce(
@@ -151,20 +106,29 @@ const summary = computed(() => {
     0,
   );
 
-  return {
-    total,
-    confirmed,
-    totalAmount,
-    totalDiscounts,
-  };
+  return { total, confirmed, totalAmount, totalDiscounts };
 });
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function showSuccess(message: string) {
+  toastStore.addToast({ severity: "success", title: t("toast.success"), message });
+}
+
+function showError(message: string) {
+  toastStore.addToast({ severity: "error", title: t("toast.error"), message });
+}
+
+function isConfirmedStatus(status?: string | null): boolean {
+  return String(status ?? "").trim().toLowerCase() === "confirmed";
+}
 
 function formatDateTime(value?: string | null): string {
   if (!value) return "-";
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-
   return date.toLocaleString("es-CR");
 }
 
@@ -172,7 +136,6 @@ function formatMoney(value?: number | null): string {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
     return "-";
   }
-
   return Number(value).toLocaleString("es-CR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -180,7 +143,7 @@ function formatMoney(value?: number | null): string {
 }
 
 function getSellerDisplayName(order: SalesOrder): string {
-  return order.sellerName || order.sellerUserId || "-";
+  return order.sellerName || "-";
 }
 
 function getOrderActions(order: SalesOrder) {
@@ -201,6 +164,62 @@ function getOrderActions(order: SalesOrder) {
   return actions;
 }
 
+async function fetchSalesOrders(): Promise<SalesOrder[]> {
+  const response = await SalesOrdersService.browse({
+    page: page.value,
+    pageSize: pageSize.value,
+  } as any);
+
+  return Array.isArray(response) ? [...response] : [];
+}
+
+async function loadData() {
+  loading.value = true;
+
+  try {
+    salesOrders.value = await fetchSalesOrders();
+  } catch {
+    showError(t("sales.messages.loadError"));
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function reloadEventually(attempts = 8, delayMs = 400) {
+  loading.value = true;
+
+  try {
+    for (let index = 0; index < attempts; index += 1) {
+      salesOrders.value = await fetchSalesOrders();
+      if (index < attempts - 1) {
+        await sleep(delayMs);
+      }
+    }
+  } catch {
+    showError(t("sales.messages.loadError"));
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
+    return;
+  }
+  page.value = targetPage;
+  await loadData();
+}
+
+async function goPrevious() {
+  if (!canGoPrevious.value) return;
+  await goToPage(page.value - 1);
+}
+
+async function goNext() {
+  if (!canGoNext.value) return;
+  await goToPage(page.value + 1);
+}
+
 function openCreateDrawer() {
   drawerStore.openDrawer({
     component: SalesOrderCreateDrawer,
@@ -211,7 +230,7 @@ function openCreateDrawer() {
     props: {},
     onSuccess: async () => {
       showSuccess(t("sales.messages.createSuccess"));
-      await reloadEventually(loadSalesOrders);
+      await reloadEventually();
     },
     onError: (error: any) => {
       showError(error?.message ?? t("sales.messages.createError"));
@@ -223,16 +242,12 @@ function openDetailsDrawer(order: SalesOrder) {
   drawerStore.openDrawer({
     component: SalesOrderDetailsDrawer,
     title: t("sales.drawer.detailsTitle"),
-    description: t("sales.drawer.detailsDescription", {
-      code: order.code,
-    }),
+    description: t("sales.drawer.detailsDescription", { code: order.code }),
     direction: "right",
     size: "xl",
-    props: {
-      salesOrderId: order.salesOrderId,
-    },
+    props: { salesOrderId: order.salesOrderId },
     onSuccess: async () => {
-      await reloadEventually(loadSalesOrders);
+      await reloadEventually();
     },
     onError: (error: any) => {
       showError(error?.message ?? t("sales.messages.loadError"));
@@ -243,19 +258,21 @@ function openDetailsDrawer(order: SalesOrder) {
 function openConfirmModal(order: SalesOrder) {
   modalStore.open({
     component: SalesOrderConfirmModal,
-    props: {
-      salesOrderId: order.salesOrderId,
-      code: order.code,
-    },
+    props: { salesOrderId: order.salesOrderId, code: order.code },
     onSuccess: async () => {
       showSuccess(t("sales.messages.confirmSuccess"));
-      await reloadEventually(loadSalesOrders);
+      await reloadEventually();
     },
     onError: (error: any) => {
       showError(error?.message ?? t("sales.messages.confirmError"));
     },
   });
 }
+
+watch(pageSize, async () => {
+  page.value = 1;
+  await loadData();
+});
 
 onMounted(async () => {
   await loadData();
@@ -273,6 +290,7 @@ onMounted(async () => {
       </p>
     </div>
 
+    <!-- KPI Cards -->
     <div
       class="grid grid-cols-1 md:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
     >
@@ -360,27 +378,30 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- Toolbar -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
         <div
           class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
         >
+          <!-- Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('sales.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            @keyup.enter="loadData"
           />
 
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-            @click="loadData"
+          <!-- Filtro de estado -->
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            {{ $t("sales.actions.search") }}
-          </button>
+            <option value="all">{{ $t("sales.filters.allStatus") }}</option>
+            <option value="confirmed">{{ $t("sales.filters.confirmed") }}</option>
+            <option value="pending">{{ $t("sales.filters.pending") }}</option>
+          </select>
 
           <button
             type="button"
@@ -391,15 +412,28 @@ onMounted(async () => {
           </button>
         </div>
 
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
-          @click="openCreateDrawer"
-        >
-          {{ $t("sales.actions.newSale") }}
-        </button>
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openCreateDrawer"
+          >
+            {{ $t("sales.actions.newSale") }}
+          </button>
+        </div>
       </div>
 
+      <!-- Table -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -408,7 +442,7 @@ onMounted(async () => {
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[1500px]">
+        <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
@@ -452,13 +486,10 @@ onMounted(async () => {
               :key="order.salesOrderId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12">
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ order.code }}
-                </div>
-                <div class="text-xs text-bt-grey-500">
-                  {{ order.salesOrderId }}
-                </div>
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700"
+              >
+                {{ order.code }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
@@ -531,6 +562,85 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
+        <div class="text-sm text-bt-grey-600">
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredSalesOrders.length }} {{ $t("sales.filtered") }})
+          </span>
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+          <button
+            type="button"
+            :disabled="!canGoPrevious"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goPrevious"
+          >
+            <ChevronLeft :size="16" />
+            <span>{{ $t("pagination.previous") }}</span>
+          </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">
+            ...
+          </span>
+
+          <button
+            v-for="pageNumber in pageNumbers"
+            :key="pageNumber"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
+            @click="goToPage(pageNumber)"
+          >
+            {{ pageNumber }}
+          </button>
+
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >
+            ...
+          </span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
+
+          <button
+            type="button"
+            :disabled="!canGoNext"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goNext"
+          >
+            <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
+          </button>
+        </div>
       </div>
     </div>
   </section>

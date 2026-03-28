@@ -36,7 +36,34 @@ const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
 
+// Filtro de estado
+const statusFilter = ref<"all" | "active" | "inactive">("all");
+
 const MAX_PAGE = 100;
+
+// Roles filtrados localmente
+const filteredRoles = computed(() => {
+  let result = roles.value;
+
+  // Filtrar por estado
+  if (statusFilter.value === "active") {
+    result = result.filter((r) => r.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((r) => !r.isActive);
+  }
+
+  // Filtrar por búsqueda en tiempo real
+  if (search.value.trim()) {
+    const query = search.value.toLowerCase().trim();
+    result = result.filter(
+      (r) =>
+        r.name.toLowerCase().includes(query) ||
+        r.description.toLowerCase().includes(query),
+    );
+  }
+
+  return result;
+});
 
 const pageNumbers = computed(() => {
   const current = page.value;
@@ -44,8 +71,8 @@ const pageNumbers = computed(() => {
   const end = Math.min(MAX_PAGE, current + 2);
 
   const pages: number[] = [];
-  for (let i = start; i <= end; i += 1) {
-    pages.push(i);
+  for (let index = start; index <= end; index += 1) {
+    pages.push(index);
   }
 
   return pages;
@@ -80,7 +107,7 @@ async function fetchRoles(): Promise<Role[]> {
   return await RolesService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    search: search.value.trim() || undefined,
+    // search removido: filtramos localmente
   });
 }
 
@@ -362,10 +389,7 @@ async function goNext() {
   await goToPage(page.value + 1);
 }
 
-async function onSearch() {
-  page.value = 1;
-  await loadRoles();
-}
+// onSearch ya no es necesario: se filtra en tiempo real
 
 watch(pageSize, async () => {
   page.value = 1;
@@ -397,21 +421,23 @@ onMounted(async () => {
         <div
           class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
         >
+          <!-- Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('roles.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            @keyup.enter="onSearch"
           />
 
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-            @click="onSearch"
+          <!-- Filtro de estado -->
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            {{ $t("roles.actions.search") }}
-          </button>
+            <option value="all">{{ $t("roles.filters.allStatus") }}</option>
+            <option value="active">{{ $t("roles.filters.active") }}</option>
+            <option value="inactive">{{ $t("roles.filters.inactive") }}</option>
+          </select>
 
           <button
             type="button"
@@ -476,7 +502,7 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="role in roles"
+              v-for="role in filteredRoles"
               :key="role.roleId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
@@ -558,7 +584,7 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!roles.length && !loading">
+            <tr v-if="!filteredRoles.length && !loading">
               <td
                 colspan="5"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -576,6 +602,10 @@ onMounted(async () => {
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
           {{ MAX_PAGE }}
+          <!-- Mostrar cantidad filtrada -->
+          <span class="text-bt-grey-500">
+            ({{ filteredRoles.length }} {{ $t("roles.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
@@ -650,4 +680,3 @@ onMounted(async () => {
     </div>
   </section>
 </template>
-

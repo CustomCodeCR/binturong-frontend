@@ -35,24 +35,19 @@ const loading = ref(false);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-
-// Filtro de estado
 const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
 
-// Roles filtrados localmente
 const filteredRoles = computed(() => {
   let result = roles.value;
 
-  // Filtrar por estado
   if (statusFilter.value === "active") {
     result = result.filter((r) => r.isActive);
   } else if (statusFilter.value === "inactive") {
     result = result.filter((r) => !r.isActive);
   }
 
-  // Filtrar por búsqueda en tiempo real
   if (search.value.trim()) {
     const query = search.value.toLowerCase().trim();
     result = result.filter(
@@ -107,7 +102,6 @@ async function fetchRoles(): Promise<Role[]> {
   return await RolesService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    // search removido: filtramos localmente
   });
 }
 
@@ -151,7 +145,6 @@ function patchRoleInList(payload: RoleSuccessPayload) {
           : role,
       ),
     );
-
     return;
   }
 
@@ -256,10 +249,7 @@ function openCreateModal() {
         await reloadRolesUntil(
           (fetchedRoles) =>
             fetchedRoles.some((role) => role.roleId === payload.roleId),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
@@ -298,10 +288,7 @@ function openEditModal(role: Role) {
 
       await reloadRolesUntil(
         (fetchedRoles) => hasRoleReachedExpectedState(fetchedRoles, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
@@ -315,6 +302,7 @@ function openEditModal(role: Role) {
 }
 
 function openDetailsDrawer(role: Role) {
+
   drawerStore.openDrawer({
     component: RoleDetailsDrawer,
     props: {
@@ -354,10 +342,7 @@ async function toggleRoleStatus(role: Role) {
         );
         return fetchedRole?.isActive === nextIsActive;
       },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -389,7 +374,10 @@ async function goNext() {
   await goToPage(page.value + 1);
 }
 
-// onSearch ya no es necesario: se filtra en tiempo real
+async function onSearch() {
+  page.value = 1;
+  await loadRoles();
+}
 
 watch(pageSize, async () => {
   page.value = 1;
@@ -415,21 +403,20 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
-          <!-- Search en tiempo real -->
+        <!-- Left: search + filters + secondary actions -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
             :placeholder="$t('roles.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
           />
 
-          <!-- Filtro de estado -->
           <select
             v-model="statusFilter"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -439,6 +426,16 @@ onMounted(async () => {
             <option value="inactive">{{ $t("roles.filters.inactive") }}</option>
           </select>
 
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("roles.actions.search") }}
+          </button>
+
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -448,6 +445,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + primary create action -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -469,6 +467,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -477,7 +476,7 @@ onMounted(async () => {
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[900px]">
+        <table v-else class="w-full border-collapse min-w-[700px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
@@ -487,14 +486,12 @@ onMounted(async () => {
                 {{ $t("roles.table.description") }}
               </th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("roles.table.status") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("roles.table.scopes") }}
               </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("roles.table.status") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">
                 {{ $t("roles.table.options") }}
               </th>
             </tr>
@@ -506,14 +503,17 @@ onMounted(async () => {
               :key="role.roleId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
                 {{ role.name }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ role.description }}
+              </td>
+
+              <!-- Scopes: simple count, details in drawer -->
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ role.scopes.length }}
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12">
@@ -531,25 +531,6 @@ onMounted(async () => {
                       : $t("roles.status.inactive")
                   }}
                 </span>
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="flex flex-wrap gap-bt-spacing-8">
-                  <span
-                    v-for="scope in role.scopes.slice(0, 4)"
-                    :key="scope.scopeId"
-                    class="px-bt-spacing-8 py-bt-spacing-4 rounded-full bg-bt-primary-100 text-bt-primary-700 text-xs"
-                  >
-                    {{ scope.code }}
-                  </span>
-
-                  <span
-                    v-if="role.scopes.length > 4"
-                    class="px-bt-spacing-8 py-bt-spacing-4 rounded-full bg-bt-grey-200 text-bt-grey-700 text-xs"
-                  >
-                    +{{ role.scopes.length - 4 }}
-                  </span>
-                </div>
               </td>
 
               <td class="px-bt-spacing-16 py-bt-spacing-12">
@@ -596,13 +577,13 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
           {{ MAX_PAGE }}
-          <!-- Mostrar cantidad filtrada -->
           <span class="text-bt-grey-500">
             ({{ filteredRoles.length }} {{ $t("roles.filtered") }})
           </span>
@@ -628,10 +609,7 @@ onMounted(async () => {
             1
           </button>
 
-          <span
-            v-if="pageNumbers[0] > 2"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">
             ...
           </span>
 

@@ -180,8 +180,8 @@
     "title": "Roles",
     "subtitle": "Administre roles, permisos y trazabilidad de permisos.",
     "searchPlaceholder": "Buscar por nombre del rol",
+    "filtered": "resultados",
     "empty": "No se encontraron roles.",
-    "filtered": "results",
     "filters": {
       "allStatus": "Todos los estados",
       "active": "Activo",
@@ -1294,6 +1294,10 @@
     "title": "Compras",
     "subtitle": "Administre órdenes de compra, recepciones, cotizaciones a proveedores y evaluaciones.",
     "searchPlaceholder": "Buscar en la pestaña actual",
+      "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar"
+    },
     "messages": {
       "loadError": "No se pudieron cargar los datos de compras."
     },
@@ -3057,8 +3061,8 @@
     "subtitle": "Monitorea indicadores principales, ventas del mes, contratos activos e inventario crítico.",
     "lastUpdated": "Última actualización",
     "actions": {
-      "refresh": "Actualizar",
-      "refreshing": "Actualizando..."
+      "refresh": "Recargar",
+      "refreshing": "Recargando..."
     },
     "filters": {
       "branch": "Sucursal",
@@ -3125,7 +3129,7 @@
       "schedules": "Programaciones"
     },
     "actions": {
-      "refresh": "Actualizar",
+      "refresh": "Recargar",
       "generate": "Generar",
       "exportPdf": "Exportar PDF",
       "exportExcel": "Exportar Excel",
@@ -3271,6 +3275,7 @@
     },
     "schedules": {
       "searchPlaceholder": "Buscar programación por nombre, frecuencia o correo",
+        "filtered": "resultados",
       "actions": {
         "newSchedule": "Nueva programación"
       },
@@ -3327,29 +3332,31 @@
       }
     }
   },
-  "accounting": {
-    "title": "Contabilidad",
-    "subtitle": "Registra ingresos y egresos, consulta estado de resultados, flujo de caja y conciliación.",
-    "tabs": {
-      "entries": "Movimientos",
-      "incomeStatement": "Estado de resultados",
-      "cashFlow": "Flujo de caja"
-    },
-    "placeholders": {
-      "selectClient": "Seleccione un cliente",
-      "selectSupplier": "Seleccione un proveedor"
-    },
-    "actions": {
-      "newIncome": "Nuevo ingreso",
-      "newExpense": "Nuevo egreso",
-      "reconcile": "Conciliar",
-      "search": "Buscar",
-      "generate": "Generar",
-      "exportPdf": "Exportar PDF",
-      "exportExcel": "Exportar Excel",
-      "viewReconciliation": "Ver conciliación",
-      "alreadyReconciled": "Ya conciliado"
-    },
+ "accounting": {
+  "title": "Contabilidad",
+  "subtitle": "Registra ingresos y gastos, revisa el estado de resultados, flujo de caja y conciliación.",
+  "filtered": "resultados",
+  "tabs": {
+    "entries": "Entradas",
+    "incomeStatement": "Estado de resultados",
+    "cashFlow": "Flujo de caja"
+  },
+  "placeholders": {
+    "selectClient": "Seleccionar cliente",
+    "selectSupplier": "Seleccionar proveedor"
+  },
+  "actions": {
+    "newIncome": "Nuevo ingreso",
+    "newExpense": "Nuevo gasto",
+    "reconcile": "Conciliar",
+    "search": "Buscar",
+    "refresh": "Recargar",
+    "generate": "Generar",
+    "exportPdf": "Exportar PDF",
+    "exportExcel": "Exportar Excel",
+    "viewReconciliation": "Ver conciliación",
+    "alreadyReconciled": "Ya conciliado"
+  },
     "summary": {
       "totalIncome": "Ingresos",
       "totalExpenses": "Egresos",

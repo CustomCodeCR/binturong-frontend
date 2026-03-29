@@ -1292,7 +1292,12 @@
   "purchases": {
     "title": "Purchases",
     "subtitle": "Manage purchase orders, receipts, supplier quotes, and supplier evaluations.",
+    "filtered":"results",
     "searchPlaceholder": "Search current tab",
+      "actions": {
+      "search": "Search",
+      "refresh": "Refresh"
+    },
     "messages": {
       "loadError": "Could not load purchase data."
     },
@@ -3119,6 +3124,7 @@
   "reports": {
     "title": "Reports",
     "subtitle": "Review financial, inventory, client, work order, and automatic scheduled reports.",
+     "filtered": "results",
     "tabs": {
       "financial": "Financial",
       "inventory": "Inventory",
@@ -3273,6 +3279,7 @@
     },
     "schedules": {
       "searchPlaceholder": "Search schedule by name, frequency, or email",
+      "filtered": "results",
       "actions": {
         "newSchedule": "New schedule"
       },
@@ -3329,30 +3336,31 @@
       }
     }
   },
-  "accounting": {
-    "title": "Accounting",
-    "subtitle": "Register income and expenses, review income statement, cash flow, and reconciliation.",
-    "tabs": {
-      "entries": "Entries",
-      "incomeStatement": "Income statement",
-      "cashFlow": "Cash flow"
-    },
-    "placeholders": {
-      "selectClient": "Select a client",
-      "selectSupplier": "Select a supplier"
-    },
-    "actions": {
-      "newIncome": "New income",
-      "newExpense": "New expense",
-      "reconcile": "Reconcile",
-      "refreshActiveTab": "Refresh active tab",
-      "search": "Search",
-      "generate": "Generate",
-      "exportPdf": "Export PDF",
-      "exportExcel": "Export Excel",
-      "viewReconciliation": "View reconciliation",
-      "alreadyReconciled": "Already reconciled"
-    },
+ "accounting": {
+  "title": "Accounting",
+  "subtitle": "Register income and expenses, review income statement, cash flow, and reconciliation.",
+  "filtered": "results",
+  "tabs": {
+    "entries": "Entries",
+    "incomeStatement": "Income statement",
+    "cashFlow": "Cash flow"
+  },
+  "placeholders": {
+    "selectClient": "Select a client",
+    "selectSupplier": "Select a supplier"
+  },
+  "actions": {
+    "newIncome": "New income",
+    "newExpense": "New expense",
+    "reconcile": "Reconcile",
+    "search": "Search",
+    "refresh": "Refresh",
+    "generate": "Generate",
+    "exportPdf": "Export PDF",
+    "exportExcel": "Export Excel",
+    "viewReconciliation": "View reconciliation",
+    "alreadyReconciled": "Already reconciled"
+  },
     "summary": {
       "totalIncome": "Income",
       "totalExpenses": "Expenses",

@@ -41,24 +41,19 @@ const loading = ref(false);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-
-// Filtro de estado
 const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
 
-//Usuarios filtrados localmente
 const filteredUsers = computed(() => {
   let result = users.value;
 
-  // Filtrar por estado
   if (statusFilter.value === "active") {
     result = result.filter((u) => u.isActive);
   } else if (statusFilter.value === "inactive") {
     result = result.filter((u) => !u.isActive);
   }
 
-  // Filtrar por búsqueda (en tiempo real)
   if (search.value.trim()) {
     const query = search.value.toLowerCase().trim();
     result = result.filter(
@@ -125,8 +120,6 @@ async function fetchUsers(): Promise<User[]> {
   return await UsersService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    // ← REMOVIDO: search del backend, ahora filtramos localmente
-    // search: search.value.trim() || undefined,
   });
 }
 
@@ -397,7 +390,10 @@ async function goNext() {
   await goToPage(page.value + 1);
 }
 
-//onSearch ya no es necesario porque se filtra  en tiempo real
+async function onSearch() {
+  page.value = 1;
+  await loadUsers();
+}
 
 watch(pageSize, async () => {
   page.value = 1;
@@ -426,19 +422,18 @@ onMounted(async () => {
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
+        <!-- Left: search + filters + secondary actions -->
         <div
           class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
         >
-          <!-- ← MEJORADO: Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('users.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
           />
 
-          <!-- ← NUEVO: Filtro de estado -->
-          <!-- ← Filtro de estado -->
           <select
             v-model="statusFilter"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -448,6 +443,16 @@ onMounted(async () => {
             <option value="inactive">{{ $t("users.filters.inactive") }}</option>
           </select>
 
+          <!-- Search: primary-500 -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("users.actions.search") }}
+          </button>
+
+          <!-- Refresh: grey-200 -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -457,6 +462,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + CTA -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -468,6 +474,7 @@ onMounted(async () => {
             <option :value="100">100</option>
           </select>
 
+          <!-- New: accent-500 -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
@@ -513,13 +520,14 @@ onMounted(async () => {
           </thead>
 
           <tbody>
-            <!-- ← CAMBIADO: Usar filteredUsers en lugar de users -->
             <tr
               v-for="user in filteredUsers"
               :key="user.userId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
+              >
                 {{ user.username }}
               </td>
 
@@ -592,7 +600,6 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <!-- ← CAMBIADO: Usar filteredUsers.length -->
             <tr v-if="!filteredUsers.length && !loading">
               <td
                 colspan="6"
@@ -611,7 +618,6 @@ onMounted(async () => {
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
           {{ MAX_PAGE }}
-          <!-- ← NUEVO: Mostrar cantidad filtrada -->
           <span class="text-bt-grey-500">
             ({{ filteredUsers.length }} {{ $t("users.filtered") }})
           </span>

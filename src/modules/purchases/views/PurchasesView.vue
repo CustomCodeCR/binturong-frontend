@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { MoreHorizontal, RefreshCw } from "lucide-vue-next";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 import { PurchasesRequestsService } from "@/core/services/purchasesRequestsService";
 import { PurchasesOrdersService } from "@/core/services/purchasesOrdersService";
@@ -33,10 +33,7 @@ const toastStore = useToastStore();
 const activeTab = ref<"requests" | "orders" | "receipts" | "quotes">("orders");
 const loading = ref(false);
 
-// ← Filtros locales en tiempo real
 const search = ref("");
-
-// ← Paginación por tab
 const page = ref(1);
 const pageSize = ref(10);
 const MAX_PAGE = 100;
@@ -70,7 +67,6 @@ function normalizeArrayResponse<T>(response: unknown): T[] {
   return [];
 }
 
-// ← MEJORADO: filtros en tiempo real (computed)
 const filteredRequests = computed(() => {
   const term = search.value.trim().toLowerCase();
   if (!term) return requests.value;
@@ -122,7 +118,6 @@ const filteredQuotes = computed(() => {
   );
 });
 
-// ← NUEVO: paginación computed
 const pageNumbers = computed(() => {
   const current = page.value;
   const start = Math.max(1, current - 2);
@@ -135,7 +130,6 @@ const pageNumbers = computed(() => {
 const canGoPrevious = computed(() => page.value > 1);
 const canGoNext = computed(() => page.value < MAX_PAGE);
 
-// ← Cantidad filtrada según tab activo
 const filteredCount = computed(() => {
   if (activeTab.value === "requests") return filteredRequests.value.length;
   if (activeTab.value === "orders") return filteredOrders.value.length;
@@ -143,46 +137,26 @@ const filteredCount = computed(() => {
   return filteredQuotes.value.length;
 });
 
-// ← NUEVO: reset de página al cambiar filtros o tab
-watch(search, () => {
-  page.value = 1;
-});
-
-watch(activeTab, () => {
-  page.value = 1;
-  search.value = "";
-});
-
-watch(pageSize, async () => {
-  page.value = 1;
-  await loadData();
-});
+watch(search, () => { page.value = 1; });
+watch(activeTab, () => { page.value = 1; search.value = ""; });
+watch(pageSize, async () => { page.value = 1; await loadData(); });
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchRequests(): Promise<PurchaseRequest[]> {
-  const response = await PurchasesRequestsService.browse({
-    page: page.value,
-    pageSize: pageSize.value,
-  });
+  const response = await PurchasesRequestsService.browse({ page: page.value, pageSize: pageSize.value });
   return normalizeArrayResponse<PurchaseRequest>(response);
 }
 
 async function fetchOrders(): Promise<PurchaseOrder[]> {
-  const response = await PurchasesOrdersService.browse({
-    page: page.value,
-    pageSize: pageSize.value,
-  });
+  const response = await PurchasesOrdersService.browse({ page: page.value, pageSize: pageSize.value });
   return normalizeArrayResponse<PurchaseOrder>(response);
 }
 
 async function fetchReceipts(): Promise<PurchaseReceipt[]> {
-  const response = await PurchasesReceiptsService.browse({
-    page: page.value,
-    pageSize: pageSize.value,
-  });
+  const response = await PurchasesReceiptsService.browse({ page: page.value, pageSize: pageSize.value });
   return normalizeArrayResponse<PurchaseReceipt>(response);
 }
 
@@ -194,48 +168,20 @@ async function fetchQuotes(): Promise<SupplierQuote[]> {
   return normalizeArrayResponse<SupplierQuote>(response);
 }
 
-function replaceRequests(next: PurchaseRequest[]) {
-  requests.value = [...next];
-}
+function replaceRequests(next: PurchaseRequest[]) { requests.value = [...next]; }
+function replaceOrders(next: PurchaseOrder[]) { orders.value = [...next]; }
+function replaceReceipts(next: PurchaseReceipt[]) { receipts.value = [...next]; }
+function replaceQuotes(next: SupplierQuote[]) { quotes.value = [...next]; }
 
-function replaceOrders(next: PurchaseOrder[]) {
-  orders.value = [...next];
-}
-
-function replaceReceipts(next: PurchaseReceipt[]) {
-  receipts.value = [...next];
-}
-
-function replaceQuotes(next: SupplierQuote[]) {
-  quotes.value = [...next];
-}
-
-async function loadRequests() {
-  replaceRequests(await fetchRequests());
-}
-
-async function loadOrders() {
-  replaceOrders(await fetchOrders());
-}
-
-async function loadReceipts() {
-  replaceReceipts(await fetchReceipts());
-}
-
-async function loadQuotes() {
-  replaceQuotes(await fetchQuotes());
-}
+async function loadRequests() { replaceRequests(await fetchRequests()); }
+async function loadOrders() { replaceOrders(await fetchOrders()); }
+async function loadReceipts() { replaceReceipts(await fetchReceipts()); }
+async function loadQuotes() { replaceQuotes(await fetchQuotes()); }
 
 async function loadData() {
   loading.value = true;
-
   try {
-    await Promise.all([
-      loadRequests(),
-      loadOrders(),
-      loadReceipts(),
-      loadQuotes(),
-    ]);
+    await Promise.all([loadRequests(), loadOrders(), loadReceipts(), loadQuotes()]);
   } catch {
     toastStore.addToast({
       severity: "error",
@@ -253,7 +199,6 @@ async function reloadEventually(
   delayMs = 500,
 ) {
   loading.value = true;
-
   try {
     for (let index = 0; index < attempts; index += 1) {
       await Promise.all(loaders.map((loader) => loader()));
@@ -279,19 +224,11 @@ async function reloadAllEventually(attempts = 10, delayMs = 500) {
 }
 
 function showSuccess(message: string) {
-  toastStore.addToast({
-    severity: "success",
-    title: t("toast.success"),
-    message,
-  });
+  toastStore.addToast({ severity: "success", title: t("toast.success"), message });
 }
 
 function showError(message: string) {
-  toastStore.addToast({
-    severity: "error",
-    title: t("toast.error"),
-    message,
-  });
+  toastStore.addToast({ severity: "error", title: t("toast.error"), message });
 }
 
 function openCreateRequestModal() {
@@ -359,12 +296,8 @@ function openOrderDrawer(orderId: string) {
     description: t("purchases.drawer.orderDescription"),
     direction: "right",
     size: "xl",
-    onSuccess: async () => {
-      await reloadAllEventually();
-    },
-    onError: (error: any) => {
-      showError(error?.message ?? t("purchases.messages.loadError"));
-    },
+    onSuccess: async () => { await reloadAllEventually(); },
+    onError: (error: any) => { showError(error?.message ?? t("purchases.messages.loadError")); },
   });
 }
 
@@ -376,12 +309,8 @@ function openReceiptDrawer(receiptId: string) {
     description: t("purchases.drawer.receiptDescription"),
     direction: "right",
     size: "xl",
-    onSuccess: async () => {
-      await reloadAllEventually();
-    },
-    onError: (error: any) => {
-      showError(error?.message ?? t("purchases.messages.loadError"));
-    },
+    onSuccess: async () => { await reloadAllEventually(); },
+    onError: (error: any) => { showError(error?.message ?? t("purchases.messages.loadError")); },
   });
 }
 
@@ -393,20 +322,18 @@ function openQuoteDrawer(quoteId: string) {
     description: t("purchases.drawer.quoteDescription"),
     direction: "right",
     size: "xl",
-    onSuccess: async () => {
-      await reloadAllEventually();
-    },
-    onError: (error: any) => {
-      showError(error?.message ?? t("purchases.messages.loadError"));
-    },
+    onSuccess: async () => { await reloadAllEventually(); },
+    onError: (error: any) => { showError(error?.message ?? t("purchases.messages.loadError")); },
   });
 }
 
-// ← NUEVO: paginación
+async function onSearch() {
+  page.value = 1;
+  await loadData();
+}
+
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadData();
 }
@@ -429,7 +356,7 @@ onMounted(async () => {
 <template>
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
 
-    <!-- HEADER — estandarizado igual que Users -->
+    <!-- HEADER -->
     <div class="mb-bt-spacing-24 shrink-0">
       <h1 class="text-2xl font-bt-bold text-bt-primary-700">
         {{ $t("purchases.title") }}
@@ -442,10 +369,11 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
-      <!-- TOOLBAR — tabs + refresh alineado a la derecha -->
+      <!-- TOOLBAR: tabs (left) + page size + create action (right) -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
+        <!-- Tabs -->
         <div class="flex flex-wrap gap-bt-spacing-8">
           <button
             v-for="tab in ['requests', 'orders', 'receipts', 'quotes']"
@@ -463,35 +391,7 @@ onMounted(async () => {
           </button>
         </div>
 
-        <!-- ← ESTANDARIZADO: Refresh en el toolbar igual que Users -->
-        <div class="flex items-center gap-bt-spacing-12 shrink-0">
-          <button
-            type="button"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
-            @click="loadData"
-          >
-            <RefreshCw :size="16" />
-            {{ $t("common.refresh") }}
-          </button>
-        </div>
-      </div>
-
-      <!-- FILTROS + ACCIONES — estandarizado igual que Users -->
-      <div
-        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
-      >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
-          <!-- ← MEJORADO: filtro en tiempo real -->
-          <input
-            v-model="search"
-            type="text"
-            :placeholder="$t('purchases.searchPlaceholder')"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-        </div>
-
+        <!-- Right: page size + create action (bt-accent-500 + font-bt-semibold) -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -503,18 +403,17 @@ onMounted(async () => {
             <option :value="100">100</option>
           </select>
 
-          <!-- Botón de acción según tab activo -->
           <button
             v-if="activeTab === 'requests'"
             type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition font-bt-semibold"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
             @click="openCreateRequestModal"
           >
             {{ $t("purchases.requests.actions.newRequest") }}
           </button>
 
           <button
-            v-if="activeTab === 'orders'"
+            v-else-if="activeTab === 'orders'"
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
             @click="openCreateOrderDrawer"
@@ -523,18 +422,18 @@ onMounted(async () => {
           </button>
 
           <button
-            v-if="activeTab === 'receipts'"
+            v-else-if="activeTab === 'receipts'"
             type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
             @click="openCreateReceiptModal"
           >
             {{ $t("purchases.receipts.actions.newReceipt") }}
           </button>
 
           <button
-            v-if="activeTab === 'quotes'"
+            v-else
             type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-info-500 text-bt-white hover:bg-bt-info-700 transition font-bt-semibold"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
             @click="openCreateQuoteModal"
           >
             {{ $t("purchases.quotes.actions.newQuote") }}
@@ -542,12 +441,40 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- TABLA -->
+      <!-- FILTER BAR: search + search button + refresh -->
+      <div
+        class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0"
+      >
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
+          <input
+            v-model="search"
+            type="text"
+            :placeholder="$t('purchases.searchPlaceholder')"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
+          />
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("purchases.actions.search") }}
+          </button>
+          <!-- Secondary: no data impact -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+            @click="loadData"
+          >
+            {{ $t("purchases.actions.refresh") }}
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
-        <div
-          v-if="loading"
-          class="py-bt-spacing-32 text-center text-bt-grey-500"
-        >
+        <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
         </div>
 
@@ -556,58 +483,29 @@ onMounted(async () => {
           <table class="w-full border-collapse min-w-[1100px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.requests.table.code") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.requests.table.branch") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.requests.table.requestedBy") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.requests.table.status") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.requests.table.date") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.requests.table.notes") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.requests.table.code") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.requests.table.branch") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.requests.table.requestedBy") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.requests.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.requests.table.date") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.requests.table.notes") }}</th>
               </tr>
             </thead>
             <tbody>
-              <!-- ← requestId solo como :key, no se renderiza -->
               <tr
                 v-for="request in filteredRequests"
                 :key="request.requestId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
-                  {{ request.code }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ request.branchName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ request.requestedByName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ request.status }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ request.requestDate }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ request.notes ?? "-" }}
-                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ request.code }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ request.branchName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ request.requestedByName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ request.status }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ request.requestDate }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ request.notes ?? "-" }}</td>
               </tr>
-
               <tr v-if="!filteredRequests.length">
-                <td
-                  colspan="6"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="6" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("purchases.requests.empty") }}
                 </td>
               </tr>
@@ -620,62 +518,30 @@ onMounted(async () => {
           <table class="w-full border-collapse min-w-[1200px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.orders.table.code") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.orders.table.supplier") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.orders.table.branch") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.orders.table.status") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.orders.table.currency") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.orders.table.total") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">
-                  {{ $t("purchases.orders.table.options") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.table.code") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.table.supplier") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.table.branch") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.table.currency") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.table.total") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("purchases.orders.table.options") }}</th>
               </tr>
             </thead>
             <tbody>
-              <!-- ← purchaseOrderId solo como :key, no se renderiza -->
               <tr
                 v-for="order in filteredOrders"
                 :key="order.purchaseOrderId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
-                  {{ order.code }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ order.supplierName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ order.branchName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ order.status }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ order.currency }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ order.total }}
-                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ order.code }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.supplierName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.branchName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.status }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.currency }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.total }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <PurchaseActionMenu
-                    :items="[
-                      {
-                        label: t('purchases.orders.actions.viewDetails'),
-                        action: () => openOrderDrawer(order.purchaseOrderId),
-                      },
-                    ]"
+                    :items="[{ label: t('purchases.orders.actions.viewDetails'), action: () => openOrderDrawer(order.purchaseOrderId) }]"
                   >
                     <template #trigger>
                       <button
@@ -688,12 +554,8 @@ onMounted(async () => {
                   </PurchaseActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!filteredOrders.length">
-                <td
-                  colspan="7"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="7" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("purchases.orders.empty") }}
                 </td>
               </tr>
@@ -706,50 +568,26 @@ onMounted(async () => {
           <table class="w-full border-collapse min-w-[1100px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.receipts.table.order") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.receipts.table.warehouse") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.receipts.table.status") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.receipts.table.date") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">
-                  {{ $t("purchases.receipts.table.options") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.table.order") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.table.warehouse") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.table.date") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("purchases.receipts.table.options") }}</th>
               </tr>
             </thead>
             <tbody>
-              <!-- ← CORREGIDO: receiptId solo como :key, eliminado de la celda -->
               <tr
                 v-for="receipt in filteredReceipts"
                 :key="receipt.receiptId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
-                  {{ receipt.purchaseOrderCode ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ receipt.warehouseName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ receipt.status }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ receipt.receiptDate }}
-                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ receipt.purchaseOrderCode ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ receipt.warehouseName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ receipt.status }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ receipt.receiptDate }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <PurchaseActionMenu
-                    :items="[
-                      {
-                        label: t('purchases.receipts.actions.viewDetails'),
-                        action: () => openReceiptDrawer(receipt.receiptId),
-                      },
-                    ]"
+                    :items="[{ label: t('purchases.receipts.actions.viewDetails'), action: () => openReceiptDrawer(receipt.receiptId) }]"
                   >
                     <template #trigger>
                       <button
@@ -762,12 +600,8 @@ onMounted(async () => {
                   </PurchaseActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!filteredReceipts.length">
-                <td
-                  colspan="5"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="5" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("purchases.receipts.empty") }}
                 </td>
               </tr>
@@ -780,56 +614,28 @@ onMounted(async () => {
           <table class="w-full border-collapse min-w-[1100px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.quotes.table.code") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.quotes.table.supplier") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.quotes.table.branch") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.quotes.table.status") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                  {{ $t("purchases.quotes.table.requestedAt") }}
-                </th>
-                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">
-                  {{ $t("purchases.quotes.table.options") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.table.code") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.table.supplier") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.table.branch") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.table.requestedAt") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("purchases.quotes.table.options") }}</th>
               </tr>
             </thead>
             <tbody>
-              <!-- ← supplierQuoteId solo como :key, no se renderiza -->
               <tr
                 v-for="quote in filteredQuotes"
                 :key="quote.supplierQuoteId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
-                  {{ quote.code }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ quote.supplierName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ quote.branchName ?? "-" }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ quote.status }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ quote.requestedAtUtc }}
-                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ quote.code }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ quote.supplierName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ quote.branchName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ quote.status }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ quote.requestedAtUtc }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <PurchaseActionMenu
-                    :items="[
-                      {
-                        label: t('purchases.quotes.actions.viewDetails'),
-                        action: () => openQuoteDrawer(quote.supplierQuoteId),
-                      },
-                    ]"
+                    :items="[{ label: t('purchases.quotes.actions.viewDetails'), action: () => openQuoteDrawer(quote.supplierQuoteId) }]"
                   >
                     <template #trigger>
                       <button
@@ -842,12 +648,8 @@ onMounted(async () => {
                   </PurchaseActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!filteredQuotes.length">
-                <td
-                  colspan="6"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="6" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("purchases.quotes.empty") }}
                 </td>
               </tr>
@@ -856,15 +658,14 @@ onMounted(async () => {
         </template>
       </div>
 
-      <!-- ← NUEVO: Paginación estandarizada igual que Users -->
+      <!-- PAGINATION (identical to Users) -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
-            ({{ filteredCount }} {{ $t("users.filtered") }})
+            ({{ filteredCount }} {{ $t("purchases.filtered") }})
           </span>
         </div>
 
@@ -875,6 +676,7 @@ onMounted(async () => {
             class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goPrevious"
           >
+            <ChevronLeft :size="16" />
             <span>{{ $t("pagination.previous") }}</span>
           </button>
 
@@ -887,12 +689,7 @@ onMounted(async () => {
             1
           </button>
 
-          <span
-            v-if="pageNumbers[0] > 2"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -912,9 +709,7 @@ onMounted(async () => {
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          >...</span>
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
@@ -932,6 +727,7 @@ onMounted(async () => {
             @click="goNext"
           >
             <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
           </button>
         </div>
       </div>

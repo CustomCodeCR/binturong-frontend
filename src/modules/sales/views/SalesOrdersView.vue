@@ -34,29 +34,23 @@ const salesOrders = ref<SalesOrder[]>([]);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-
-// Filtro de estado
 const statusFilter = ref<"all" | "confirmed" | "pending">("all");
 
 const MAX_PAGE = 100;
 
-// Filtrado local en tiempo real
 const filteredSalesOrders = computed(() => {
   let result = salesOrders.value;
 
-  // Filtrar por estado
   if (statusFilter.value === "confirmed") {
     result = result.filter((item) =>
       String(item.status ?? "").toLowerCase().includes("confirm"),
     );
   } else if (statusFilter.value === "pending") {
     result = result.filter(
-      (item) =>
-        !String(item.status ?? "").toLowerCase().includes("confirm"),
+      (item) => !String(item.status ?? "").toLowerCase().includes("confirm"),
     );
   }
 
-  // Filtrar por búsqueda en tiempo real
   const term = search.value.trim().toLowerCase();
   if (term) {
     result = result.filter(
@@ -77,12 +71,10 @@ const pageNumbers = computed(() => {
   const current = page.value;
   const start = Math.max(1, current - 2);
   const end = Math.min(MAX_PAGE, current + 2);
-
   const pages: number[] = [];
   for (let index = start; index <= end; index += 1) {
     pages.push(index);
   }
-
   return pages;
 });
 
@@ -91,21 +83,15 @@ const canGoNext = computed(() => page.value < MAX_PAGE);
 
 const summary = computed(() => {
   const total = salesOrders.value.length;
-
   const confirmed = salesOrders.value.filter((item) =>
     String(item.status ?? "").toLowerCase().includes("confirm"),
   ).length;
-
   const totalAmount = salesOrders.value.reduce(
-    (acc, item) => acc + Number(item.total || 0),
-    0,
+    (acc, item) => acc + Number(item.total || 0), 0,
   );
-
   const totalDiscounts = salesOrders.value.reduce(
-    (acc, item) => acc + Number(item.discounts || 0),
-    0,
+    (acc, item) => acc + Number(item.discounts || 0), 0,
   );
-
   return { total, confirmed, totalAmount, totalDiscounts };
 });
 
@@ -133,9 +119,7 @@ function formatDateTime(value?: string | null): string {
 }
 
 function formatMoney(value?: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return "-";
-  }
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
   return Number(value).toLocaleString("es-CR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -148,19 +132,11 @@ function getSellerDisplayName(order: SalesOrder): string {
 
 function getOrderActions(order: SalesOrder) {
   const actions = [
-    {
-      label: t("sales.actions.viewDetails"),
-      action: () => openDetailsDrawer(order),
-    },
+    { label: t("sales.actions.viewDetails"), action: () => openDetailsDrawer(order) },
   ];
-
   if (!isConfirmedStatus(order.status)) {
-    actions.push({
-      label: t("sales.actions.confirm"),
-      action: () => openConfirmModal(order),
-    });
+    actions.push({ label: t("sales.actions.confirm"), action: () => openConfirmModal(order) });
   }
-
   return actions;
 }
 
@@ -169,13 +145,11 @@ async function fetchSalesOrders(): Promise<SalesOrder[]> {
     page: page.value,
     pageSize: pageSize.value,
   } as any);
-
   return Array.isArray(response) ? [...response] : [];
 }
 
 async function loadData() {
   loading.value = true;
-
   try {
     salesOrders.value = await fetchSalesOrders();
   } catch {
@@ -187,13 +161,10 @@ async function loadData() {
 
 async function reloadEventually(attempts = 8, delayMs = 400) {
   loading.value = true;
-
   try {
     for (let index = 0; index < attempts; index += 1) {
       salesOrders.value = await fetchSalesOrders();
-      if (index < attempts - 1) {
-        await sleep(delayMs);
-      }
+      if (index < attempts - 1) await sleep(delayMs);
     }
   } catch {
     showError(t("sales.messages.loadError"));
@@ -202,10 +173,13 @@ async function reloadEventually(attempts = 8, delayMs = 400) {
   }
 }
 
+async function onSearch() {
+  page.value = 1;
+  await loadData();
+}
+
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadData();
 }
@@ -246,9 +220,7 @@ function openDetailsDrawer(order: SalesOrder) {
     direction: "right",
     size: "xl",
     props: { salesOrderId: order.salesOrderId },
-    onSuccess: async () => {
-      await reloadEventually();
-    },
+    onSuccess: async () => { await reloadEventually(); },
     onError: (error: any) => {
       showError(error?.message ?? t("sales.messages.loadError"));
     },
@@ -281,6 +253,7 @@ onMounted(async () => {
 
 <template>
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
+    <!-- HEADER -->
     <div class="mb-bt-spacing-24 shrink-0">
       <h1 class="text-2xl font-bt-bold text-bt-primary-700">
         {{ $t("sales.title") }}
@@ -290,110 +263,73 @@ onMounted(async () => {
       </p>
     </div>
 
-    <!-- KPI Cards -->
-    <div
-      class="grid grid-cols-1 md:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
-    >
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+    <!-- KPI CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600">
             <ShoppingBag :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.summary.totalOrders") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-primary-700">
-              {{ summary.total }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("sales.summary.totalOrders") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-primary-700">{{ summary.total }}</div>
           </div>
         </div>
       </div>
 
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700">
             <UserRound :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.summary.confirmedOrders") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-success-700">
-              {{ summary.confirmed }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("sales.summary.confirmedOrders") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-success-700">{{ summary.confirmed }}</div>
           </div>
         </div>
       </div>
 
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600">
             <CircleDollarSign :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.summary.totalAmount") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-accent-700">
-              {{ formatMoney(summary.totalAmount) }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("sales.summary.totalAmount") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-accent-700">{{ formatMoney(summary.totalAmount) }}</div>
           </div>
         </div>
       </div>
 
-      <div
-        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
-      >
+      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
         <div class="flex items-center gap-bt-spacing-12">
-          <div
-            class="w-12 h-12 rounded-full bg-bt-warning-100 flex items-center justify-center text-bt-warning-700"
-          >
+          <div class="w-12 h-12 rounded-full bg-bt-warning-100 flex items-center justify-center text-bt-warning-700">
             <BadgePercent :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">
-              {{ $t("sales.discounts.summary.totalDiscounts") }}
-            </div>
-            <div class="text-2xl font-bt-bold text-bt-warning-700">
-              {{ formatMoney(summary.totalDiscounts) }}
-            </div>
+            <div class="text-sm text-bt-grey-500">{{ $t("sales.discounts.summary.totalDiscounts") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-warning-700">{{ formatMoney(summary.totalDiscounts) }}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div
-      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
-    >
-      <!-- Toolbar -->
+    <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
+
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
-          <!-- Search en tiempo real -->
+        <!-- Left: search + filters + secondary actions -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
             :placeholder="$t('sales.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
           />
 
-          <!-- Filtro de estado -->
           <select
             v-model="statusFilter"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -403,6 +339,16 @@ onMounted(async () => {
             <option value="pending">{{ $t("sales.filters.pending") }}</option>
           </select>
 
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("sales.actions.search") }}
+          </button>
+
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -412,6 +358,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + primary create action -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -433,50 +380,25 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Table -->
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
-        <div
-          v-if="loading"
-          class="py-bt-spacing-32 text-center text-bt-grey-500"
-        >
+        <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
         </div>
 
         <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.code") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.client") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.branch") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.seller") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.date") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.status") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.discounts.fields.globalDiscountPerc") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.fields.discounts") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("sales.table.total") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("sales.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.code") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.client") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.branch") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.seller") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.date") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.discounts.fields.globalDiscountPerc") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.fields.discounts") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("sales.table.total") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("sales.table.options") }}</th>
             </tr>
           </thead>
 
@@ -486,36 +408,18 @@ onMounted(async () => {
               :key="order.salesOrderId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700">
                 {{ order.code }}
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ order.clientName || "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ order.branchName || "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ getSellerDisplayName(order) }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ formatDateTime(order.orderDate) }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.clientName || "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ order.branchName || "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ getSellerDisplayName(order) }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDateTime(order.orderDate) }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
-                <span
-                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-info-100 text-bt-info-700"
-                >
+                <span class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-info-100 text-bt-info-700">
                   {{ order.status }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 <span
                   v-if="Number(order.globalDiscountPerc) > 0"
@@ -525,19 +429,12 @@ onMounted(async () => {
                 </span>
                 <span v-else>-</span>
               </td>
-
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-warning-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-warning-700 font-bt-semibold">
                 {{ formatMoney(order.discounts) }}
               </td>
-
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">
                 {{ formatMoney(order.total) }}
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <SalesOrderActionMenu :items="getOrderActions(order)">
                   <template #trigger>
@@ -553,10 +450,7 @@ onMounted(async () => {
             </tr>
 
             <tr v-if="!filteredSalesOrders.length && !loading">
-              <td
-                colspan="10"
-                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-              >
+              <td colspan="10" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                 {{ $t("sales.empty") }}
               </td>
             </tr>
@@ -564,13 +458,12 @@ onMounted(async () => {
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
             ({{ filteredSalesOrders.length }} {{ $t("sales.filtered") }})
           </span>
@@ -596,9 +489,7 @@ onMounted(async () => {
             1
           </button>
 
-          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">
-            ...
-          </span>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -618,9 +509,7 @@ onMounted(async () => {
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          >...</span>
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"

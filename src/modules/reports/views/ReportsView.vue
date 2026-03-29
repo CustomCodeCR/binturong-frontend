@@ -3,7 +3,8 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   MoreHorizontal,
-  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-vue-next";
 
 import { ReportsService } from "@/core/services/reportsService";
@@ -39,7 +40,6 @@ const activeTab = ref<
 const loadingCatalogs = ref(false);
 const loadingFinancial = ref(false);
 const loadingInventory = ref(false);
-const loadingClient = ref(false);
 const loadingServiceOrders = ref(false);
 const loadingSchedules = ref(false);
 
@@ -65,10 +65,7 @@ const serviceOrdersFromUtc = ref("");
 const serviceOrdersToUtc = ref("");
 const serviceOrdersEmployeeId = ref("");
 
-// ← MEJORADO: Búsqueda en tiempo real para schedules
 const scheduleSearch = ref("");
-
-// ← NUEVO: Paginación para schedules
 const schedulePage = ref(1);
 const schedulePageSize = ref(10);
 const SCHEDULE_MAX_PAGE = 100;
@@ -120,7 +117,6 @@ function formatNumber(value?: number | null): string {
   return Number(value).toLocaleString("es-CR");
 }
 
-// ← NUEVO: Filtro en tiempo real de schedules (computed)
 const filteredSchedules = computed(() => {
   if (!scheduleSearch.value.trim()) return schedules.value;
   const query = scheduleSearch.value.toLowerCase().trim();
@@ -142,7 +138,9 @@ const schedulePageNumbers = computed(() => {
 });
 
 const canScheduleGoPrevious = computed(() => schedulePage.value > 1);
-const canScheduleGoNext = computed(() => schedulePage.value < SCHEDULE_MAX_PAGE);
+const canScheduleGoNext = computed(
+  () => schedulePage.value < SCHEDULE_MAX_PAGE,
+);
 
 const schedulesSummary = computed(() => {
   const total = schedules.value.length;
@@ -151,7 +149,6 @@ const schedulesSummary = computed(() => {
   return { total, active, failed };
 });
 
-// ← NUEVO: Reset de página al cambiar filtros
 watch(scheduleSearch, () => {
   schedulePage.value = 1;
 });
@@ -161,7 +158,6 @@ watch(schedulePageSize, async () => {
   await loadSchedules();
 });
 
-// ← NUEVO: Reset de resultados al cambiar tab
 watch(activeTab, () => {
   schedulePage.value = 1;
   scheduleSearch.value = "";
@@ -183,7 +179,9 @@ async function loadCatalogs() {
     ]);
 
     branches.value = Array.isArray(branchesResponse) ? branchesResponse : [];
-    categories.value = Array.isArray(categoriesResponse) ? categoriesResponse : [];
+    categories.value = Array.isArray(categoriesResponse)
+      ? categoriesResponse
+      : [];
     clients.value = Array.isArray(clientsResponse) ? clientsResponse : [];
     employees.value = Array.isArray(employeesResponse) ? employeesResponse : [];
   } catch {
@@ -376,7 +374,6 @@ async function loadSchedules() {
     const response = await ReportsService.browseSchedules({
       page: schedulePage.value,
       pageSize: schedulePageSize.value,
-      // ← REMOVIDO: search del backend, ahora filtramos localmente en tiempo real
     });
 
     schedules.value = Array.isArray(response) ? response : [];
@@ -408,7 +405,8 @@ function openCreateScheduleModal() {
       toastStore.addToast({
         severity: "error",
         title: t("toast.error"),
-        message: error?.message ?? t("reports.schedules.messages.createError"),
+        message:
+          error?.message ?? t("reports.schedules.messages.createError"),
       });
     },
   });
@@ -430,7 +428,8 @@ function openEditScheduleModal(schedule: ReportSchedule) {
       toastStore.addToast({
         severity: "error",
         title: t("toast.error"),
-        message: error?.message ?? t("reports.schedules.messages.updateError"),
+        message:
+          error?.message ?? t("reports.schedules.messages.updateError"),
       });
     },
   });
@@ -485,26 +484,6 @@ function getScheduleActions(schedule: ReportSchedule) {
   ];
 }
 
-// ← ESTANDARIZADO: refresh inteligente por tab activo
-async function refreshActiveTab() {
-  if (activeTab.value === "financial") {
-    await loadFinancialReport();
-    return;
-  }
-  if (activeTab.value === "inventory") {
-    await loadInventoryReport();
-    return;
-  }
-  if (activeTab.value === "serviceOrders") {
-    await loadServiceOrdersReport();
-    return;
-  }
-  if (activeTab.value === "schedules") {
-    await loadSchedules();
-  }
-}
-
-// ← NUEVO: Paginación de schedules
 async function goToSchedulePage(targetPage: number) {
   if (
     targetPage < 1 ||
@@ -527,6 +506,11 @@ async function scheduleGoNext() {
   await goToSchedulePage(schedulePage.value + 1);
 }
 
+async function onScheduleSearch() {
+  schedulePage.value = 1;
+  await loadSchedules();
+}
+
 onMounted(async () => {
   financialFromUtc.value = getLocalDateInput(-30);
   financialToUtc.value = getLocalDateInput(0);
@@ -543,7 +527,7 @@ onMounted(async () => {
 
 <template>
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
-    <!-- HEADER — estandarizado igual que Users -->
+    <!-- HEADER -->
     <div class="mb-bt-spacing-24 shrink-0">
       <h1 class="text-2xl font-bt-bold text-bt-primary-700">
         {{ $t("reports.title") }}
@@ -556,7 +540,7 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
-      <!-- TOOLBAR — tabs + botón refresh alineado a la derecha -->
+      <!-- TOOLBAR: tabs + right-side actions -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
@@ -583,15 +567,28 @@ onMounted(async () => {
           </button>
         </div>
 
-        <!-- ← ESTANDARIZADO: Refresh en el header, igual que Users -->
-        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+        <!-- Right: page size + CTA — only on schedules tab -->
+        <div
+          v-if="activeTab === 'schedules'"
+          class="flex items-center gap-bt-spacing-12 shrink-0"
+        >
+          <select
+            v-model.number="schedulePageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+
+          <!-- New schedule: accent-500 -->
           <button
             type="button"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
-            @click="refreshActiveTab"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openCreateScheduleModal"
           >
-            <RefreshCw :size="16" />
-            {{ $t("reports.actions.refresh") }}
+            {{ $t("reports.schedules.actions.newSchedule") }}
           </button>
         </div>
       </div>
@@ -603,47 +600,51 @@ onMounted(async () => {
         {{ $t("common.loading") }}
       </div>
 
-      <div v-else class="flex-1 min-h-0 overflow-auto">
+      <template v-else>
 
         <!-- ── FINANCIAL ── -->
-        <div v-if="activeTab === 'financial'" class="space-y-bt-spacing-24">
+        <div
+          v-if="activeTab === 'financial'"
+          class="flex-1 min-h-0 flex flex-col gap-bt-spacing-24"
+        >
+          <!-- Filter bar -->
           <div
-            class="grid grid-cols-1 gap-bt-spacing-16 rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 md:grid-cols-[1fr_1fr_auto]"
+            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div>
-              <label class="mb-bt-spacing-8 block text-sm text-bt-primary-700">
-                {{ $t("reports.financial.fields.from") }}
-              </label>
+            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
               <input
                 v-model="financialFromUtc"
                 type="date"
-                class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
               />
-            </div>
-
-            <div>
-              <label class="mb-bt-spacing-8 block text-sm text-bt-primary-700">
-                {{ $t("reports.financial.fields.to") }}
-              </label>
               <input
                 v-model="financialToUtc"
                 type="date"
-                class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
               />
-            </div>
-
-            <div class="flex items-end gap-bt-spacing-12">
+              <!-- Generate: primary-500 -->
               <button
                 type="button"
-                class="rounded-m bg-bt-primary-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-primary-600"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
                 @click="loadFinancialReport"
               >
                 {{ $t("reports.actions.generate") }}
               </button>
-
+              <!-- Refresh: grey-200 -->
               <button
                 type="button"
-                class="rounded-m bg-bt-warning-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-warning-700"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+                @click="loadFinancialReport"
+              >
+                {{ $t("reports.actions.refresh") }}
+              </button>
+            </div>
+
+            <div class="flex items-center gap-bt-spacing-12 shrink-0">
+              <!-- Export PDF: warning-500 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition font-bt-semibold"
                 @click="exportFinancialPdf"
               >
                 {{ $t("reports.actions.exportPdf") }}
@@ -651,99 +652,100 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div
-            v-if="loadingFinancial"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
-            {{ $t("common.loading") }}
+          <!-- Results -->
+          <div class="flex-1 min-h-0 overflow-auto">
+            <div
+              v-if="loadingFinancial"
+              class="py-bt-spacing-32 text-center text-bt-grey-500"
+            >
+              {{ $t("common.loading") }}
+            </div>
+
+            <template v-else-if="financialReport">
+              <div
+                v-if="!financialReport.hasData"
+                class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
+              >
+                {{ financialReport.message || $t("reports.financial.empty") }}
+              </div>
+
+              <div
+                v-else
+                class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3"
+              >
+                <div
+                  class="rounded-m border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16"
+                >
+                  <div class="text-sm text-bt-success-700">
+                    {{ $t("reports.financial.summary.sales") }}
+                  </div>
+                  <div
+                    class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-success-700"
+                  >
+                    {{ formatMoney(financialReport.salesTotal) }}
+                  </div>
+                </div>
+
+                <div
+                  class="rounded-m border border-bt-error-200 bg-bt-error-100 p-bt-spacing-16"
+                >
+                  <div class="text-sm text-bt-error-700">
+                    {{ $t("reports.financial.summary.expenses") }}
+                  </div>
+                  <div
+                    class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-error-700"
+                  >
+                    {{ formatMoney(financialReport.expensesTotal) }}
+                  </div>
+                </div>
+
+                <div
+                  class="rounded-m border p-bt-spacing-16"
+                  :class="
+                    financialReport.profit >= 0
+                      ? 'border-bt-primary-200 bg-bt-primary-50'
+                      : 'border-bt-warning-200 bg-bt-warning-100'
+                  "
+                >
+                  <div
+                    class="text-sm"
+                    :class="
+                      financialReport.profit >= 0
+                        ? 'text-bt-primary-700'
+                        : 'text-bt-warning-700'
+                    "
+                  >
+                    {{ $t("reports.financial.summary.profit") }}
+                  </div>
+                  <div
+                    class="mt-bt-spacing-8 text-2xl font-bt-bold"
+                    :class="
+                      financialReport.profit >= 0
+                        ? 'text-bt-primary-700'
+                        : 'text-bt-warning-700'
+                    "
+                  >
+                    {{ formatMoney(financialReport.profit) }}
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
-
-          <template v-else-if="financialReport">
-            <div
-              v-if="!financialReport.hasData"
-              class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
-            >
-              {{ financialReport.message || $t("reports.financial.empty") }}
-            </div>
-
-            <div
-              v-else
-              class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3"
-            >
-              <div
-                class="rounded-m border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16"
-              >
-                <div class="text-sm text-bt-success-700">
-                  {{ $t("reports.financial.summary.sales") }}
-                </div>
-                <div
-                  class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-success-700"
-                >
-                  {{ formatMoney(financialReport.salesTotal) }}
-                </div>
-              </div>
-
-              <div
-                class="rounded-m border border-bt-error-200 bg-bt-error-100 p-bt-spacing-16"
-              >
-                <div class="text-sm text-bt-error-700">
-                  {{ $t("reports.financial.summary.expenses") }}
-                </div>
-                <div
-                  class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-error-700"
-                >
-                  {{ formatMoney(financialReport.expensesTotal) }}
-                </div>
-              </div>
-
-              <div
-                class="rounded-m border p-bt-spacing-16"
-                :class="
-                  financialReport.profit >= 0
-                    ? 'border-bt-primary-200 bg-bt-primary-50'
-                    : 'border-bt-warning-200 bg-bt-warning-100'
-                "
-              >
-                <div
-                  class="text-sm"
-                  :class="
-                    financialReport.profit >= 0
-                      ? 'text-bt-primary-700'
-                      : 'text-bt-warning-700'
-                  "
-                >
-                  {{ $t("reports.financial.summary.profit") }}
-                </div>
-                <div
-                  class="mt-bt-spacing-8 text-2xl font-bt-bold"
-                  :class="
-                    financialReport.profit >= 0
-                      ? 'text-bt-primary-700'
-                      : 'text-bt-warning-700'
-                  "
-                >
-                  {{ formatMoney(financialReport.profit) }}
-                </div>
-              </div>
-            </div>
-          </template>
         </div>
 
         <!-- ── INVENTORY ── -->
         <div
           v-else-if="activeTab === 'inventory'"
-          class="space-y-bt-spacing-24"
+          class="flex-1 min-h-0 flex flex-col gap-bt-spacing-24"
         >
+          <!-- Filter bar -->
           <div
-            class="grid grid-cols-1 gap-bt-spacing-16 rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 md:grid-cols-[1fr_auto]"
+            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div>
-              <label class="mb-bt-spacing-8 block text-sm text-bt-primary-700">
-                {{ $t("reports.inventory.fields.category") }}
-              </label>
+            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
               <select
                 v-model="inventoryCategoryId"
-                class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
               >
                 <option value="">
                   {{ $t("reports.filters.allCategories") }}
@@ -756,20 +758,29 @@ onMounted(async () => {
                   {{ category.label }}
                 </option>
               </select>
-            </div>
-
-            <div class="flex items-end gap-bt-spacing-12">
+              <!-- Generate: primary-500 -->
               <button
                 type="button"
-                class="rounded-m bg-bt-primary-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-primary-600"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
                 @click="loadInventoryReport"
               >
                 {{ $t("reports.actions.generate") }}
               </button>
-
+              <!-- Refresh: grey-200 -->
               <button
                 type="button"
-                class="rounded-m bg-bt-success-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-success-700"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+                @click="loadInventoryReport"
+              >
+                {{ $t("reports.actions.refresh") }}
+              </button>
+            </div>
+
+            <div class="flex items-center gap-bt-spacing-12 shrink-0">
+              <!-- Export Excel: success-500 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold"
                 @click="exportInventoryExcel"
               >
                 {{ $t("reports.actions.exportExcel") }}
@@ -777,27 +788,25 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div
-            v-if="loadingInventory"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
-            {{ $t("common.loading") }}
-          </div>
-
-          <template v-else-if="inventoryReport">
+          <!-- Results -->
+          <div class="flex-1 min-h-0 overflow-auto">
             <div
-              v-if="!inventoryReport.hasData"
-              class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
+              v-if="loadingInventory"
+              class="py-bt-spacing-32 text-center text-bt-grey-500"
             >
-              {{ inventoryReport.message || $t("reports.inventory.empty") }}
+              {{ $t("common.loading") }}
             </div>
 
-            <div
-              v-else
-              class="overflow-hidden rounded-m border border-bt-grey-200"
-            >
-              <table class="w-full border-collapse">
-                <thead>
+            <template v-else-if="inventoryReport">
+              <div
+                v-if="!inventoryReport.hasData"
+                class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
+              >
+                {{ inventoryReport.message || $t("reports.inventory.empty") }}
+              </div>
+
+              <table v-else class="w-full border-collapse min-w-[800px]">
+                <thead class="sticky top-0 z-10">
                   <tr class="bg-bt-primary-50 text-left">
                     <th
                       class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
@@ -821,9 +830,7 @@ onMounted(async () => {
                     </th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  <!-- ← productId solo como :key de Vue, no se renderiza -->
                   <tr
                     v-for="item in inventoryReport.items"
                     :key="item.productId"
@@ -861,72 +868,68 @@ onMounted(async () => {
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
 
         <!-- ── CLIENT ── -->
-        <div v-else-if="activeTab === 'client'" class="space-y-bt-spacing-24">
+        <div
+          v-else-if="activeTab === 'client'"
+          class="flex-1 min-h-0 flex flex-col gap-bt-spacing-24"
+        >
+          <!-- Filter bar -->
           <div
-            class="rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16"
+            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div
-              class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <label
-                  class="mb-bt-spacing-8 block text-sm text-bt-primary-700"
+            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+              <select
+                v-model="clientId"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              >
+                <option value="">
+                  {{ $t("reports.placeholders.selectClient") }}
+                </option>
+                <option
+                  v-for="client in clients"
+                  :key="client.id"
+                  :value="client.id"
                 >
-                  {{ $t("reports.client.fields.client") }}
-                </label>
-                <select
-                  v-model="clientId"
-                  class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-                >
-                  <option value="">
-                    {{ $t("reports.placeholders.selectClient") }}
-                  </option>
-                  <option
-                    v-for="client in clients"
-                    :key="client.id"
-                    :value="client.id"
-                  >
-                    {{ client.label }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="flex items-end gap-bt-spacing-12">
-                <button
-                  type="button"
-                  class="rounded-m bg-bt-primary-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-primary-600"
-                  @click="openClientDrawer"
-                >
-                  {{ $t("reports.actions.viewReport") }}
-                </button>
-              </div>
+                  {{ client.label }}
+                </option>
+              </select>
+              <!-- View report: primary-500 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+                @click="openClientDrawer"
+              >
+                {{ $t("reports.actions.viewReport") }}
+              </button>
             </div>
           </div>
 
-          <div
-            class="rounded-m border border-bt-grey-200 bg-bt-white p-bt-spacing-24"
-          >
-            <div class="flex items-center gap-bt-spacing-12">
-              <div
-                class="flex h-12 w-12 items-center justify-center rounded-full bg-bt-primary-50 text-bt-primary-700"
-              >
-                <span class="text-xl">👤</span>
-              </div>
-              <div>
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ $t("reports.client.preview.title") }}
+          <!-- Results -->
+          <div class="flex-1 min-h-0 overflow-auto">
+            <div
+              class="rounded-m border border-bt-grey-200 bg-bt-white p-bt-spacing-24"
+            >
+              <div class="flex items-center gap-bt-spacing-12">
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-full bg-bt-primary-50 text-bt-primary-700"
+                >
+                  <span class="text-xl">👤</span>
                 </div>
-                <div class="text-sm text-bt-grey-600">
-                  {{
-                    clientPreviewLoaded
-                      ? $t("reports.client.preview.loaded")
-                      : $t("reports.client.preview.description")
-                  }}
+                <div>
+                  <div class="font-bt-semibold text-bt-primary-700">
+                    {{ $t("reports.client.preview.title") }}
+                  </div>
+                  <div class="text-sm text-bt-grey-600">
+                    {{
+                      clientPreviewLoaded
+                        ? $t("reports.client.preview.loaded")
+                        : $t("reports.client.preview.description")
+                    }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -936,148 +939,134 @@ onMounted(async () => {
         <!-- ── SERVICE ORDERS ── -->
         <div
           v-else-if="activeTab === 'serviceOrders'"
-          class="space-y-bt-spacing-24"
+          class="flex-1 min-h-0 flex flex-col gap-bt-spacing-24"
         >
+          <!-- Filter bar -->
           <div
-            class="rounded-l border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16"
+            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div
-              class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-2 xl:grid-cols-4"
-            >
-              <div>
-                <label
-                  class="mb-bt-spacing-8 block text-sm text-bt-primary-700"
-                >
-                  {{ $t("reports.serviceOrders.fields.from") }}
-                </label>
-                <input
-                  v-model="serviceOrdersFromUtc"
-                  type="date"
-                  class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-                />
-              </div>
-
-              <div>
-                <label
-                  class="mb-bt-spacing-8 block text-sm text-bt-primary-700"
-                >
-                  {{ $t("reports.serviceOrders.fields.to") }}
-                </label>
-                <input
-                  v-model="serviceOrdersToUtc"
-                  type="date"
-                  class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-                />
-              </div>
-
-              <div>
-                <label
-                  class="mb-bt-spacing-8 block text-sm text-bt-primary-700"
-                >
-                  {{ $t("reports.serviceOrders.fields.employee") }}
-                </label>
-                <select
-                  v-model="serviceOrdersEmployeeId"
-                  class="w-full rounded-m border border-bt-grey-300 bg-bt-white px-bt-spacing-16 py-bt-spacing-12 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-                >
-                  <option value="">
-                    {{ $t("reports.placeholders.allEmployees") }}
-                  </option>
-                  <option
-                    v-for="employee in employees"
-                    :key="employee.id"
-                    :value="employee.id"
-                  >
-                    {{ employee.label }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="flex items-end gap-bt-spacing-12">
-                <button
-                  type="button"
-                  class="rounded-m bg-bt-primary-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-primary-600"
-                  @click="loadServiceOrdersReport"
-                >
-                  {{ $t("reports.actions.generate") }}
-                </button>
-
-                <button
-                  type="button"
-                  class="rounded-m bg-bt-accent-500 px-bt-spacing-16 py-bt-spacing-12 text-bt-white hover:bg-bt-accent-600"
-                  @click="openServiceOrdersDrawer"
-                >
-                  {{ $t("reports.actions.viewReport") }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="loadingServiceOrders"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
-            {{ $t("common.loading") }}
-          </div>
-
-          <template v-else-if="serviceOrdersReport">
-            <div
-              v-if="!serviceOrdersReport.hasData"
-              class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
-            >
-              {{
-                serviceOrdersReport.message ||
-                $t("reports.serviceOrders.empty")
-              }}
-            </div>
-
-            <template v-else>
-              <div class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3">
-                <div
-                  class="rounded-m border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16"
-                >
-                  <div class="text-sm text-bt-success-700">
-                    {{ $t("reports.serviceOrders.summary.completed") }}
-                  </div>
-                  <div
-                    class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-success-700"
-                  >
-                    {{ serviceOrdersReport.completedCount }}
-                  </div>
-                </div>
-
-                <div
-                  class="rounded-m border border-bt-warning-200 bg-bt-warning-100 p-bt-spacing-16"
-                >
-                  <div class="text-sm text-bt-warning-700">
-                    {{ $t("reports.serviceOrders.summary.pending") }}
-                  </div>
-                  <div
-                    class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-warning-700"
-                  >
-                    {{ serviceOrdersReport.pendingCount }}
-                  </div>
-                </div>
-
-                <div
-                  class="rounded-m border border-bt-error-200 bg-bt-error-100 p-bt-spacing-16"
-                >
-                  <div class="text-sm text-bt-error-700">
-                    {{ $t("reports.serviceOrders.summary.canceled") }}
-                  </div>
-                  <div
-                    class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-error-700"
-                  >
-                    {{ serviceOrdersReport.canceledCount }}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                class="overflow-hidden rounded-m border border-bt-grey-200"
+            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+              <input
+                v-model="serviceOrdersFromUtc"
+                type="date"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              />
+              <input
+                v-model="serviceOrdersToUtc"
+                type="date"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              />
+              <select
+                v-model="serviceOrdersEmployeeId"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
               >
-                <table class="w-full border-collapse">
-                  <thead>
+                <option value="">
+                  {{ $t("reports.placeholders.allEmployees") }}
+                </option>
+                <option
+                  v-for="employee in employees"
+                  :key="employee.id"
+                  :value="employee.id"
+                >
+                  {{ employee.label }}
+                </option>
+              </select>
+              <!-- Generate: primary-500 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+                @click="loadServiceOrdersReport"
+              >
+                {{ $t("reports.actions.generate") }}
+              </button>
+              <!-- Refresh: grey-200 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+                @click="loadServiceOrdersReport"
+              >
+                {{ $t("reports.actions.refresh") }}
+              </button>
+            </div>
+
+            <div class="flex items-center gap-bt-spacing-12 shrink-0">
+              <!-- View detailed report: accent-500 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+                @click="openServiceOrdersDrawer"
+              >
+                {{ $t("reports.actions.viewReport") }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div class="flex-1 min-h-0 overflow-auto">
+            <div
+              v-if="loadingServiceOrders"
+              class="py-bt-spacing-32 text-center text-bt-grey-500"
+            >
+              {{ $t("common.loading") }}
+            </div>
+
+            <template v-else-if="serviceOrdersReport">
+              <div
+                v-if="!serviceOrdersReport.hasData"
+                class="rounded-m border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
+              >
+                {{
+                  serviceOrdersReport.message ||
+                  $t("reports.serviceOrders.empty")
+                }}
+              </div>
+
+              <template v-else>
+                <div
+                  class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3 mb-bt-spacing-24"
+                >
+                  <div
+                    class="rounded-m border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16"
+                  >
+                    <div class="text-sm text-bt-success-700">
+                      {{ $t("reports.serviceOrders.summary.completed") }}
+                    </div>
+                    <div
+                      class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-success-700"
+                    >
+                      {{ serviceOrdersReport.completedCount }}
+                    </div>
+                  </div>
+
+                  <div
+                    class="rounded-m border border-bt-warning-200 bg-bt-warning-100 p-bt-spacing-16"
+                  >
+                    <div class="text-sm text-bt-warning-700">
+                      {{ $t("reports.serviceOrders.summary.pending") }}
+                    </div>
+                    <div
+                      class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-warning-700"
+                    >
+                      {{ serviceOrdersReport.pendingCount }}
+                    </div>
+                  </div>
+
+                  <div
+                    class="rounded-m border border-bt-error-200 bg-bt-error-100 p-bt-spacing-16"
+                  >
+                    <div class="text-sm text-bt-error-700">
+                      {{ $t("reports.serviceOrders.summary.canceled") }}
+                    </div>
+                    <div
+                      class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-error-700"
+                    >
+                      {{ serviceOrdersReport.canceledCount }}
+                    </div>
+                  </div>
+                </div>
+
+                <table class="w-full border-collapse min-w-[800px]">
+                  <thead class="sticky top-0 z-10">
                     <tr class="bg-bt-primary-50 text-left">
                       <th
                         class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
@@ -1101,9 +1090,7 @@ onMounted(async () => {
                       </th>
                     </tr>
                   </thead>
-
                   <tbody>
-                    <!-- ← serviceOrderId solo como :key de Vue, no se renderiza -->
                     <tr
                       v-for="item in serviceOrdersReport.items"
                       :key="item.serviceOrderId"
@@ -1141,15 +1128,17 @@ onMounted(async () => {
                     </tr>
                   </tbody>
                 </table>
-              </div>
+              </template>
             </template>
-          </template>
+          </div>
         </div>
 
         <!-- ── SCHEDULES ── -->
-        <div v-else class="space-y-bt-spacing-24">
-          <!-- Tarjetas de resumen -->
-          <div class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3">
+        <div v-else class="flex-1 min-h-0 flex flex-col">
+          <!-- Summary cards -->
+          <div
+            class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-3 mb-bt-spacing-24 shrink-0"
+          >
             <div
               class="rounded-m border border-bt-primary-200 bg-bt-primary-50 p-bt-spacing-16"
             >
@@ -1190,198 +1179,179 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Toolbar de schedules — estandarizado igual que Users -->
+          <!-- Search bar (mirrors Users toolbar) -->
           <div
-            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
+            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
           >
             <div
-              class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-xl"
+              class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
             >
-              <!-- ← MEJORADO: Filtro en tiempo real (v-model reactivo) -->
               <input
                 v-model="scheduleSearch"
                 type="text"
                 :placeholder="$t('reports.schedules.searchPlaceholder')"
                 class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                @keyup.enter="onScheduleSearch"
               />
-
+              <!-- Search: primary-500 -->
+              <button
+                type="button"
+                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+                @click="onScheduleSearch"
+              >
+                {{ $t("reports.actions.search") }}
+              </button>
+              <!-- Refresh: grey-200 -->
               <button
                 type="button"
                 class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
                 @click="loadSchedules"
               >
-                {{ $t("users.actions.refresh") }}
-              </button>
-            </div>
-
-            <div class="flex items-center gap-bt-spacing-12 shrink-0">
-              <select
-                v-model.number="schedulePageSize"
-                class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-              >
-                <option :value="10">10</option>
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
-
-              <button
-                type="button"
-                class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
-                @click="openCreateScheduleModal"
-              >
-                {{ $t("reports.schedules.actions.newSchedule") }}
+                {{ $t("reports.actions.refresh") }}
               </button>
             </div>
           </div>
 
-          <div
-            v-if="loadingSchedules"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
-            {{ $t("common.loading") }}
+          <!-- Table -->
+          <div class="flex-1 min-h-0 overflow-auto">
+            <div
+              v-if="loadingSchedules"
+              class="py-bt-spacing-32 text-center text-bt-grey-500"
+            >
+              {{ $t("common.loading") }}
+            </div>
+
+            <table v-else class="w-full border-collapse min-w-[1100px]">
+              <thead class="sticky top-0 z-10">
+                <tr class="bg-bt-primary-50 text-left">
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.name") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.reportType") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.frequency") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.recipient") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.time") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.status") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
+                  >
+                    {{ $t("reports.schedules.table.lastAttempt") }}
+                  </th>
+                  <th
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+                  >
+                    {{ $t("reports.schedules.table.options") }}
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr
+                  v-for="schedule in filteredSchedules"
+                  :key="schedule.reportScheduleId"
+                  class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
+                >
+                  <td
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
+                  >
+                    <div>{{ schedule.name }}</div>
+                    <div
+                      v-if="schedule.lastError"
+                      class="mt-bt-spacing-4 text-xs font-bt-normal text-bt-error-700"
+                    >
+                      {{ schedule.lastError }}
+                    </div>
+                  </td>
+                  <td
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                  >
+                    {{ schedule.reportType }}
+                  </td>
+                  <td
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                  >
+                    {{ schedule.frequency }}
+                  </td>
+                  <td
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                  >
+                    {{ schedule.recipientEmail }}
+                  </td>
+                  <td
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                  >
+                    {{ schedule.timeOfDayUtc }}
+                  </td>
+                  <td class="px-bt-spacing-16 py-bt-spacing-12">
+                    <span
+                      class="inline-flex rounded-full px-bt-spacing-12 py-bt-spacing-4 text-xs font-bt-semibold"
+                      :class="
+                        schedule.isActive
+                          ? 'bg-bt-success-100 text-bt-success-700'
+                          : 'bg-bt-error-100 text-bt-error-700'
+                      "
+                    >
+                      {{
+                        schedule.isActive
+                          ? $t("reports.status.active")
+                          : $t("reports.status.inactive")
+                      }}
+                    </span>
+                  </td>
+                  <td
+                    class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
+                  >
+                    {{ formatDateTime(schedule.lastAttemptAtUtc) }}
+                  </td>
+                  <td class="px-bt-spacing-16 py-bt-spacing-12">
+                    <ReportsActionMenu :items="getScheduleActions(schedule)">
+                      <template #trigger>
+                        <button
+                          type="button"
+                          class="inline-flex items-center justify-center w-10 h-10 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition"
+                        >
+                          <MoreHorizontal :size="18" />
+                        </button>
+                      </template>
+                    </ReportsActionMenu>
+                  </td>
+                </tr>
+
+                <tr v-if="!filteredSchedules.length && !loadingSchedules">
+                  <td
+                    colspan="8"
+                    class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+                  >
+                    {{ $t("reports.schedules.empty") }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <table v-else class="w-full border-collapse min-w-[1100px]">
-            <thead class="sticky top-0 z-10">
-              <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.name") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.reportType") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.frequency") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.recipient") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.time") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.status") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("reports.schedules.table.lastAttempt") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-                >
-                  {{ $t("reports.schedules.table.options") }}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <!-- ← CAMBIADO: filteredSchedules en tiempo real -->
-              <tr
-                v-for="schedule in filteredSchedules"
-                :key="schedule.reportScheduleId"
-                class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
-              >
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
-                >
-                  <div class="font-bt-semibold text-bt-primary-700">
-                    {{ schedule.name }}
-                  </div>
-                  <div
-                    v-if="schedule.lastError"
-                    class="mt-bt-spacing-4 text-xs text-bt-error-700"
-                  >
-                    {{ schedule.lastError }}
-                  </div>
-                </td>
-
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
-                >
-                  {{ schedule.reportType }}
-                </td>
-
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
-                >
-                  {{ schedule.frequency }}
-                </td>
-
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
-                >
-                  {{ schedule.recipientEmail }}
-                </td>
-
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
-                >
-                  {{ schedule.timeOfDayUtc }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12">
-                  <span
-                    class="inline-flex rounded-full px-bt-spacing-12 py-bt-spacing-4 text-xs font-bt-semibold"
-                    :class="
-                      schedule.isActive
-                        ? 'bg-bt-success-100 text-bt-success-700'
-                        : 'bg-bt-error-100 text-bt-error-700'
-                    "
-                  >
-                    {{
-                      schedule.isActive
-                        ? $t("reports.status.active")
-                        : $t("reports.status.inactive")
-                    }}
-                  </span>
-                </td>
-
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700"
-                >
-                  {{ formatDateTime(schedule.lastAttemptAtUtc) }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12">
-                  <ReportsActionMenu :items="getScheduleActions(schedule)">
-                    <template #trigger>
-                      <button
-                        type="button"
-                        class="inline-flex items-center justify-center w-10 h-10 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition"
-                      >
-                        <MoreHorizontal :size="18" />
-                      </button>
-                    </template>
-                  </ReportsActionMenu>
-                </td>
-              </tr>
-
-              <tr v-if="!filteredSchedules.length && !loadingSchedules">
-                <td
-                  colspan="8"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
-                  {{ $t("reports.schedules.empty") }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- ← NUEVO: Paginación estandarizada igual que Users -->
+          <!-- Pagination (mirrors Users) -->
           <div
             class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
           >
@@ -1389,7 +1359,8 @@ onMounted(async () => {
               {{ $t("pagination.page") }} {{ schedulePage }}
               {{ $t("pagination.of") }} {{ SCHEDULE_MAX_PAGE }}
               <span class="text-bt-grey-500">
-                ({{ filteredSchedules.length }} {{ $t("users.filtered") }})
+                ({{ filteredSchedules.length }}
+                {{ $t("reports.schedules.filtered") }})
               </span>
             </div>
 
@@ -1400,6 +1371,7 @@ onMounted(async () => {
                 class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
                 @click="scheduleGoPrevious"
               >
+                <ChevronLeft :size="16" />
                 <span>{{ $t("pagination.previous") }}</span>
               </button>
 
@@ -1463,11 +1435,13 @@ onMounted(async () => {
                 @click="scheduleGoNext"
               >
                 <span>{{ $t("pagination.next") }}</span>
+                <ChevronRight :size="16" />
               </button>
             </div>
           </div>
         </div>
-      </div>
+
+      </template>
     </div>
   </section>
 </template>

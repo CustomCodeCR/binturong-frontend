@@ -32,21 +32,39 @@ const toastStore = useToastStore();
 const paymentMethods = ref<PaymentMethod[]>([]);
 const loading = ref(false);
 const search = ref("");
+const statusFilter = ref<"all" | "active" | "inactive">("all");
 const page = ref(1);
 const pageSize = ref(10);
 
 const MAX_PAGE = 100;
 
+const filteredPaymentMethods = computed(() => {
+  let result = paymentMethods.value;
+
+  if (statusFilter.value === "active") {
+    result = result.filter((m) => m.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((m) => !m.isActive);
+  }
+
+  const term = search.value.trim().toLowerCase();
+  if (term) {
+    result = result.filter(
+      (m) =>
+        (m.code ?? "").toLowerCase().includes(term) ||
+        (m.description ?? "").toLowerCase().includes(term),
+    );
+  }
+
+  return result;
+});
+
 const pageNumbers = computed(() => {
   const current = page.value;
   const start = Math.max(1, current - 2);
   const end = Math.min(MAX_PAGE, current + 2);
-
   const pages: number[] = [];
-  for (let i = start; i <= end; i += 1) {
-    pages.push(i);
-  }
-
+  for (let i = start; i <= end; i += 1) pages.push(i);
   return pages;
 });
 
@@ -71,7 +89,6 @@ function replacePaymentMethods(nextPaymentMethods: PaymentMethod[]) {
 
 async function loadPaymentMethods() {
   loading.value = true;
-
   try {
     replacePaymentMethods(await fetchPaymentMethods());
   } catch {
@@ -87,118 +104,64 @@ async function loadPaymentMethods() {
 
 function patchPaymentMethodInList(payload: PaymentMethodSuccessPayload) {
   const existingIndex = paymentMethods.value.findIndex(
-    (paymentMethod) =>
-      paymentMethod.paymentMethodId === payload.paymentMethodId,
+    (m) => m.paymentMethodId === payload.paymentMethodId,
   );
 
   if (existingIndex >= 0) {
     replacePaymentMethods(
-      paymentMethods.value.map((paymentMethod) =>
-        paymentMethod.paymentMethodId === payload.paymentMethodId
-          ? {
-              ...paymentMethod,
-              paymentMethodId: payload.paymentMethodId,
-              code: payload.code,
-              description: payload.description,
-              isActive: payload.isActive,
-              updatedAt: payload.updatedAt ?? paymentMethod.updatedAt,
-            }
-          : paymentMethod,
+      paymentMethods.value.map((m) =>
+        m.paymentMethodId === payload.paymentMethodId
+          ? { ...m, paymentMethodId: payload.paymentMethodId, code: payload.code, description: payload.description, isActive: payload.isActive, updatedAt: payload.updatedAt ?? m.updatedAt }
+          : m,
       ),
     );
     return;
   }
 
   replacePaymentMethods([
-    {
-      id: `payment-method:${payload.paymentMethodId}`,
-      paymentMethodId: payload.paymentMethodId,
-      code: payload.code,
-      description: payload.description,
-      isActive: payload.isActive,
-      updatedAt: payload.updatedAt ?? null,
-    } as PaymentMethod,
+    { id: `payment-method:${payload.paymentMethodId}`, paymentMethodId: payload.paymentMethodId, code: payload.code, description: payload.description, isActive: payload.isActive, updatedAt: payload.updatedAt ?? null } as PaymentMethod,
     ...paymentMethods.value,
   ]);
 }
 
-function patchPaymentMethodStatusInList(
-  paymentMethodId: string,
-  isActive: boolean,
-) {
+function patchPaymentMethodStatusInList(paymentMethodId: string, isActive: boolean) {
   replacePaymentMethods(
-    paymentMethods.value.map((paymentMethod) =>
-      paymentMethod.paymentMethodId === paymentMethodId
-        ? {
-            ...paymentMethod,
-            isActive,
-          }
-        : paymentMethod,
+    paymentMethods.value.map((m) =>
+      m.paymentMethodId === paymentMethodId ? { ...m, isActive } : m,
     ),
   );
 }
 
 function removePaymentMethodFromList(paymentMethodId: string) {
-  replacePaymentMethods(
-    paymentMethods.value.filter(
-      (paymentMethod) => paymentMethod.paymentMethodId !== paymentMethodId,
-    ),
-  );
+  replacePaymentMethods(paymentMethods.value.filter((m) => m.paymentMethodId !== paymentMethodId));
 }
 
-function hasPaymentMethodReachedExpectedState(
-  fetchedPaymentMethods: PaymentMethod[],
-  expected: PaymentMethodSuccessPayload,
-): boolean {
-  const fetchedPaymentMethod = fetchedPaymentMethods.find(
-    (paymentMethod) =>
-      paymentMethod.paymentMethodId === expected.paymentMethodId,
-  );
-
-  if (!fetchedPaymentMethod) {
-    return false;
-  }
-
-  return (
-    fetchedPaymentMethod.code === expected.code &&
-    fetchedPaymentMethod.description === expected.description &&
-    fetchedPaymentMethod.isActive === expected.isActive
-  );
+function hasPaymentMethodReachedExpectedState(fetchedPaymentMethods: PaymentMethod[], expected: PaymentMethodSuccessPayload): boolean {
+  const found = fetchedPaymentMethods.find((m) => m.paymentMethodId === expected.paymentMethodId);
+  if (!found) return false;
+  return found.code === expected.code && found.description === expected.description && found.isActive === expected.isActive;
 }
 
 async function reloadPaymentMethodsUntil(
   predicate: (fetchedPaymentMethods: PaymentMethod[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
-
   loading.value = true;
 
   try {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
-      const fetchedPaymentMethods = await fetchPaymentMethods();
-
-      if (predicate(fetchedPaymentMethods)) {
-        replacePaymentMethods(fetchedPaymentMethods);
+      const fetched = await fetchPaymentMethods();
+      if (predicate(fetched)) {
+        replacePaymentMethods(fetched);
         return;
       }
-
-      if (attempt < attempts - 1) {
-        await sleep(delayMs);
-      }
+      if (attempt < attempts - 1) await sleep(delayMs);
     }
-
     replacePaymentMethods(await fetchPaymentMethods());
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("paymentMethods.messages.loadError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("paymentMethods.messages.loadError") });
   } finally {
     loading.value = false;
   }
@@ -208,39 +171,19 @@ function openCreateModal() {
   modalStore.open({
     component: PaymentMethodCreateModal,
     onSuccess: async (payload?: PaymentMethodSuccessPayload) => {
-      if (payload?.paymentMethodId) {
-        patchPaymentMethodInList(payload);
-      }
-
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("paymentMethods.messages.createSuccess"),
-      });
-
+      if (payload?.paymentMethodId) patchPaymentMethodInList(payload);
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("paymentMethods.messages.createSuccess") });
       if (payload?.paymentMethodId) {
         await reloadPaymentMethodsUntil(
-          (fetchedPaymentMethods) =>
-            fetchedPaymentMethods.some(
-              (paymentMethod) =>
-                paymentMethod.paymentMethodId === payload.paymentMethodId,
-            ),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+          (fetched) => fetched.some((m) => m.paymentMethodId === payload.paymentMethodId),
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
-
       await loadPaymentMethods();
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("paymentMethods.messages.createError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("paymentMethods.messages.createError") });
     },
   });
 }
@@ -248,38 +191,18 @@ function openCreateModal() {
 function openEditModal(paymentMethod: PaymentMethod) {
   modalStore.open({
     component: PaymentMethodEditModal,
-    props: {
-      paymentMethodId: paymentMethod.paymentMethodId,
-    },
+    props: { paymentMethodId: paymentMethod.paymentMethodId },
     onSuccess: async (payload?: PaymentMethodSuccessPayload) => {
-      if (!payload?.paymentMethodId) {
-        await loadPaymentMethods();
-        return;
-      }
-
+      if (!payload?.paymentMethodId) { await loadPaymentMethods(); return; }
       patchPaymentMethodInList(payload);
-
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("paymentMethods.messages.updateSuccess"),
-      });
-
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("paymentMethods.messages.updateSuccess") });
       await reloadPaymentMethodsUntil(
-        (fetchedPaymentMethods) =>
-          hasPaymentMethodReachedExpectedState(fetchedPaymentMethods, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        (fetched) => hasPaymentMethodReachedExpectedState(fetched, payload),
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("paymentMethods.messages.updateError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("paymentMethods.messages.updateError") });
     },
   });
 }
@@ -287,13 +210,9 @@ function openEditModal(paymentMethod: PaymentMethod) {
 function openDetailsDrawer(paymentMethod: PaymentMethod) {
   drawerStore.openDrawer({
     component: PaymentMethodDetailsDrawer,
-    props: {
-      paymentMethodId: paymentMethod.paymentMethodId,
-    },
+    props: { paymentMethodId: paymentMethod.paymentMethodId },
     title: t("paymentMethods.drawer.title"),
-    description: t("paymentMethods.drawer.description", {
-      description: paymentMethod.description,
-    }),
+    description: t("paymentMethods.drawer.description", { description: paymentMethod.description }),
     direction: "right",
     size: "lg",
   });
@@ -301,43 +220,27 @@ function openDetailsDrawer(paymentMethod: PaymentMethod) {
 
 async function togglePaymentMethodStatus(paymentMethod: PaymentMethod) {
   const nextIsActive = !paymentMethod.isActive;
-
   try {
     await PaymentMethodsService.update(paymentMethod.paymentMethodId, {
       code: paymentMethod.code,
       description: paymentMethod.description,
       isActive: nextIsActive,
     });
-
     patchPaymentMethodStatusInList(paymentMethod.paymentMethodId, nextIsActive);
-
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
-      message: paymentMethod.isActive
-        ? t("paymentMethods.messages.deactivateSuccess")
-        : t("paymentMethods.messages.reactivateSuccess"),
+      message: paymentMethod.isActive ? t("paymentMethods.messages.deactivateSuccess") : t("paymentMethods.messages.reactivateSuccess"),
     });
-
     await reloadPaymentMethodsUntil(
-      (fetchedPaymentMethods) => {
-        const fetchedPaymentMethod = fetchedPaymentMethods.find(
-          (item) => item.paymentMethodId === paymentMethod.paymentMethodId,
-        );
-        return fetchedPaymentMethod?.isActive === nextIsActive;
-      },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      (fetched) => fetched.find((item) => item.paymentMethodId === paymentMethod.paymentMethodId)?.isActive === nextIsActive,
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: paymentMethod.isActive
-        ? t("paymentMethods.messages.deactivateError")
-        : t("paymentMethods.messages.reactivateError"),
+      message: paymentMethod.isActive ? t("paymentMethods.messages.deactivateError") : t("paymentMethods.messages.reactivateError"),
     });
   }
 }
@@ -345,39 +248,19 @@ async function togglePaymentMethodStatus(paymentMethod: PaymentMethod) {
 async function deletePaymentMethod(paymentMethod: PaymentMethod) {
   try {
     await PaymentMethodsService.delete(paymentMethod.paymentMethodId);
-
     removePaymentMethodFromList(paymentMethod.paymentMethodId);
-
-    toastStore.addToast({
-      severity: "success",
-      title: t("toast.success"),
-      message: t("paymentMethods.messages.deleteSuccess"),
-    });
-
+    toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("paymentMethods.messages.deleteSuccess") });
     await reloadPaymentMethodsUntil(
-      (fetchedPaymentMethods) =>
-        !fetchedPaymentMethods.some(
-          (item) => item.paymentMethodId === paymentMethod.paymentMethodId,
-        ),
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      (fetched) => !fetched.some((item) => item.paymentMethodId === paymentMethod.paymentMethodId),
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("paymentMethods.messages.deleteError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("paymentMethods.messages.deleteError") });
   }
 }
 
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
-
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadPaymentMethods();
 }
@@ -402,6 +285,10 @@ watch(pageSize, async () => {
   await loadPaymentMethods();
 });
 
+watch(filteredPaymentMethods, () => {
+  page.value = 1;
+}, { deep: true });
+
 onMounted(async () => {
   await loadPaymentMethods();
 });
@@ -421,12 +308,12 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
+        <!-- Left: search + status filter + Search + Refresh -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
@@ -434,6 +321,15 @@ onMounted(async () => {
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             @keyup.enter="onSearch"
           />
+
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option value="all">{{ $t("paymentMethods.filters.allStatus") }}</option>
+            <option value="active">{{ $t("paymentMethods.filters.active") }}</option>
+            <option value="inactive">{{ $t("paymentMethods.filters.inactive") }}</option>
+          </select>
 
           <button
             type="button"
@@ -452,6 +348,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + New Payment Method -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -473,97 +370,53 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
-        <div
-          v-if="loading"
-          class="py-bt-spacing-32 text-center text-bt-grey-500"
-        >
+        <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
         </div>
 
-        <table v-else class="w-full border-collapse min-w-[900px]">
+        <table v-else class="w-full border-collapse min-w-[700px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("paymentMethods.table.code") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("paymentMethods.table.description") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("paymentMethods.table.status") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("paymentMethods.table.updatedAt") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("paymentMethods.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("paymentMethods.table.code") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("paymentMethods.table.description") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("paymentMethods.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("paymentMethods.table.updatedAt") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("paymentMethods.table.options") }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="paymentMethod in paymentMethods"
+              v-for="paymentMethod in filteredPaymentMethods"
               :key="paymentMethod.paymentMethodId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
                 {{ paymentMethod.code }}
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ paymentMethod.description }}
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
-                  :class="[
-                    'inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold',
-                    paymentMethod.isActive
-                      ? 'bg-bt-success-100 text-bt-success-700'
-                      : 'bg-bt-error-100 text-bt-error-700',
-                  ]"
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
+                  :class="paymentMethod.isActive ? 'bg-bt-success-100 text-bt-success-700' : 'bg-bt-error-100 text-bt-error-700'"
                 >
-                  {{
-                    paymentMethod.isActive
-                      ? $t("paymentMethods.status.active")
-                      : $t("paymentMethods.status.inactive")
-                  }}
+                  {{ paymentMethod.isActive ? $t("paymentMethods.status.active") : $t("paymentMethods.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 {{ paymentMethod.updatedAt }}
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <PaymentMethodActionMenu
                   :items="[
-                    {
-                      label: t('paymentMethods.actions.viewDetails'),
-                      action: () => openDetailsDrawer(paymentMethod),
-                    },
-                    {
-                      label: t('paymentMethods.actions.edit'),
-                      action: () => openEditModal(paymentMethod),
-                    },
-                    {
-                      label: paymentMethod.isActive
-                        ? t('paymentMethods.actions.deactivate')
-                        : t('paymentMethods.actions.reactivate'),
-                      action: () => togglePaymentMethodStatus(paymentMethod),
-                      danger: paymentMethod.isActive,
-                    },
-                    {
-                      label: t('paymentMethods.actions.delete'),
-                      action: () => deletePaymentMethod(paymentMethod),
-                      danger: true,
-                    },
+                    { label: t('paymentMethods.actions.viewDetails'), action: () => openDetailsDrawer(paymentMethod) },
+                    { label: t('paymentMethods.actions.edit'), action: () => openEditModal(paymentMethod) },
+                    { label: paymentMethod.isActive ? t('paymentMethods.actions.deactivate') : t('paymentMethods.actions.reactivate'), action: () => togglePaymentMethodStatus(paymentMethod), danger: paymentMethod.isActive },
+                    { label: t('paymentMethods.actions.delete'), action: () => deletePaymentMethod(paymentMethod), danger: true },
                   ]"
                 >
                   <template #trigger>
@@ -578,11 +431,8 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!paymentMethods.length && !loading">
-              <td
-                colspan="5"
-                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-              >
+            <tr v-if="!filteredPaymentMethods.length && !loading">
+              <td colspan="5" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                 {{ $t("paymentMethods.empty") }}
               </td>
             </tr>
@@ -590,12 +440,15 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredPaymentMethods.length }} {{ $t("paymentMethods.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
@@ -609,52 +462,20 @@ onMounted(async () => {
             <span>{{ $t("pagination.previous") }}</span>
           </button>
 
-          <button
-            v-if="pageNumbers[0] > 1"
-            type="button"
-            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
-            @click="goToPage(1)"
-          >
-            1
-          </button>
-
-          <span
-            v-if="pageNumbers[0] > 2"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          <button v-if="pageNumbers[0] > 1" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goToPage(1)">1</button>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
             :key="pageNumber"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
-            :class="
-              pageNumber === page
-                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
-                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
-            "
+            :class="pageNumber === page ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white' : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'"
             @click="goToPage(pageNumber)"
-          >
-            {{ pageNumber }}
-          </button>
+          >{{ pageNumber }}</button>
 
-          <span
-            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
-
-          <button
-            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
-            type="button"
-            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
-            @click="goToPage(MAX_PAGE)"
-          >
-            {{ MAX_PAGE }}
-          </button>
+          <span v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          <button v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goToPage(MAX_PAGE)">{{ MAX_PAGE }}</button>
 
           <button
             type="button"

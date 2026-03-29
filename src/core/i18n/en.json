@@ -263,6 +263,13 @@
     "subtitle": "Manage tax catalog, percentages, and status.",
     "searchPlaceholder": "Search by tax name or code",
     "empty": "No taxes found.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+  
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -395,6 +402,12 @@
     "subtitle": "Manage product category catalog and status.",
     "searchPlaceholder": "Search by category name",
     "empty": "No categories found.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -455,6 +468,12 @@
     "subtitle": "Manage payment method catalog and status.",
     "searchPlaceholder": "Search by code or description",
     "empty": "No payment methods found.",
+      "filtered": "results",
+  "filters": {
+    "allStatus": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
     "status": {
       "active": "Active",
       "inactive": "Inactive"

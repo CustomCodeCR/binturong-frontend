@@ -264,6 +264,12 @@
     "subtitle": "Administre el catálogo de impuestos, porcentajes y estado.",
     "searchPlaceholder": "Buscar por nombre o código del impuesto",
     "empty": "No se encontraron impuestos.",
+    "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
@@ -398,6 +404,12 @@
     "subtitle": "Administre el catálogo de categorías de productos y su estado.",
     "searchPlaceholder": "Buscar por nombre de categoría",
     "empty": "No se encontraron categorías.",
+     "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"

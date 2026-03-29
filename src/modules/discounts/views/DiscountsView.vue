@@ -717,12 +717,14 @@ onMounted(async () => {
                     :items="[
                       {
                         label: t('discounts.actions.approve'),
-                        action: String(approval.status).toLowerCase() === 'pending' ? () => approveRequest(approval) : undefined,
+                        action: () => approveRequest(approval),
+                        disabled: String(approval.status).toLowerCase() !== 'pending',
                       },
                       {
                         label: t('discounts.actions.reject'),
-                        action: String(approval.status).toLowerCase() === 'pending' ? () => openRejectApprovalModal(approval) : undefined,
+                        action: () => openRejectApprovalModal(approval),
                         danger: true,
+                        disabled: String(approval.status).toLowerCase() !== 'pending',
                       },
                       { label: t('common.viewDetails'), action: () => openApprovalDetailsDrawer(approval) },
                     ]"

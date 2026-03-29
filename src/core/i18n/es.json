@@ -328,10 +328,18 @@
     "subtitle": "Administre el catálogo de unidades de medida y su estado.",
     "searchPlaceholder": "Buscar por código o nombre",
     "empty": "No se encontraron unidades de medida.",
+
+    "filtered": "resultados",
+      "filters": {                    
+    "allStatus": "Todos los estados",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
     },
+
     "table": {
       "code": "Código",
       "name": "Nombre",

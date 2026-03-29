@@ -327,7 +327,13 @@
     "subtitle": "Manage unit of measure catalog and status.",
     "searchPlaceholder": "Search by code or name",
     "empty": "No units of measure found.",
-    "status": {
+     "filtered": "results",          
+  "filters": {                    
+    "allStatus": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+   "status": {
       "active": "Active",
       "inactive": "Inactive"
     },

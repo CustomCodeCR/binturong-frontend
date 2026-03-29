@@ -42,8 +42,6 @@ const clients = ref<Client[]>([]);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-
-// Filtro de estado
 const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
@@ -56,7 +54,6 @@ async function fetchClients(): Promise<Client[]> {
   return await ClientsService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    // ← REMOVIDO: search del backend, filtramos localmente
   });
 }
 
@@ -66,7 +63,6 @@ function replaceClients(nextClients: Client[]) {
 
 async function loadClients() {
   loading.value = true;
-
   try {
     replaceClients(await fetchClients());
   } catch {
@@ -80,18 +76,15 @@ async function loadClients() {
   }
 }
 
-// Filtrado local (igual que UserView)
 const filteredClients = computed(() => {
   let result = clients.value;
 
-  // Filtrar por estado
   if (statusFilter.value === "active") {
     result = result.filter((c) => c.isActive);
   } else if (statusFilter.value === "inactive") {
     result = result.filter((c) => !c.isActive);
   }
 
-  // Filtrar por búsqueda (en tiempo real)
   if (search.value.trim()) {
     const query = search.value.toLowerCase().trim();
     result = result.filter(
@@ -143,8 +136,7 @@ function patchClientInList(payload: ClientSuccessPayload) {
               contactName: payload.contactName,
               email: payload.email,
               primaryPhone: payload.primaryPhone,
-              secondaryPhone:
-                payload.secondaryPhone ?? client.secondaryPhone ?? null,
+              secondaryPhone: payload.secondaryPhone ?? client.secondaryPhone ?? null,
               industry: payload.industry,
               clientType: payload.clientType,
               score: payload.score,
@@ -179,12 +171,7 @@ function patchClientInList(payload: ClientSuccessPayload) {
 function patchClientStatusInList(clientId: string, isActive: boolean) {
   replaceClients(
     clients.value.map((client) =>
-      client.clientId === clientId
-        ? {
-            ...client,
-            isActive,
-          }
-        : client,
+      client.clientId === clientId ? { ...client, isActive } : client,
     ),
   );
 }
@@ -203,9 +190,7 @@ function hasClientReachedExpectedState(
     (client) => client.clientId === expected.clientId,
   );
 
-  if (!fetchedClient) {
-    return false;
-  }
+  if (!fetchedClient) return false;
 
   return (
     fetchedClient.identification === expected.identification &&
@@ -224,10 +209,7 @@ function hasClientReachedExpectedState(
 
 async function reloadClientsUntil(
   predicate: (fetchedClients: Client[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
@@ -262,21 +244,15 @@ async function reloadClientsUntil(
   }
 }
 
-// ← CORREGIDO: Acceso correcto al drawerStore
 function getDrawerClientId(): string | null {
-  if (!drawerStore.isOpen) {
-    return null;
-  }
-
+  if (!drawerStore.isOpen) return null;
   const props = (drawerStore.props ?? {}) as { clientId?: string };
   return props.clientId ?? null;
 }
 
 async function refreshOpenClientDetailsDrawer() {
   const openClientId = getDrawerClientId();
-  if (!openClientId) {
-    return;
-  }
+  if (!openClientId) return;
 
   const currentClient = clients.value.find(
     (client) => client.clientId === openClientId,
@@ -284,9 +260,7 @@ async function refreshOpenClientDetailsDrawer() {
 
   drawerStore.openDrawer({
     component: ClientDetailsDrawer,
-    props: {
-      clientId: openClientId,
-    },
+    props: { clientId: openClientId },
     title: t("clients.drawer.title"),
     description: t("clients.drawer.description", {
       name: currentClient?.tradeName ?? "",
@@ -300,9 +274,7 @@ function openCreateModal() {
   modalStore.open({
     component: ClientCreateModal,
     onSuccess: async (payload?: ClientSuccessPayload) => {
-      if (payload?.clientId) {
-        patchClientInList(payload);
-      }
+      if (payload?.clientId) patchClientInList(payload);
 
       toastStore.addToast({
         severity: "success",
@@ -313,13 +285,8 @@ function openCreateModal() {
       if (payload?.clientId) {
         await reloadClientsUntil(
           (fetchedClients) =>
-            fetchedClients.some(
-              (client) => client.clientId === payload.clientId,
-            ),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+            fetchedClients.some((client) => client.clientId === payload.clientId),
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
@@ -340,9 +307,7 @@ function openCreateModal() {
 function openEditModal(client: Client) {
   modalStore.open({
     component: ClientEditModal,
-    props: {
-      clientId: client.clientId,
-    },
+    props: { clientId: client.clientId },
     onSuccess: async (payload?: ClientSuccessPayload) => {
       if (!payload?.clientId) {
         await loadClients();
@@ -359,12 +324,8 @@ function openEditModal(client: Client) {
       });
 
       await reloadClientsUntil(
-        (fetchedClients) =>
-          hasClientReachedExpectedState(fetchedClients, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        (fetchedClients) => hasClientReachedExpectedState(fetchedClients, payload),
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
@@ -380,13 +341,9 @@ function openEditModal(client: Client) {
 function openDetailsDrawer(client: Client) {
   drawerStore.openDrawer({
     component: ClientDetailsDrawer,
-    props: {
-      clientId: client.clientId,
-    },
+    props: { clientId: client.clientId },
     title: t("clients.drawer.title"),
-    description: t("clients.drawer.description", {
-      name: client.tradeName,
-    }),
+    description: t("clients.drawer.description", { name: client.tradeName }),
     direction: "right",
     size: "xl",
   });
@@ -425,10 +382,7 @@ async function toggleClientStatus(client: Client) {
         );
         return fetchedClient?.isActive === nextIsActive;
       },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -457,10 +411,7 @@ async function deleteClient(client: Client) {
     await reloadClientsUntil(
       (fetchedClients) =>
         !fetchedClients.some((item) => item.clientId === client.clientId),
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
 
     if (openedClientId === client.clientId) {
@@ -475,25 +426,24 @@ async function deleteClient(client: Client) {
   }
 }
 
+async function onSearch() {
+  page.value = 1;
+  await loadClients();
+}
+
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadClients();
 }
 
 async function goPrevious() {
-  if (!canGoPrevious.value) {
-    return;
-  }
+  if (!canGoPrevious.value) return;
   await goToPage(page.value - 1);
 }
 
 async function goNext() {
-  if (!canGoNext.value) {
-    return;
-  }
+  if (!canGoNext.value) return;
   await goToPage(page.value + 1);
 }
 
@@ -521,32 +471,39 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
-          <!-- ← MEJORADO: Search en tiempo real (sin botón necesario) -->
+        <!-- Left: search + status filter + search button + refresh -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
             :placeholder="$t('clients.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
           />
 
-          <!-- ← NUEVO: Filtro de estado -->
           <select
             v-model="statusFilter"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
             <option value="all">{{ $t("clients.filters.allStatus") }}</option>
             <option value="active">{{ $t("clients.filters.active") }}</option>
-            <option value="inactive">
-              {{ $t("clients.filters.inactive") }}
-            </option>
+            <option value="inactive">{{ $t("clients.filters.inactive") }}</option>
           </select>
 
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("clients.actions.search") }}
+          </button>
+
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -556,8 +513,8 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
-          <!-- ← NUEVO: Selector de pageSize -->
           <select
             v-model.number="pageSize"
             class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -578,6 +535,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -586,76 +544,35 @@ onMounted(async () => {
           {{ $t("common.loading") }}
         </div>
 
-        <!-- ← REMOVIDO: min-w excesivo, ajustado a contenido real -->
         <table v-else class="w-full border-collapse min-w-[900px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <!-- ← REMOVIDO: Columna de ID interno -->
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.identification") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.tradeName") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.contactName") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.email") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.phone") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.clientType") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("clients.table.status") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("clients.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.identification") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.tradeName") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.contactName") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.email") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.phone") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.clientType") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("clients.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("clients.table.options") }}</th>
             </tr>
           </thead>
 
           <tbody>
-            <!-- ← CAMBIADO: Usar filteredClients -->
             <tr
               v-for="client in filteredClients"
               :key="client.clientId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ client.identification }}
-                </div>
-                <div class="text-xs text-bt-grey-500">
-                  {{ client.identificationType }}
-                </div>
+                <div class="font-bt-semibold text-bt-primary-700">{{ client.identification }}</div>
+                <div class="text-xs text-bt-grey-500">{{ client.identificationType }}</div>
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ client.tradeName }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ client.contactName }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ client.email }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ client.primaryPhone }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ client.clientType }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ client.tradeName }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ client.contactName }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ client.email }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ client.primaryPhone }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ client.clientType }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -665,14 +582,9 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{
-                    client.isActive
-                      ? $t("clients.status.active")
-                      : $t("clients.status.inactive")
-                  }}
+                  {{ client.isActive ? $t("clients.status.active") : $t("clients.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <ClientActionMenu
                   :items="[
@@ -722,13 +634,12 @@ onMounted(async () => {
         </table>
       </div>
 
-      <!-- ← NUEVA: Paginación completa (igual que UserView) -->
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
             ({{ filteredClients.length }} {{ $t("clients.filtered") }})
           </span>
@@ -754,12 +665,7 @@ onMounted(async () => {
             1
           </button>
 
-          <span
-            v-if="pageNumbers[0] > 2"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -779,9 +685,7 @@ onMounted(async () => {
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          >...</span>
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"

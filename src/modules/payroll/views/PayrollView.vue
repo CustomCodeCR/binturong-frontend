@@ -34,17 +34,13 @@ const payrolls = ref<Payroll[]>([]);
 const page = ref(1);
 const pageSize = ref(10);
 
-// Filtros locales en tiempo real
 const searchPeriodCode = ref("");
 const searchStatus = ref("");
-
-// Filtros de fecha siguen siendo del backend
 const searchFromUtc = ref("");
 const searchToUtc = ref("");
 
 const MAX_PAGE = 100;
 
-// Filtrado local en tiempo real
 const filteredPayrolls = computed(() => {
   let result = payrolls.value;
 
@@ -81,15 +77,10 @@ const summary = computed(() => {
   const totalPayrolls = payrolls.value.length;
 
   const uniqueEmployeeIds = new Set(
-    payrolls.value.flatMap((p) =>
-      (p.details ?? []).map((d) => d.employeeId),
-    ),
+    payrolls.value.flatMap((p) => (p.details ?? []).map((d) => d.employeeId)),
   );
 
-  const totalNet = payrolls.value.reduce(
-    (acc, p) => acc + totalNetSalary(p),
-    0,
-  );
+  const totalNet = payrolls.value.reduce((acc, p) => acc + totalNetSalary(p), 0);
 
   const totalCommissions = payrolls.value.reduce((acc, p) => {
     return (
@@ -101,12 +92,7 @@ const summary = computed(() => {
     );
   }, 0);
 
-  return {
-    totalPayrolls,
-    totalEmployees: uniqueEmployeeIds.size,
-    totalNet,
-    totalCommissions,
-  };
+  return { totalPayrolls, totalEmployees: uniqueEmployeeIds.size, totalNet, totalCommissions };
 });
 
 function formatDate(value?: string | null): string {
@@ -170,6 +156,11 @@ async function loadPayrolls() {
   }
 }
 
+async function onSearch() {
+  page.value = 1;
+  await loadPayrolls();
+}
+
 async function goToPage(targetPage: number) {
   if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
@@ -191,19 +182,11 @@ function openCreatePayrollModal() {
     component: PayrollCreateModal,
     props: {},
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("payroll.messages.createSuccess"),
-      });
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("payroll.messages.createSuccess") });
       await loadPayrolls();
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("payroll.messages.createError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("payroll.messages.createError") });
     },
   });
 }
@@ -213,19 +196,11 @@ function openOvertimeModal() {
     component: PayrollOvertimeModal,
     props: {},
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("payroll.overtime.messages.createSuccess"),
-      });
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("payroll.overtime.messages.createSuccess") });
       await loadPayrolls();
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("payroll.overtime.messages.createError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("payroll.overtime.messages.createError") });
     },
   });
 }
@@ -324,38 +299,12 @@ onBeforeUnmount(() => {
 
     <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
 
-      <!-- Toolbar -->
-      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-bt-spacing-12 w-full xl:max-w-5xl">
-          <!-- Search periodo en tiempo real -->
-          <input
-            v-model="searchPeriodCode"
-            type="text"
-            :placeholder="$t('payroll.filters.periodCode')"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-
-          <!-- Search status en tiempo real -->
-          <input
-            v-model="searchStatus"
-            type="text"
-            :placeholder="$t('payroll.filters.status')"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-
-          <!-- Fechas siguen siendo del backend -->
-          <input
-            v-model="searchFromUtc"
-            type="datetime-local"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-
-          <input
-            v-model="searchToUtc"
-            type="datetime-local"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-        </div>
+      <!-- TOOLBAR: page size + create actions (right) -->
+      <div
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-16 shrink-0"
+      >
+        <!-- Placeholder left (empty, filters are below) -->
+        <div class="hidden lg:block" />
 
         <div class="flex flex-wrap items-center gap-bt-spacing-12 shrink-0">
           <select
@@ -370,15 +319,7 @@ onBeforeUnmount(() => {
 
           <button
             type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
-            @click="loadPayrolls"
-          >
-            {{ $t("payroll.actions.refresh") }}
-          </button>
-
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition font-bt-semibold"
             @click="openOvertimeModal"
           >
             {{ $t("payroll.actions.newOvertime") }}
@@ -394,7 +335,63 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Table -->
+      <!-- FILTER BAR fila 1: período + status + buscar + refresh -->
+      <div
+        class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-12 shrink-0"
+      >
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
+          <input
+            v-model="searchPeriodCode"
+            type="text"
+            :placeholder="$t('payroll.filters.periodCode')"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
+          />
+          <input
+            v-model="searchStatus"
+            type="text"
+            :placeholder="$t('payroll.filters.status')"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
+          />
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("payroll.actions.search") }}
+          </button>
+          <!-- Secondary: no data impact -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+            @click="loadPayrolls"
+          >
+            {{ $t("payroll.actions.refresh") }}
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER BAR fila 2: fechas -->
+      <div
+        class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0"
+      >
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
+          <input
+            v-model="searchFromUtc"
+            type="datetime-local"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          />
+          <input
+            v-model="searchToUtc"
+            type="datetime-local"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          />
+        </div>
+      </div>
+
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div v-if="loading" class="py-bt-spacing-24 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
@@ -422,7 +419,7 @@ onBeforeUnmount(() => {
               :key="payroll.payrollId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
                 {{ payroll.periodCode }}
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDate(payroll.startDate) }}</td>
@@ -471,7 +468,7 @@ onBeforeUnmount(() => {
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- PAGINATION -->
       <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}

@@ -76,9 +76,7 @@ const isAdminUser = computed(() => {
 });
 
 const assignedBranchId = computed(() => {
-  return String(
-    assignedEmployee.value?.branchId ?? authStore.employeeBranchId ?? "",
-  ).trim();
+  return String(assignedEmployee.value?.branchId ?? authStore.employeeBranchId ?? "").trim();
 });
 
 const assignedWarehouseId = computed(() => {
@@ -86,42 +84,23 @@ const assignedWarehouseId = computed(() => {
 });
 
 const visibleBranches = computed(() => {
-  if (isAdminUser.value) {
-    return branches.value;
-  }
-
-  if (!assignedBranchId.value) {
-    return [];
-  }
-
+  if (isAdminUser.value) return branches.value;
+  if (!assignedBranchId.value) return [];
   return branches.value.filter(
     (branch) => String(branch.branchId).trim() === assignedBranchId.value,
   );
 });
 
 function transferBelongsToCurrentBranch(transfer: InventoryTransfer): boolean {
-  if (isAdminUser.value) {
-    return true;
-  }
-
-  if (!assignedBranchId.value) {
-    return false;
-  }
-
+  if (isAdminUser.value) return true;
+  if (!assignedBranchId.value) return false;
   const fromBranchId = String(transfer.fromBranchId ?? "").trim();
   const toBranchId = String(transfer.toBranchId ?? "").trim();
-
-  return (
-    fromBranchId === assignedBranchId.value ||
-    toBranchId === assignedBranchId.value
-  );
+  return fromBranchId === assignedBranchId.value || toBranchId === assignedBranchId.value;
 }
 
 function canDeleteTransfer(transfer: InventoryTransfer): boolean {
-  if (isAdminUser.value) {
-    return true;
-  }
-
+  if (isAdminUser.value) return true;
   return transferBelongsToCurrentBranch(transfer);
 }
 
@@ -133,33 +112,18 @@ async function fetchTransfers(): Promise<InventoryTransfer[]> {
   });
 
   const safeTransfers = response ?? [];
-
-  if (isAdminUser.value) {
-    return safeTransfers;
-  }
-
-  return safeTransfers.filter((transfer) =>
-    transferBelongsToCurrentBranch(transfer),
-  );
+  if (isAdminUser.value) return safeTransfers;
+  return safeTransfers.filter((transfer) => transferBelongsToCurrentBranch(transfer));
 }
 
 async function loadBranches() {
   loadingBranches.value = true;
-
   try {
-    const response = await BranchesService.browse({
-      page: 1,
-      pageSize: 100,
-    });
-
+    const response = await BranchesService.browse({ page: 1, pageSize: 100 });
     branches.value = response ?? [];
   } catch {
     branches.value = [];
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadBranchesError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.loadBranchesError") });
   } finally {
     loadingBranches.value = false;
   }
@@ -167,32 +131,15 @@ async function loadBranches() {
 
 async function loadAssignedEmployee() {
   assignedEmployee.value = null;
-
-  if (isAdminUser.value) {
-    return;
-  }
-
-  if (!authStore.userId) {
-    return;
-  }
+  if (isAdminUser.value || !authStore.userId) return;
 
   loadingEmployee.value = true;
-
   try {
-    const employees = await EmployeesService.browse({
-      page: 1,
-      pageSize: 100,
-      userId: authStore.userId,
-    } as any);
-
+    const employees = await EmployeesService.browse({ page: 1, pageSize: 100, userId: authStore.userId } as any);
     assignedEmployee.value = (employees ?? [])[0] ?? null;
   } catch {
     assignedEmployee.value = null;
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadEmployeeError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.loadEmployeeError") });
   } finally {
     loadingEmployee.value = false;
   }
@@ -200,35 +147,21 @@ async function loadAssignedEmployee() {
 
 async function loadInventory() {
   loadingInventory.value = true;
-
   try {
     const sections = await Promise.all(
       visibleBranches.value.map(async (branch) => {
-        const items = await BranchesService.browseInventoryByBranchId(
-          branch.branchId,
-        );
-
+        const items = await BranchesService.browseInventoryByBranchId(branch.branchId);
         let filteredItems = items ?? [];
-
         if (!isAdminUser.value && assignedWarehouseId.value) {
           filteredItems = filteredItems.filter(() => true);
         }
-
-        return {
-          branch,
-          items: filteredItems,
-        };
+        return { branch, items: filteredItems };
       }),
     );
-
     branchInventories.value = sections;
   } catch {
     branchInventories.value = [];
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadInventoryError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.loadInventoryError") });
   } finally {
     loadingInventory.value = false;
   }
@@ -236,16 +169,11 @@ async function loadInventory() {
 
 async function loadTransfers() {
   loadingTransfers.value = true;
-
   try {
     transfers.value = await fetchTransfers();
   } catch {
     transfers.value = [];
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadTransfersError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.loadTransfersError") });
   } finally {
     loadingTransfers.value = false;
   }
@@ -253,14 +181,8 @@ async function loadTransfers() {
 
 async function reloadAllAfterTransferAction() {
   reloadingAfterAction.value = true;
-
   try {
-    await Promise.all([
-      loadBranches(),
-      loadAssignedEmployee(),
-      loadInventory(),
-      loadTransfers(),
-    ]);
+    await Promise.all([loadBranches(), loadAssignedEmployee(), loadInventory(), loadTransfers()]);
   } finally {
     reloadingAfterAction.value = false;
   }
@@ -270,63 +192,39 @@ function handleInventoryTransferUpdated() {
   void reloadAllAfterTransferAction();
 }
 
-async function reloadInventoryEventually(options?: {
-  attempts?: number;
-  delayMs?: number;
-}) {
+async function reloadInventoryEventually(options?: { attempts?: number; delayMs?: number }) {
   const attempts = options?.attempts ?? 10;
   const delayMs = options?.delayMs ?? 500;
-
   try {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       await loadInventory();
-
-      if (attempt < attempts - 1) {
-        await sleep(delayMs);
-      }
+      if (attempt < attempts - 1) await sleep(delayMs);
     }
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadInventoryError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.loadInventoryError") });
   }
 }
 
 async function reloadTransfersUntil(
   predicate: (fetchedTransfers: InventoryTransfer[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 10;
   const delayMs = options?.delayMs ?? 500;
 
   loadingTransfers.value = true;
-
   try {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const fetchedTransfers = await fetchTransfers();
-
       if (predicate(fetchedTransfers)) {
         transfers.value = [...fetchedTransfers];
         return;
       }
-
-      if (attempt < attempts - 1) {
-        await sleep(delayMs);
-      }
+      if (attempt < attempts - 1) await sleep(delayMs);
     }
-
     transfers.value = await fetchTransfers();
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.loadTransfersError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.loadTransfersError") });
   } finally {
     loadingTransfers.value = false;
   }
@@ -342,9 +240,7 @@ function patchTransferInList(payload: InventoryTransferSuccessPayload) {
     lines: payload.lines as any[],
   } as InventoryTransfer;
 
-  if (!isAdminUser.value && !transferBelongsToCurrentBranch(draftTransfer)) {
-    return;
-  }
+  if (!isAdminUser.value && !transferBelongsToCurrentBranch(draftTransfer)) return;
 
   const existingIndex = transfers.value.findIndex(
     (transfer) => transfer.transferId === payload.transferId,
@@ -353,14 +249,7 @@ function patchTransferInList(payload: InventoryTransferSuccessPayload) {
   if (existingIndex >= 0) {
     transfers.value = transfers.value.map((transfer) =>
       transfer.transferId === payload.transferId
-        ? {
-            ...transfer,
-            transferId: payload.transferId,
-            status: payload.status,
-            notes: payload.notes,
-            createdAt: payload.createdAt,
-            lines: payload.lines as any[],
-          }
+        ? { ...transfer, transferId: payload.transferId, status: payload.status, notes: payload.notes, createdAt: payload.createdAt, lines: payload.lines as any[] }
         : transfer,
     );
     return;
@@ -377,34 +266,22 @@ function removeTransferFromList(transferId: string) {
 
 const filteredBranchInventories = computed(() => {
   const term = inventorySearch.value.trim().toLowerCase();
-
-  if (!term) {
-    return branchInventories.value;
-  }
+  if (!term) return branchInventories.value;
 
   return branchInventories.value
     .map((section) => ({
       branch: section.branch,
-      items: section.items.filter((item) => {
-        return (
-          String(item.productId ?? "")
-            .toLowerCase()
-            .includes(term) ||
-          String(item.productName ?? "")
-            .toLowerCase()
-            .includes(term)
-        );
-      }),
+      items: section.items.filter((item) =>
+        String(item.productName ?? "").toLowerCase().includes(term) ||
+        String(item.productId ?? "").toLowerCase().includes(term),
+      ),
     }))
     .filter((section) => section.items.length > 0);
 });
 
 const flattenedInventory = computed(() => {
   return filteredBranchInventories.value.flatMap((section) =>
-    section.items.map((item) => ({
-      branch: section.branch,
-      item,
-    })),
+    section.items.map((item) => ({ branch: section.branch, item })),
   );
 });
 
@@ -418,12 +295,8 @@ const inventoryPageNumbers = computed(() => {
   const current = inventoryPage.value;
   const start = Math.max(1, current - 2);
   const end = Math.min(MAX_PAGE, current + 2);
-
   const pages: number[] = [];
-  for (let i = start; i <= end; i += 1) {
-    pages.push(i);
-  }
-
+  for (let i = start; i <= end; i += 1) pages.push(i);
   return pages;
 });
 
@@ -431,12 +304,8 @@ const transferPageNumbers = computed(() => {
   const current = transferPage.value;
   const start = Math.max(1, current - 2);
   const end = Math.min(MAX_PAGE, current + 2);
-
   const pages: number[] = [];
-  for (let i = start; i <= end; i += 1) {
-    pages.push(i);
-  }
-
+  for (let i = start; i <= end; i += 1) pages.push(i);
   return pages;
 });
 
@@ -444,10 +313,7 @@ const lowStockItems = computed(() => {
   return branchInventories.value.flatMap((section) =>
     section.items
       .filter((item) => item.stock <= lowStockThreshold.value)
-      .map((item) => ({
-        branch: section.branch,
-        item,
-      })),
+      .map((item) => ({ branch: section.branch, item })),
   );
 });
 
@@ -455,45 +321,29 @@ function openTransferModal() {
   modalStore.open({
     component: InventoryTransferCreateModal,
     onSuccess: async (payload?: InventoryTransferSuccessPayload) => {
-      if (payload?.transferId) {
-        patchTransferInList(payload);
-      }
+      if (payload?.transferId) patchTransferInList(payload);
 
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("inventory.messages.reviewRequested"),
-      });
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("inventory.messages.reviewRequested") });
 
       await Promise.all([
         payload?.transferId
           ? reloadTransfersUntil((fetchedTransfers) =>
-              fetchedTransfers.some(
-                (transfer) => transfer.transferId === payload.transferId,
-              ),
+              fetchedTransfers.some((transfer) => transfer.transferId === payload.transferId),
             )
           : loadTransfers(),
         reloadInventoryEventually(),
       ]);
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("inventory.messages.transferCreateError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("inventory.messages.transferCreateError") });
     },
   });
 }
 
-function openMovementModal(
-  mode: "purchase-in" | "service-out" | "physical-adjustment",
-) {
+function openMovementModal(mode: "purchase-in" | "service-out" | "physical-adjustment") {
   modalStore.open({
     component: InventoryMovementModal,
-    props: {
-      mode,
-    },
+    props: { mode },
     onSuccess: async () => {
       toastStore.addToast({
         severity: "success",
@@ -505,7 +355,6 @@ function openMovementModal(
               ? t("inventory.messages.serviceOutSuccess")
               : t("inventory.messages.adjustmentSuccess"),
       });
-
       await reloadInventoryEventually();
     },
     onError: (error) => {
@@ -526,23 +375,15 @@ function openMovementModal(
 
 function openTransferDrawer(transfer: InventoryTransfer) {
   if (!transferBelongsToCurrentBranch(transfer)) {
-    toastStore.addToast({
-      severity: "warning",
-      title: t("toast.warning"),
-      message: t("inventory.messages.transferNotAvailableForBranch"),
-    });
+    toastStore.addToast({ severity: "warning", title: t("toast.warning"), message: t("inventory.messages.transferNotAvailableForBranch") });
     return;
   }
 
   drawerStore.openDrawer({
     component: InventoryTransferDetailsDrawer,
-    props: {
-      transferId: transfer.transferId,
-    },
+    props: { transferId: transfer.transferId },
     title: t("inventory.drawer.title"),
-    description: t("inventory.drawer.description", {
-      transferId: transfer.transferId,
-    }),
+    description: t("inventory.drawer.description", { transferId: transfer.transferId }),
     direction: "right",
     size: "xl",
   });
@@ -550,57 +391,40 @@ function openTransferDrawer(transfer: InventoryTransfer) {
 
 async function deleteTransfer(transfer: InventoryTransfer) {
   if (!canDeleteTransfer(transfer)) {
-    toastStore.addToast({
-      severity: "warning",
-      title: t("toast.warning"),
-      message: t("inventory.messages.transferDeleteNotAllowed"),
-    });
+    toastStore.addToast({ severity: "warning", title: t("toast.warning"), message: t("inventory.messages.transferDeleteNotAllowed") });
     return;
   }
 
   try {
-    await InventoryTransfersService.deleteInventoryTransfer(
-      transfer.transferId,
-    );
-
+    await InventoryTransfersService.deleteInventoryTransfer(transfer.transferId);
     removeTransferFromList(transfer.transferId);
-
-    toastStore.addToast({
-      severity: "success",
-      title: t("toast.success"),
-      message: t("inventory.messages.transferDeleted"),
-    });
-
+    toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("inventory.messages.transferDeleted") });
     await reloadTransfersUntil(
-      (fetchedTransfers) =>
-        !fetchedTransfers.some(
-          (item) => item.transferId === transfer.transferId,
-        ),
+      (fetchedTransfers) => !fetchedTransfers.some((item) => item.transferId === transfer.transferId),
     );
-
     await reloadInventoryEventually();
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("inventory.messages.transferDeleteError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("inventory.messages.transferDeleteError") });
   }
 }
 
-function goInventoryPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE) {
-    return;
-  }
+async function onInventorySearch() {
+  inventoryPage.value = 1;
+  await loadInventory();
+}
 
+async function onTransferSearch() {
+  transferPage.value = 1;
+  await loadTransfers();
+}
+
+function goInventoryPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE) return;
   inventoryPage.value = targetPage;
 }
 
 async function goTransferPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE) {
-    return;
-  }
-
+  if (targetPage < 1 || targetPage > MAX_PAGE) return;
   transferPage.value = targetPage;
   await loadTransfers();
 }
@@ -611,114 +435,130 @@ watch(pageSize, async () => {
   await loadTransfers();
 });
 
-watch(transferSearch, async () => {
-  transferPage.value = 1;
-  await loadTransfers();
-});
-
-watch(
-  filteredBranchInventories,
-  () => {
-    inventoryPage.value = 1;
-  },
-  { deep: true },
-);
+watch(filteredBranchInventories, () => {
+  inventoryPage.value = 1;
+}, { deep: true });
 
 onMounted(async () => {
-  window.addEventListener(
-    "inventory-transfer-updated",
-    handleInventoryTransferUpdated as EventListener,
-  );
-
+  window.addEventListener("inventory-transfer-updated", handleInventoryTransferUpdated as EventListener);
   await loadBranches();
   await loadAssignedEmployee();
   await Promise.all([loadInventory(), loadTransfers()]);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener(
-    "inventory-transfer-updated",
-    handleInventoryTransferUpdated as EventListener,
-  );
+  window.removeEventListener("inventory-transfer-updated", handleInventoryTransferUpdated as EventListener);
 });
 </script>
 
 <template>
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
     <div class="mb-bt-spacing-24 shrink-0">
-      <h1 class="text-2xl font-bt-bold text-bt-primary-700">
-        {{ $t("inventory.title") }}
-      </h1>
-      <p class="text-bt-grey-600 mt-bt-spacing-8">
-        {{ $t("inventory.subtitle") }}
-      </p>
+      <h1 class="text-2xl font-bt-bold text-bt-primary-700">{{ $t("inventory.title") }}</h1>
+      <p class="text-bt-grey-600 mt-bt-spacing-8">{{ $t("inventory.subtitle") }}</p>
     </div>
 
-    <div
-      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
-    >
-      <div
-        v-if="reloadingAfterAction"
-        class="mb-bt-spacing-16 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-info-100 text-bt-info-700 shrink-0"
-      >
+    <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
+
+      <div v-if="reloadingAfterAction" class="mb-bt-spacing-16 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-info-100 text-bt-info-700 shrink-0">
         {{ $t("common.loading") }}
       </div>
 
-      <div class="flex flex-wrap gap-bt-spacing-8 mb-bt-spacing-24 shrink-0">
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
-          :class="
-            activeTab === 'stock'
-              ? 'bg-bt-primary-500 text-bt-white'
-              : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'
-          "
-          @click="activeTab = 'stock'"
-        >
-          {{ $t("inventory.tabs.stock") }}
-        </button>
+      <!-- TOOLBAR: tabs (left) + page size (right) -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+        <div class="flex flex-wrap gap-bt-spacing-8">
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
+            :class="activeTab === 'stock' ? 'bg-bt-primary-500 text-bt-white' : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'"
+            @click="activeTab = 'stock'"
+          >
+            {{ $t("inventory.tabs.stock") }}
+          </button>
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
+            :class="activeTab === 'transfers' ? 'bg-bt-primary-500 text-bt-white' : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'"
+            @click="activeTab = 'transfers'"
+          >
+            {{ $t("inventory.tabs.transfers") }}
+          </button>
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
+            :class="activeTab === 'alerts' ? 'bg-bt-primary-500 text-bt-white' : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'"
+            @click="activeTab = 'alerts'"
+          >
+            {{ $t("inventory.tabs.alerts") }}
+          </button>
+        </div>
 
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
-          :class="
-            activeTab === 'transfers'
-              ? 'bg-bt-primary-500 text-bt-white'
-              : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'
-          "
-          @click="activeTab = 'transfers'"
-        >
-          {{ $t("inventory.tabs.transfers") }}
-        </button>
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
 
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
-          :class="
-            activeTab === 'alerts'
-              ? 'bg-bt-primary-500 text-bt-white'
-              : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'
-          "
-          @click="activeTab = 'alerts'"
-        >
-          {{ $t("inventory.tabs.alerts") }}
-        </button>
+          <!-- Create actions shown per tab -->
+          <template v-if="activeTab === 'stock'">
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold"
+              @click="openMovementModal('purchase-in')"
+            >
+              {{ $t("inventory.actions.purchaseIn") }}
+            </button>
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition font-bt-semibold"
+              @click="openMovementModal('service-out')"
+            >
+              {{ $t("inventory.actions.serviceOut") }}
+            </button>
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+              @click="openMovementModal('physical-adjustment')"
+            >
+              {{ $t("inventory.actions.physicalAdjustment") }}
+            </button>
+          </template>
+
+          <button
+            v-if="activeTab === 'transfers'"
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openTransferModal"
+          >
+            {{ $t("inventory.actions.newTransfer") }}
+          </button>
+        </div>
       </div>
 
+      <!-- ── STOCK ── -->
       <template v-if="activeTab === 'stock'">
-        <div
-          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
-        >
-          <div
-            class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-          >
+        <!-- Filter bar -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0">
+          <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
             <input
               v-model="inventorySearch"
               type="text"
               :placeholder="$t('inventory.stock.searchPlaceholder')"
               class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              @keyup.enter="onInventorySearch"
             />
-
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+              @click="onInventorySearch"
+            >
+              {{ $t("inventory.actions.search") }}
+            </button>
             <button
               type="button"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -727,103 +567,33 @@ onBeforeUnmount(() => {
               {{ $t("inventory.actions.refresh") }}
             </button>
           </div>
-
-          <div class="flex flex-wrap gap-bt-spacing-12">
-            <button
-              type="button"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700"
-              @click="openMovementModal('purchase-in')"
-            >
-              {{ $t("inventory.actions.purchaseIn") }}
-            </button>
-
-            <button
-              type="button"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700"
-              @click="openMovementModal('service-out')"
-            >
-              {{ $t("inventory.actions.serviceOut") }}
-            </button>
-
-            <button
-              type="button"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600"
-              @click="openMovementModal('physical-adjustment')"
-            >
-              {{ $t("inventory.actions.physicalAdjustment") }}
-            </button>
-          </div>
         </div>
 
-        <div
-          v-if="loadingBranches || loadingEmployee || loadingInventory"
-          class="py-bt-spacing-32 text-center text-bt-grey-500"
-        >
+        <div v-if="loadingBranches || loadingEmployee || loadingInventory" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
         </div>
 
         <div v-else class="flex-1 min-h-0 overflow-auto">
-          <table class="w-full border-collapse min-w-[950px]">
+          <table class="w-full border-collapse min-w-[900px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("branches.fields.code") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("branches.fields.name") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.stock.table.productId") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.stock.table.productName") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.stock.table.stock") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.stock.table.alert") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.fields.code") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.fields.name") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.stock.table.productName") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.stock.table.stock") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.stock.table.alert") }}</th>
               </tr>
             </thead>
-
             <tbody>
               <tr
                 v-for="entry in paginatedInventory"
                 :key="`${entry.branch.branchId}-${entry.item.productId}`"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ entry.branch.code }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ entry.branch.name }}
-                </td>
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ entry.item.productId }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ entry.item.productName ?? "-" }}
-                </td>
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
-                >
-                  {{ entry.item.stock }}
-                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ entry.branch.code }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ entry.branch.name }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ entry.item.productName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">{{ entry.item.stock }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <span
                     v-if="entry.item.stock <= lowStockThreshold"
@@ -839,12 +609,8 @@ onBeforeUnmount(() => {
                   </span>
                 </td>
               </tr>
-
               <tr v-if="!paginatedInventory.length">
-                <td
-                  colspan="6"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="5" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("inventory.stock.empty") }}
                 </td>
               </tr>
@@ -852,44 +618,42 @@ onBeforeUnmount(() => {
           </table>
         </div>
 
-        <div
-          class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
-        >
+        <!-- Stock pagination -->
+        <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
           <div class="text-sm text-bt-grey-600">
-            {{ $t("pagination.page") }} {{ inventoryPage }}
-            {{ $t("pagination.of") }} {{ MAX_PAGE }}
+            {{ $t("pagination.page") }} {{ inventoryPage }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+            <span class="text-bt-grey-500">({{ flattenedInventory.length }} {{ $t("inventory.filtered") }})</span>
           </div>
-
           <div class="flex items-center gap-bt-spacing-8 flex-wrap">
             <button
               type="button"
               :disabled="inventoryPage <= 1"
-              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
               @click="goInventoryPage(inventoryPage - 1)"
             >
               <ChevronLeft :size="16" />
               <span>{{ $t("pagination.previous") }}</span>
             </button>
 
+            <button v-if="inventoryPageNumbers[0] > 1" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goInventoryPage(1)">1</button>
+            <span v-if="inventoryPageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+
             <button
               v-for="pageNumber in inventoryPageNumbers"
               :key="pageNumber"
               type="button"
               class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
-              :class="
-                pageNumber === inventoryPage
-                  ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
-                  : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
-              "
+              :class="pageNumber === inventoryPage ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white' : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'"
               @click="goInventoryPage(pageNumber)"
-            >
-              {{ pageNumber }}
-            </button>
+            >{{ pageNumber }}</button>
+
+            <span v-if="inventoryPageNumbers[inventoryPageNumbers.length - 1] < MAX_PAGE - 1" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+            <button v-if="inventoryPageNumbers[inventoryPageNumbers.length - 1] < MAX_PAGE" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goInventoryPage(MAX_PAGE)">{{ MAX_PAGE }}</button>
 
             <button
               type="button"
               :disabled="inventoryPage >= MAX_PAGE"
-              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
               @click="goInventoryPage(inventoryPage + 1)"
             >
               <span>{{ $t("pagination.next") }}</span>
@@ -899,28 +663,25 @@ onBeforeUnmount(() => {
         </div>
       </template>
 
+      <!-- ── TRANSFERS ── -->
       <template v-else-if="activeTab === 'transfers'">
-        <div
-          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
-        >
-          <div
-            class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-          >
+        <!-- Filter bar -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0">
+          <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
             <input
               v-model="transferSearch"
               type="text"
               :placeholder="$t('inventory.transfers.searchPlaceholder')"
               class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              @keyup.enter="onTransferSearch"
             />
-
             <button
               type="button"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
-              @click="loadTransfers"
+              @click="onTransferSearch"
             >
               {{ $t("inventory.actions.search") }}
             </button>
-
             <button
               type="button"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -929,108 +690,42 @@ onBeforeUnmount(() => {
               {{ $t("inventory.actions.refresh") }}
             </button>
           </div>
-
-          <button
-            type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 font-bt-semibold"
-            @click="openTransferModal"
-          >
-            {{ $t("inventory.actions.newTransfer") }}
-          </button>
         </div>
 
         <div class="flex-1 min-h-0 overflow-auto">
-          <div
-            v-if="loadingTransfers"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
+          <div v-if="loadingTransfers" class="py-bt-spacing-32 text-center text-bt-grey-500">
             {{ $t("common.loading") }}
           </div>
 
-          <table v-else class="w-full border-collapse min-w-[1000px]">
+          <table v-else class="w-full border-collapse min-w-[900px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.transfers.table.transferId") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.transfers.table.status") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.transfers.table.notes") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.transfers.table.createdAt") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.transfers.table.lines") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-                >
-                  {{ $t("inventory.transfers.table.options") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.transfers.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.transfers.table.notes") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.transfers.table.createdAt") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.transfers.table.lines") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("inventory.transfers.table.options") }}</th>
               </tr>
             </thead>
-
             <tbody>
               <tr
                 v-for="transfer in transfers"
                 :key="transfer.transferId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
-                >
-                  {{ transfer.transferId }}
-                </td>
-
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
-                  <span
-                    class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-info-100 text-bt-info-700"
-                  >
+                  <span class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold bg-bt-info-100 text-bt-info-700">
                     {{ transfer.status }}
                   </span>
                 </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ transfer.notes || "-" }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ transfer.createdAt }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ transfer.lines.length }}
-                </td>
-
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ transfer.notes || "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ transfer.createdAt }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ transfer.lines.length }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <InventoryActionMenu
                     :items="[
-                      {
-                        label: t('inventory.actions.viewDetails'),
-                        action: () => openTransferDrawer(transfer),
-                      },
-                      ...(canDeleteTransfer(transfer)
-                        ? [
-                            {
-                              label: t('inventory.actions.delete'),
-                              action: () => deleteTransfer(transfer),
-                              danger: true,
-                            },
-                          ]
-                        : []),
+                      { label: t('inventory.actions.viewDetails'), action: () => openTransferDrawer(transfer) },
+                      ...(canDeleteTransfer(transfer) ? [{ label: t('inventory.actions.delete'), action: () => deleteTransfer(transfer), danger: true }] : []),
                     ]"
                   >
                     <template #trigger>
@@ -1044,12 +739,8 @@ onBeforeUnmount(() => {
                   </InventoryActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!transfers.length">
-                <td
-                  colspan="6"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="5" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("inventory.transfers.empty") }}
                 </td>
               </tr>
@@ -1057,44 +748,42 @@ onBeforeUnmount(() => {
           </table>
         </div>
 
-        <div
-          class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
-        >
+        <!-- Transfers pagination -->
+        <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
           <div class="text-sm text-bt-grey-600">
-            {{ $t("pagination.page") }} {{ transferPage }}
-            {{ $t("pagination.of") }} {{ MAX_PAGE }}
+            {{ $t("pagination.page") }} {{ transferPage }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+            <span class="text-bt-grey-500">({{ transfers.length }} {{ $t("inventory.filtered") }})</span>
           </div>
-
           <div class="flex items-center gap-bt-spacing-8 flex-wrap">
             <button
               type="button"
               :disabled="transferPage <= 1"
-              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
               @click="goTransferPage(transferPage - 1)"
             >
               <ChevronLeft :size="16" />
               <span>{{ $t("pagination.previous") }}</span>
             </button>
 
+            <button v-if="transferPageNumbers[0] > 1" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goTransferPage(1)">1</button>
+            <span v-if="transferPageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+
             <button
               v-for="pageNumber in transferPageNumbers"
               :key="pageNumber"
               type="button"
               class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
-              :class="
-                pageNumber === transferPage
-                  ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
-                  : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
-              "
+              :class="pageNumber === transferPage ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white' : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'"
               @click="goTransferPage(pageNumber)"
-            >
-              {{ pageNumber }}
-            </button>
+            >{{ pageNumber }}</button>
+
+            <span v-if="transferPageNumbers[transferPageNumbers.length - 1] < MAX_PAGE - 1" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+            <button v-if="transferPageNumbers[transferPageNumbers.length - 1] < MAX_PAGE" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goTransferPage(MAX_PAGE)">{{ MAX_PAGE }}</button>
 
             <button
               type="button"
               :disabled="transferPage >= MAX_PAGE"
-              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+              class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
               @click="goTransferPage(transferPage + 1)"
             >
               <span>{{ $t("pagination.next") }}</span>
@@ -1104,10 +793,9 @@ onBeforeUnmount(() => {
         </div>
       </template>
 
+      <!-- ── ALERTS ── -->
       <template v-else>
-        <div
-          class="mb-bt-spacing-24 flex flex-col md:flex-row md:items-center gap-bt-spacing-16"
-        >
+        <div class="mb-bt-spacing-24 flex flex-col md:flex-row md:items-center gap-bt-spacing-16 shrink-0">
           <div>
             <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
               {{ $t("inventory.alerts.threshold") }}
@@ -1120,78 +808,32 @@ onBeforeUnmount(() => {
               class="w-40 px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
           </div>
-
-          <div class="text-sm text-bt-grey-600">
-            {{ $t("inventory.alerts.note") }}
-          </div>
+          <div class="text-sm text-bt-grey-600">{{ $t("inventory.alerts.note") }}</div>
         </div>
 
         <div class="rounded-m border border-bt-grey-200 overflow-hidden">
           <table class="w-full border-collapse">
             <thead>
               <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("branches.fields.code") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("branches.fields.name") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.alerts.table.productId") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.alerts.table.productName") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("inventory.alerts.table.stock") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.fields.code") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.fields.name") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.alerts.table.productName") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("inventory.alerts.table.stock") }}</th>
               </tr>
             </thead>
-
             <tbody>
               <tr
                 v-for="entry in lowStockItems"
                 :key="`${entry.branch.branchId}-${entry.item.productId}`"
                 class="border-t border-bt-grey-200 bg-bt-warning-100/40"
               >
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ entry.branch.code }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ entry.branch.name }}
-                </td>
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ entry.item.productId }}
-                </td>
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ entry.item.productName ?? "-" }}
-                </td>
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-warning-700 font-bt-bold"
-                >
-                  {{ entry.item.stock }}
-                </td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ entry.branch.code }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ entry.branch.name }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ entry.item.productName ?? "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-warning-700 font-bt-bold">{{ entry.item.stock }}</td>
               </tr>
-
               <tr v-if="!lowStockItems.length">
-                <td
-                  colspan="5"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="4" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("inventory.alerts.empty") }}
                 </td>
               </tr>

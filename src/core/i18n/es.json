@@ -511,10 +511,17 @@
     "subtitle": "Administre el catálogo de productos, visibilidad de stock, transferencias y ajustes físicos.",
     "searchPlaceholder": "Buscar por SKU, código de barras o nombre",
     "empty": "No se encontraron productos.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
     },
+
     "table": {
       "sku": "SKU",
       "name": "Nombre",
@@ -973,6 +980,12 @@
     "subtitle": "Administre empleados e historial de asistencia.",
     "searchPlaceholder": "Buscar por nombre, cédula, correo o puesto",
     "empty": "No se encontraron empleados.",
+    "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
@@ -1097,6 +1110,12 @@
     "subtitle": "Administre proveedores, condiciones de crédito, contactos, documentos e historial de compras.",
     "searchPlaceholder": "Buscar por identificación, razón social, nombre comercial, correo o teléfono",
     "empty": "No se encontraron proveedores.",
+    "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
@@ -1294,7 +1313,7 @@
     "title": "Compras",
     "subtitle": "Administre órdenes de compra, recepciones, cotizaciones a proveedores y evaluaciones.",
     "searchPlaceholder": "Buscar en la pestaña actual",
-      "actions": {
+    "actions": {
       "search": "Buscar",
       "refresh": "Recargar"
     },
@@ -1738,6 +1757,12 @@
     "subtitle": "Administre cotizaciones de clientes, envíelas, actualice su estado y conviértalas en contratos o facturas.",
     "searchPlaceholder": "Buscar por código, cliente, sucursal, estado o moneda",
     "empty": "No se encontraron cotizaciones.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "accepted": "Aceptada",
+      "pending": "Pendiente"
+    },
     "accepted": {
       "yes": "Aceptada",
       "no": "Pendiente"
@@ -2278,6 +2303,16 @@
     "subtitle": "Cree, revise y emita facturas electrónicas.",
     "searchPlaceholder": "Buscar por cliente, sucursal, consecutivo, clave, estado o notas",
     "empty": "No se encontraron facturas.",
+    "filtered": "resultados",
+    "filters": {
+      "allStatus": "Todos los estados",
+      "emitted": "Emitida",
+      "pending": "Pendiente"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
     "summary": {
       "totalInvoices": "Facturas totales",
       "pendingInvoices": "Facturas pendientes",
@@ -2384,1077 +2419,1175 @@
         "taxPerc": "Impuesto %",
         "total": "Total"
       }
-    }
-  },
-  "payments": {
-    "title": "Control de pagos",
-    "subtitle": "Registre pagos, consulte el historial y gestione notas de crédito y débito.",
-    "searchPlaceholder": "Buscar por cliente, método de pago, factura, referencia o notas",
-    "empty": "No se encontraron pagos.",
-    "filtered": "resultados",
-    "tabs": {
-      "payments": "Pagos",
-      "creditNotes": "Notas de crédito",
-      "debitNotes": "Notas de débito"
     },
-    "summary": {
-      "totalPayments": "Pagos totales",
-      "totalCollected": "Total cobrado",
-      "cashPayments": "Pagos en efectivo",
-      "transferPayments": "Pagos por transferencia"
-    },
-    "filters": {
-      "allClients": "Todos los clientes",
-      "allPaymentMethods": "Todos los métodos de pago"
-    },
-    "actions": {
-      "refresh": "Recargar",
-      "newPayment": "Registrar pago",
-      "register": "Registrar",
-      "viewDetails": "Ver detalle",
-      "exportPdf": "Exportar PDF",
-      "exportExcel": "Exportar Excel"
-    },
-    "fields": {
-      "invoice": "Factura",
-      "client": "Cliente",
-      "paymentMethod": "Método de pago",
-      "paymentDate": "Fecha de pago",
-      "amount": "Monto",
-      "amountTendered": "Monto entregado",
-      "changeAmount": "Vuelto",
-      "pendingAmount": "Saldo pendiente",
-      "reference": "Referencia",
-      "notes": "Notas",
-      "isBankConfirmed": "Confirmado por banco",
-      "isPosAvailable": "POS disponible",
-      "isApproved": "Aprobado",
-      "posAuthCode": "Código de autorización POS",
-      "totalAmount": "Monto total"
-    },
-    "placeholders": {
-      "selectInvoice": "Seleccione una factura",
-      "selectClient": "Seleccione un cliente",
-      "selectPaymentMethod": "Seleccione un método de pago"
-    },
-    "modes": {
-      "cash": "Efectivo",
-      "transfer": "Transferencia",
-      "card": "Tarjeta",
-      "partial": "Pago parcial"
-    },
-    "table": {
-      "client": "Cliente",
-      "method": "Método",
-      "paymentDate": "Fecha de pago",
-      "totalAmount": "Monto total",
-      "reference": "Referencia",
-      "appliedInvoices": "Facturas aplicadas",
-      "invoice": "Factura",
-      "appliedAmount": "Monto aplicado",
-      "options": "Opciones"
-    },
-    "drawer": {
-      "detailsTitle": "Detalle del pago",
-      "detailsDescription": "Revise el pago {reference}.",
-      "appliedInvoicesTitle": "Facturas aplicadas",
-      "emptyAppliedInvoices": "No se encontraron facturas aplicadas."
-    },
-    "modal": {
-      "title": "Registrar pago",
-      "description": "Seleccione el tipo de pago y registre la transacción contra una factura."
-    },
-    "messages": {
-      "loadError": "No se pudieron cargar los pagos.",
-      "loadDetailError": "No se pudo cargar el detalle del pago.",
-      "loadCatalogsError": "No se pudieron cargar los catálogos.",
-      "loadInvoiceError": "No se pudo cargar la información de la factura.",
-      "registerSuccess": "Pago registrado correctamente.",
-      "registerError": "No se pudo registrar el pago.",
-      "exportPdfError": "No se pudo exportar el reporte PDF.",
-      "exportExcelError": "No se pudo exportar el reporte Excel."
-    },
-    "validation": {
-      "requiredHeader": "Factura, cliente, método de pago y fecha de pago son obligatorios.",
-      "invoiceRequired": "Se requiere una factura válida.",
-      "amountRequired": "Se requiere un monto válido.",
-      "cashInsufficient": "El monto entregado es menor al saldo pendiente.",
-      "partialExceedsBalance": "El pago parcial supera el saldo restante."
-    },
-    "creditNotes": {
-      "empty": "No se encontraron notas de crédito.",
-      "actions": {
-        "new": "Nueva nota de crédito"
+
+    "payments": {
+      "title": "Control de pagos",
+      "subtitle": "Registre pagos, consulte el historial y gestione notas de crédito y débito.",
+      "searchPlaceholder": "Buscar por cliente, método de pago, factura, referencia o notas",
+      "empty": "No se encontraron pagos.",
+      "filtered": "resultados",
+      "tabs": {
+        "payments": "Pagos",
+        "creditNotes": "Notas de crédito",
+        "debitNotes": "Notas de débito"
       },
-      "modal": {
-        "title": "Crear nota de crédito",
-        "description": "Cree y emita una nota de crédito asociada a una factura."
+      "summary": {
+        "totalPayments": "Pagos totales",
+        "totalCollected": "Total cobrado",
+        "cashPayments": "Pagos en efectivo",
+        "transferPayments": "Pagos por transferencia"
+      },
+      "filters": {
+        "allClients": "Todos los clientes",
+        "allPaymentMethods": "Todos los métodos de pago"
+      },
+      "actions": {
+        "search": "Buscar",
+        "refresh": "Recargar",
+        "newPayment": "Registrar pago",
+        "register": "Registrar",
+        "viewDetails": "Ver detalle",
+        "exportPdf": "Exportar PDF",
+        "exportExcel": "Exportar Excel"
       },
       "fields": {
         "invoice": "Factura",
-        "reason": "Motivo",
-        "totalAmount": "Monto total",
-        "issueDate": "Fecha de emisión",
-        "selectedInvoiceBalance": "Saldo de la factura"
+        "client": "Cliente",
+        "paymentMethod": "Método de pago",
+        "paymentDate": "Fecha de pago",
+        "amount": "Monto",
+        "amountTendered": "Monto entregado",
+        "changeAmount": "Vuelto",
+        "pendingAmount": "Saldo pendiente",
+        "reference": "Referencia",
+        "notes": "Notas",
+        "isBankConfirmed": "Confirmado por banco",
+        "isPosAvailable": "POS disponible",
+        "isApproved": "Aprobado",
+        "posAuthCode": "Código de autorización POS",
+        "totalAmount": "Monto total"
       },
       "placeholders": {
         "selectInvoice": "Seleccione una factura",
-        "selectReason": "Seleccione una razón"
+        "selectClient": "Seleccione un cliente",
+        "selectPaymentMethod": "Seleccione un método de pago"
       },
-      "reasons": {
-        "return": "Devolución",
-        "priceCorrection": "Corrección de precio",
-        "serviceCanceled": "Servicio cancelado"
+      "modes": {
+        "cash": "Efectivo",
+        "transfer": "Transferencia",
+        "card": "Tarjeta",
+        "partial": "Pago parcial"
       },
       "table": {
-        "invoice": "Factura",
-        "consecutive": "Consecutivo",
-        "issueDate": "Fecha de emisión",
-        "reason": "Motivo",
+        "client": "Cliente",
+        "method": "Método",
+        "paymentDate": "Fecha de pago",
         "totalAmount": "Monto total",
-        "taxStatus": "Estado tributario"
+        "reference": "Referencia",
+        "appliedInvoices": "Facturas aplicadas",
+        "invoice": "Factura",
+        "appliedAmount": "Monto aplicado",
+        "options": "Opciones"
       },
-      "messages": {
-        "loadError": "No se pudieron cargar las notas de crédito.",
-        "createSuccess": "Nota de crédito creada correctamente.",
-        "createError": "No se pudo crear la nota de crédito."
-      },
-      "validation": {
-        "required": "Factura, motivo, monto total y fecha de emisión son obligatorios.",
-        "amountRequired": "El monto debe ser mayor a 0.",
-        "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
-      }
-    },
-    "debitNotes": {
-      "empty": "No se encontraron notas de débito.",
-      "actions": {
-        "new": "Nueva nota de débito"
+      "drawer": {
+        "detailsTitle": "Detalle del pago",
+        "detailsDescription": "Revise el pago {reference}.",
+        "appliedInvoicesTitle": "Facturas aplicadas",
+        "emptyAppliedInvoices": "No se encontraron facturas aplicadas."
       },
       "modal": {
-        "title": "Crear nota de débito",
-        "description": "Cree y emita una nota de débito asociada a una factura."
-      },
-      "fields": {
-        "invoice": "Factura",
-        "reason": "Motivo",
-        "totalAmount": "Monto total",
-        "issueDate": "Fecha de emisión",
-        "selectedInvoiceBalance": "Monto base de la factura"
-      },
-      "placeholders": {
-        "selectInvoice": "Seleccione una factura"
-      },
-      "table": {
-        "invoice": "Factura",
-        "consecutive": "Consecutivo",
-        "issueDate": "Fecha de emisión",
-        "reason": "Motivo",
-        "totalAmount": "Monto total",
-        "taxStatus": "Estado tributario"
+        "title": "Registrar pago",
+        "description": "Seleccione el tipo de pago y registre la transacción contra una factura."
       },
       "messages": {
-        "loadError": "No se pudieron cargar las notas de débito.",
-        "createSuccess": "Nota de débito creada correctamente.",
-        "createError": "No se pudo crear la nota de débito."
+        "loadError": "No se pudieron cargar los pagos.",
+        "loadDetailError": "No se pudo cargar el detalle del pago.",
+        "loadCatalogsError": "No se pudieron cargar los catálogos.",
+        "loadInvoiceError": "No se pudo cargar la información de la factura.",
+        "registerSuccess": "Pago registrado correctamente.",
+        "registerError": "No se pudo registrar el pago.",
+        "exportPdfError": "No se pudo exportar el reporte PDF.",
+        "exportExcelError": "No se pudo exportar el reporte Excel."
       },
       "validation": {
-        "required": "Factura, motivo, monto total y fecha de emisión son obligatorios.",
-        "amountRequired": "El monto debe ser mayor a 0.",
-        "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
+        "requiredHeader": "Factura, cliente, método de pago y fecha de pago son obligatorios.",
+        "invoiceRequired": "Se requiere una factura válida.",
+        "amountRequired": "Se requiere un monto válido.",
+        "cashInsufficient": "El monto entregado es menor al saldo pendiente.",
+        "partialExceedsBalance": "El pago parcial supera el saldo restante."
+      },
+      "creditNotes": {
+        "empty": "No se encontraron notas de crédito.",
+        "actions": {
+          "new": "Nueva nota de crédito"
+        },
+        "modal": {
+          "title": "Crear nota de crédito",
+          "description": "Cree y emita una nota de crédito asociada a una factura."
+        },
+        "fields": {
+          "invoice": "Factura",
+          "reason": "Motivo",
+          "totalAmount": "Monto total",
+          "issueDate": "Fecha de emisión",
+          "selectedInvoiceBalance": "Saldo de la factura"
+        },
+        "placeholders": {
+          "selectInvoice": "Seleccione una factura",
+          "selectReason": "Seleccione una razón"
+        },
+        "reasons": {
+          "return": "Devolución",
+          "priceCorrection": "Corrección de precio",
+          "serviceCanceled": "Servicio cancelado"
+        },
+        "table": {
+          "invoice": "Factura",
+          "consecutive": "Consecutivo",
+          "issueDate": "Fecha de emisión",
+          "reason": "Motivo",
+          "totalAmount": "Monto total",
+          "taxStatus": "Estado tributario"
+        },
+        "messages": {
+          "loadError": "No se pudieron cargar las notas de crédito.",
+          "createSuccess": "Nota de crédito creada correctamente.",
+          "createError": "No se pudo crear la nota de crédito."
+        },
+        "validation": {
+          "required": "Factura, motivo, monto total y fecha de emisión son obligatorios.",
+          "amountRequired": "El monto debe ser mayor a 0.",
+          "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
+        }
+      },
+      "debitNotes": {
+        "empty": "No se encontraron notas de débito.",
+        "actions": {
+          "new": "Nueva nota de débito"
+        },
+        "modal": {
+          "title": "Crear nota de débito",
+          "description": "Cree y emita una nota de débito asociada a una factura."
+        },
+        "fields": {
+          "invoice": "Factura",
+          "reason": "Motivo",
+          "totalAmount": "Monto total",
+          "issueDate": "Fecha de emisión",
+          "selectedInvoiceBalance": "Monto base de la factura"
+        },
+        "placeholders": {
+          "selectInvoice": "Seleccione una factura"
+        },
+        "table": {
+          "invoice": "Factura",
+          "consecutive": "Consecutivo",
+          "issueDate": "Fecha de emisión",
+          "reason": "Motivo",
+          "totalAmount": "Monto total",
+          "taxStatus": "Estado tributario"
+        },
+        "messages": {
+          "loadError": "No se pudieron cargar las notas de débito.",
+          "createSuccess": "Nota de débito creada correctamente.",
+          "createError": "No se pudo crear la nota de débito."
+        },
+        "validation": {
+          "required": "Factura, motivo, monto total y fecha de emisión son obligatorios.",
+          "amountRequired": "El monto debe ser mayor a 0.",
+          "invoiceAlreadyPaid": "La factura seleccionada ya fue pagada."
+        }
       }
+    },
+    "audit": {
+  "title": "Auditoría del sistema",
+  "subtitle": "Monitorea los cambios y la actividad del sistema.",
+  "empty": "No se encontraron registros de auditoría.",
+  "filtered": "resultados",
+  "noData": "Sin datos",
+  "filters": {
+    "allModules": "Todos los módulos",
+    "allActions": "Todas las acciones"
+  },
+  "modules": {
+    "taxes": "Taxes",
+    "products": "Products",
+    "auth": "Security",
+    "inventory": "Inventory",
+    "users": "Users"
+  },
+  "actions": {
+    "search": "Search",
+    "refresh": "Refresh",
+    "create": "Create",
+    "update": "Update",
+    "delete": "Delete",
+    "exportPdf": "Export PDF",
+    "exportExcel": "Export Excel"
+  },
+  "table": {
+    "date": "Date",
+    "module": "Module",
+    "entity": "Entity",
+    "action": "Action",
+    "user": "User",
+    "ip": "IP"
+  },
+  "modal": {
+    "title": "Change Details",
+    "dataBefore": "Previous State",
+    "dataAfter": "New State"
+  },
+  "messages": {
+    "loadError": "Could not load audit records."
     }
   },
-  "payroll": {
-    "title": "Planillas",
-    "subtitle": "Calcule planillas, registre horas extra, ajuste comisiones y gestione boletas de pago.",
-    "empty": "No se encontraron planillas.",
-    "filtered": "resultados",
-    "summary": {
-      "totalPayrolls": "Planillas totales",
-      "totalEmployees": "Total de empleados",
-      "totalNet": "Total neto de planilla",
-      "totalCommissions": "Total de comisiones"
-    },
-    "filters": {
-      "periodCode": "Buscar por código de período",
-      "status": "Buscar por estado",
-      "filtered": "resultados"
-    },
-    "actions": {
-      "refresh": "Recargar",
-      "newPayroll": "Nueva planilla",
-      "newOvertime": "Registrar horas extra",
-      "calculate": "Calcular planilla",
-      "viewDetails": "Ver detalle",
-      "adjustCommission": "Ajustar comisión",
-      "sendPayslip": "Enviar boleta",
-      "generatePayslip": "Generar boleta",
-      "viewHistory": "Ver historial",
-      "loadHistory": "Cargar historial"
-    },
-    "fields": {
-      "periodCode": "Código de período",
-      "startDate": "Fecha de inicio",
-      "endDate": "Fecha de fin",
-      "payrollType": "Tipo de planilla",
-      "status": "Estado",
-      "attendanceConfirmed": "Asistencia confirmada",
-      "attendanceConfirmedHint": "Active esta opción solo después de validar los registros de asistencia del período."
-    },
-    "types": {
-      "weekly": "Semanal",
-      "biweekly": "Quincenal",
-      "monthly": "Mensual"
-    },
-    "table": {
-      "periodCode": "Período",
-      "startDate": "Fecha inicio",
-      "endDate": "Fecha fin",
-      "payrollType": "Tipo",
-      "status": "Estado",
-      "employees": "Empleados",
-      "grossTotal": "Total bruto",
-      "totalNet": "Total neto",
-      "updatedAt": "Actualizado",
-      "options": "Opciones"
-    },
-    "detail": {
-      "employeeName": "Empleado",
-      "grossSalary": "Salario bruto",
-      "overtimeHours": "Horas extra",
-      "commissionAmount": "Comisión",
-      "deductions": "Deducciones",
-      "employerContrib": "Contribución patronal",
-      "netSalary": "Salario neto",
-      "actions": "Acciones"
-    },
-    "modal": {
-      "title": "Crear o calcular planilla",
-      "description": "Cree una planilla en borrador o calcule la planilla completa para un período.",
-      "modes": {
-        "calculate": "Calcular",
-        "createDraft": "Crear borrador"
-      }
-    },
-    "drawer": {
-      "title": "Detalle de planilla",
-      "description": "Revise los datos de planilla, el desglose por empleado y el historial de pagos.",
-      "tabs": {
-        "details": "Detalles",
-        "history": "Historial del empleado"
+    "payroll": {
+      "title": "Planillas",
+      "subtitle": "Calcule planillas, registre horas extra, ajuste comisiones y gestione boletas de pago.",
+      "empty": "No se encontraron planillas.",
+      "filtered": "resultados",
+      "summary": {
+        "totalPayrolls": "Planillas totales",
+        "totalEmployees": "Total de empleados",
+        "totalNet": "Total neto de planilla",
+        "totalCommissions": "Total de comisiones"
       },
-      "employeeBreakdown": "Desglose por empleado",
-      "emptyDetails": "No se encontraron detalles de planilla."
-    },
-    "history": {
-      "empty": "No se encontró historial de planilla para este empleado.",
+      "filters": {
+        "periodCode": "Buscar por código de período",
+        "status": "Buscar por estado",
+        "filtered": "resultados"
+      },
+      "actions": {
+        "refresh": "Recargar",
+        "newPayroll": "Nueva planilla",
+        "newOvertime": "Registrar horas extra",
+        "calculate": "Calcular planilla",
+        "viewDetails": "Ver detalle",
+        "adjustCommission": "Ajustar comisión",
+        "sendPayslip": "Enviar boleta",
+        "generatePayslip": "Generar boleta",
+        "viewHistory": "Ver historial",
+        "loadHistory": "Cargar historial"
+      },
       "fields": {
-        "employee": "Empleado",
-        "from": "Desde",
-        "to": "Hasta"
+        "periodCode": "Código de período",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "payrollType": "Tipo de planilla",
+        "status": "Estado",
+        "attendanceConfirmed": "Asistencia confirmada",
+        "attendanceConfirmedHint": "Active esta opción solo después de validar los registros de asistencia del período."
       },
-      "placeholders": {
-        "selectEmployee": "Seleccione un empleado"
+      "types": {
+        "weekly": "Semanal",
+        "biweekly": "Quincenal",
+        "monthly": "Mensual"
       },
       "table": {
         "periodCode": "Período",
         "startDate": "Fecha inicio",
         "endDate": "Fecha fin",
+        "payrollType": "Tipo",
         "status": "Estado",
-        "commission": "Comisión",
-        "netSalary": "Salario neto"
+        "employees": "Empleados",
+        "grossTotal": "Total bruto",
+        "totalNet": "Total neto",
+        "updatedAt": "Actualizado",
+        "options": "Opciones"
       },
-      "messages": {
-        "loadError": "No se pudo cargar el historial de planillas del empleado."
-      }
-    },
-    "overtime": {
+      "detail": {
+        "employeeName": "Empleado",
+        "grossSalary": "Salario bruto",
+        "overtimeHours": "Horas extra",
+        "commissionAmount": "Comisión",
+        "deductions": "Deducciones",
+        "employerContrib": "Contribución patronal",
+        "netSalary": "Salario neto",
+        "actions": "Acciones"
+      },
       "modal": {
-        "title": "Registrar horas extra",
-        "description": "Registre horas extra para un empleado."
+        "title": "Crear o calcular planilla",
+        "description": "Cree una planilla en borrador o calcule la planilla completa para un período.",
+        "modes": {
+          "calculate": "Calcular",
+          "createDraft": "Crear borrador"
+        }
       },
-      "fields": {
-        "employee": "Empleado",
-        "workDate": "Fecha de trabajo",
-        "hours": "Horas",
-        "notes": "Notas"
-      },
-      "placeholders": {
-        "selectEmployee": "Seleccione un empleado"
-      },
-      "messages": {
-        "createSuccess": "Horas extra registradas correctamente.",
-        "createError": "No se pudieron registrar las horas extra."
-      },
-      "validation": {
-        "required": "Empleado, fecha de trabajo y horas son obligatorios.",
-        "invalidHours": "Las horas deben ser mayores que 0 y menores o iguales a 16."
-      }
-    },
-    "commissions": {
-      "modal": {
-        "title": "Ajustar comisión",
-        "description": "Ajuste el monto de comisión para {employee}."
-      },
-      "fields": {
-        "amount": "Monto de comisión"
-      },
-      "messages": {
-        "updateSuccess": "Comisión actualizada correctamente.",
-        "updateError": "No se pudo actualizar la comisión."
-      },
-      "validation": {
-        "invalidAmount": "El monto de comisión debe ser un número válido mayor o igual a 0."
-      }
-    },
-    "messages": {
-      "loadError": "No se pudieron cargar las planillas.",
-      "loadDetailError": "No se pudo cargar el detalle de la planilla.",
-      "createSuccess": "Planilla procesada correctamente.",
-      "createError": "No se pudo procesar la planilla.",
-      "calculateError": "No se pudo calcular la planilla.",
-      "sendEmailSuccess": "Boleta enviada correctamente por correo.",
-      "sendEmailError": "No se pudo enviar la boleta por correo.",
-      "generatePdfSuccess": "La solicitud de generación de boleta fue procesada.",
-      "generatePdfWarning": "El endpoint de PDF aún no está configurado para devolver un archivo descargable en el cliente actual."
-    },
-    "validation": {
-      "required": "Código de período, tipo de planilla, fecha de inicio y fecha de fin son obligatorios.",
-      "invalidDateRange": "La fecha de fin no puede ser menor que la fecha de inicio.",
-      "attendanceRequired": "Debe confirmar la asistencia antes de calcular la planilla."
-    }
-  },
-  "services": {
-    "title": "Servicios",
-    "subtitle": "Gestione el catálogo de servicios, órdenes de servicio, tiempos estimados y asignaciones técnicas.",
-    "uncategorized": "Sin categoría",
-    "empty": "No se encontraron servicios.",
-    "emptyByCategory": "No hay servicios disponibles en esta categoría.",
-    "filtered": "results",
-    "summary": {
-      "total": "Servicios totales",
-      "active": "Activos",
-      "inactive": "Inactivos",
-      "averageRate": "Tarifa promedio"
-    },
-    "filters": {
-      "search": "Buscar por código, nombre o descripción",
-      "categoryId": "Filtrar por id de categoría",
-      "allStatuses": "Todos los estados",
-      "allStatus": "Todos los estados",
-      "active": "Activos",
-      "inactive": "Inactivos"
-    },
-    "status": {
-      "active": "Activos",
-      "inactive": "Inactivos"
-    },
-    "availability": {
-      "active": "Activo",
-      "inactive": "Inactivo",
-      "maintenance": "Mantenimiento"
-    },
-    "fields": {
-      "code": "Código",
-      "name": "Nombre",
-      "description": "Descripción",
-      "category": "Categoría",
-      "isCategoryProtected": "Categoría protegida",
-      "standardTimeMin": "Tiempo estimado (min)",
-      "baseRate": "Tarifa base",
-      "availabilityStatus": "Disponibilidad",
-      "isActive": "Activo"
-    },
-    "table": {
-      "code": "Código",
-      "name": "Servicio",
-      "standardTimeMin": "Tiempo estimado",
-      "baseRate": "Tarifa",
-      "availabilityStatus": "Disponibilidad",
-      "status": "Estado",
-      "options": "Opciones",
-      "category": "Categoría"
-    },
-    "actions": {
-      "refresh": "Recargar",
-      "newService": "Nuevo servicio",
-      "edit": "Editar",
-      "viewDetails": "Ver detalle",
-      "search": "Buscar"
-    },
-    "modal": {
-      "createTitle": "Crear servicio",
-      "createDescription": "Registre un nuevo servicio en el catálogo.",
-      "editTitle": "Editar servicio",
-      "editDescription": "Actualice el servicio seleccionado."
-    },
-    "drawer": {
-      "title": "Detalle del servicio",
-      "description": "Revise la información del servicio y sus órdenes relacionadas.",
-      "tabs": {
-        "details": "Detalles",
-        "orders": "Órdenes de servicio"
-      }
-    },
-    "placeholders": {
-      "selectCategory": "Seleccione una categoría"
-    },
-    "orders": {
-      "empty": "No se encontraron órdenes de servicio para este servicio.",
       "drawer": {
-        "createTitle": "Crear orden de servicio",
-        "createDescription": "Cree una nueva orden de servicio con servicios, materiales, checklist y fotos.",
-        "detailsTitle": "Detalle de orden de servicio",
-        "detailsDescription": "Información de la orden {code}"
+        "title": "Detalle de planilla",
+        "description": "Revise los datos de planilla, el desglose por empleado y el historial de pagos.",
+        "tabs": {
+          "details": "Detalles",
+          "history": "Historial del empleado"
+        },
+        "employeeBreakdown": "Desglose por empleado",
+        "emptyDetails": "No se encontraron detalles de planilla."
       },
-      "sections": {
-        "general": "Información general",
-        "summary": "Resumen rápido",
-        "services": "Servicios",
-        "materials": "Materiales",
-        "checklist": "Checklist"
+      "history": {
+        "empty": "No se encontró historial de planilla para este empleado.",
+        "fields": {
+          "employee": "Empleado",
+          "from": "Desde",
+          "to": "Hasta"
+        },
+        "placeholders": {
+          "selectEmployee": "Seleccione un empleado"
+        },
+        "table": {
+          "periodCode": "Período",
+          "startDate": "Fecha inicio",
+          "endDate": "Fecha fin",
+          "status": "Estado",
+          "commission": "Comisión",
+          "netSalary": "Salario neto"
+        },
+        "messages": {
+          "loadError": "No se pudo cargar el historial de planillas del empleado."
+        }
       },
+      "overtime": {
+        "modal": {
+          "title": "Registrar horas extra",
+          "description": "Registre horas extra para un empleado."
+        },
+        "fields": {
+          "employee": "Empleado",
+          "workDate": "Fecha de trabajo",
+          "hours": "Horas",
+          "notes": "Notas"
+        },
+        "placeholders": {
+          "selectEmployee": "Seleccione un empleado"
+        },
+        "messages": {
+          "createSuccess": "Horas extra registradas correctamente.",
+          "createError": "No se pudieron registrar las horas extra."
+        },
+        "validation": {
+          "required": "Empleado, fecha de trabajo y horas son obligatorios.",
+          "invalidHours": "Las horas deben ser mayores que 0 y menores o iguales a 16."
+        }
+      },
+      "commissions": {
+        "modal": {
+          "title": "Ajustar comisión",
+          "description": "Ajuste el monto de comisión para {employee}."
+        },
+        "fields": {
+          "amount": "Monto de comisión"
+        },
+        "messages": {
+          "updateSuccess": "Comisión actualizada correctamente.",
+          "updateError": "No se pudo actualizar la comisión."
+        },
+        "validation": {
+          "invalidAmount": "El monto de comisión debe ser un número válido mayor o igual a 0."
+        }
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar las planillas.",
+        "loadDetailError": "No se pudo cargar el detalle de la planilla.",
+        "createSuccess": "Planilla procesada correctamente.",
+        "createError": "No se pudo procesar la planilla.",
+        "calculateError": "No se pudo calcular la planilla.",
+        "sendEmailSuccess": "Boleta enviada correctamente por correo.",
+        "sendEmailError": "No se pudo enviar la boleta por correo.",
+        "generatePdfSuccess": "La solicitud de generación de boleta fue procesada.",
+        "generatePdfWarning": "El endpoint de PDF aún no está configurado para devolver un archivo descargable en el cliente actual."
+      },
+      "validation": {
+        "required": "Código de período, tipo de planilla, fecha de inicio y fecha de fin son obligatorios.",
+        "invalidDateRange": "La fecha de fin no puede ser menor que la fecha de inicio.",
+        "attendanceRequired": "Debe confirmar la asistencia antes de calcular la planilla."
+      }
+    },
+    "services": {
+      "title": "Servicios",
+      "subtitle": "Gestione el catálogo de servicios, órdenes de servicio, tiempos estimados y asignaciones técnicas.",
+      "uncategorized": "Sin categoría",
+      "empty": "No se encontraron servicios.",
+
+      "emptyByCategory": "No hay servicios disponibles en esta categoría.",
+      "filtered": "resultados",
       "summary": {
-        "services": "Servicios",
-        "estimatedItems": "Ítems estimados",
-        "materials": "Materiales",
-        "checklists": "Checklists",
-        "estimatedMaterialsCost": "Costo estimado materiales",
-        "total": "Total",
-        "open": "Abiertas",
-        "closed": "Cerradas"
+        "total": "Servicios totales",
+        "active": "Activos",
+        "inactive": "Inactivos",
+        "averageRate": "Tarifa promedio"
+      },
+      "filters": {
+        "search": "Buscar por código, nombre o descripción",
+        "categoryId": "Filtrar por id de categoría",
+        "allStatuses": "Todos los estados",
+        "allStatus": "Todos los estados",
+        "active": "Activos",
+        "inactive": "Inactivos"
+      },
+      "status": {
+        "active": "Activos",
+        "inactive": "Inactivos"
+      },
+      "availability": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "maintenance": "Mantenimiento"
       },
       "fields": {
         "code": "Código",
-        "client": "Cliente",
-        "branch": "Sucursal",
-        "contract": "Contrato",
-        "scheduledDate": "Fecha programada",
-        "serviceAddress": "Dirección del servicio",
-        "notes": "Notas",
-        "service": "Servicio",
-        "quantity": "Cantidad",
-        "status": "Estado",
+        "name": "Nombre",
         "description": "Descripción",
-        "product": "Producto",
-        "estimatedCost": "Costo estimado",
-        "isCompleted": "Completado"
+        "category": "Categoría",
+        "isCategoryProtected": "Categoría protegida",
+        "standardTimeMin": "Tiempo estimado (min)",
+        "baseRate": "Tarifa base",
+        "availabilityStatus": "Disponibilidad",
+        "isActive": "Activo"
+      },
+      "table": {
+        "code": "Código",
+        "name": "Servicio",
+        "standardTimeMin": "Tiempo estimado",
+        "baseRate": "Tarifa",
+        "availabilityStatus": "Disponibilidad",
+        "status": "Estado",
+        "options": "Opciones",
+        "category": "Categoría"
+      },
+      "actions": {
+        "refresh": "Recargar",
+        "newService": "Nuevo servicio",
+        "edit": "Editar",
+        "viewDetails": "Ver detalle",
+        "search": "Buscar"
+      },
+      "modal": {
+        "createTitle": "Crear servicio",
+        "createDescription": "Registre un nuevo servicio en el catálogo.",
+        "editTitle": "Editar servicio",
+        "editDescription": "Actualice el servicio seleccionado."
+      },
+      "drawer": {
+        "title": "Detalle del servicio",
+        "description": "Revise la información del servicio y sus órdenes relacionadas.",
+        "tabs": {
+          "details": "Detalles",
+          "orders": "Órdenes de servicio"
+        }
+      },
+      "placeholders": {
+        "selectCategory": "Seleccione una categoría"
+      },
+      "orders": {
+        "empty": "No se encontraron órdenes de servicio para este servicio.",
+        "drawer": {
+          "createTitle": "Crear orden de servicio",
+          "createDescription": "Cree una nueva orden de servicio con servicios, materiales, checklist y fotos.",
+          "detailsTitle": "Detalle de orden de servicio",
+          "detailsDescription": "Información de la orden {code}"
+        },
+        "sections": {
+          "general": "Información general",
+          "summary": "Resumen rápido",
+          "services": "Servicios",
+          "materials": "Materiales",
+          "checklist": "Checklist"
+        },
+        "summary": {
+          "services": "Servicios",
+          "estimatedItems": "Ítems estimados",
+          "materials": "Materiales",
+          "checklists": "Checklists",
+          "estimatedMaterialsCost": "Costo estimado materiales",
+          "total": "Total",
+          "open": "Abiertas",
+          "closed": "Cerradas"
+        },
+        "fields": {
+          "code": "Código",
+          "client": "Cliente",
+          "branch": "Sucursal",
+          "contract": "Contrato",
+          "scheduledDate": "Fecha programada",
+          "serviceAddress": "Dirección del servicio",
+          "notes": "Notas",
+          "service": "Servicio",
+          "quantity": "Cantidad",
+          "status": "Estado",
+          "description": "Descripción",
+          "product": "Producto",
+          "estimatedCost": "Costo estimado",
+          "isCompleted": "Completado"
+        },
+        "placeholders": {
+          "selectClient": "Seleccione un cliente",
+          "selectBranch": "Seleccione una sucursal",
+          "selectContract": "Seleccione un contrato",
+          "selectService": "Seleccione un servicio",
+          "selectProduct": "Seleccione un producto"
+        },
+        "actions": {
+          "newOrder": "Nueva orden de servicio",
+          "addService": "Agregar servicio",
+          "addMaterial": "Agregar material",
+          "addChecklist": "Agregar checklist"
+        },
+        "table": {
+          "code": "Código",
+          "client": "Cliente",
+          "status": "Estado",
+          "scheduledDate": "Fecha programada",
+          "address": "Dirección",
+          "options": "Opciones",
+          "branch": "Sucursal",
+          "contract": "Contrato",
+          "items": "Servicios"
+        },
+        "messages": {
+          "loadError": "No se pudieron cargar las órdenes de servicio.",
+          "createSuccess": "Orden de servicio creada correctamente.",
+          "createError": "No se pudo crear la orden de servicio.",
+          "loadDetailError": "No se pudo cargar el detalle de la orden de servicio.",
+          "loadCatalogsError": "No se pudieron cargar los catálogos de la orden de servicio."
+        },
+        "validation": {
+          "required": "Código, cliente, fecha programada y dirección del servicio son obligatorios.",
+          "servicesRequired": "Debe agregar al menos un servicio válido."
+        },
+        "emptyServices": "No hay servicios agregados.",
+        "emptyMaterials": "No hay materiales agregados.",
+        "emptyChecklist": "No hay checklist agregado."
+      },
+      "messages": {
+        "loadError": "No se pudieron cargar los servicios.",
+        "loadDetailError": "No se pudo cargar el detalle del servicio.",
+        "createSuccess": "Servicio creado correctamente.",
+        "createError": "No se pudo crear el servicio.",
+        "updateSuccess": "Servicio actualizado correctamente.",
+        "updateError": "No se pudo actualizar el servicio."
+      },
+      "validation": {
+        "required": "Código, nombre, categoría, tiempo estimado y tarifa son obligatorios.",
+        "invalidTime": "El tiempo estimado debe ser mayor que 0.",
+        "invalidRate": "La tarifa debe ser mayor o igual a 0.",
+        "protectedCategory": "Este servicio pertenece a una categoría protegida y no puede cambiar de categoría."
+      }
+    },
+
+    "discounts": {
+      "title": "Descuentos",
+      "subtitle": "Administra políticas, aprobaciones e historial de descuentos.",
+      "filtered": "resultados",
+      "tabs": {
+        "policies": "Políticas",
+        "approvals": "Aprobaciones",
+        "history": "Historial"
+      },
+      "stats": {
+        "activePolicies": "Políticas activas",
+        "pendingApprovals": "Aprobaciones pendientes",
+        "totalDiscounted": "Monto total descontado"
+      },
+      "actions": {
+        "newPolicy": "Nueva política",
+        "apply": "Aplicar descuento",
+        "reject": "Rechazar",
+        "approve": "Aprobar",
+        "export": "Exportar",
+        "exportExcel": "Exportar Excel",
+        "requestApproval": "Solicitar aprobación",
+        "lineDiscount": "Linea de descuento",
+        "globalDiscount": "Descuento global",
+        "removeLineDiscount": "Eliminar descuento por línea",
+        "removeGlobalDiscount": "Eliminar descuento global"
+      },
+      "fields": {
+        "globalDiscountPerc": "Descuento global %",
+        "globalDiscountAmount": "Monto descuento global",
+        "globalDiscountReason": "Motivo descuento global",
+        "discountReason": "Motivo descuento"
+      },
+      "apply": {
+        "lineTitle": "Aplicar descuento a línea",
+        "lineDescription": "Define un descuento específico para este producto o servicio.",
+        "globalTitle": "Aplicar descuento global",
+        "globalDescription": "Define un descuento sobre el total de la orden.",
+        "fields": {
+          "policy": "Política",
+          "discountPerc": "Porcentaje de descuento",
+          "reason": "Motivo"
+        },
+        "placeholders": {
+          "selectPolicy": "Seleccione una política"
+        },
+        "validation": {
+          "policyRequired": "La política es obligatoria.",
+          "reasonRequired": "El motivo es obligatorio.",
+          "discountInvalid": "El porcentaje de descuento no es válido."
+        }
+      },
+      "sales": {
+        "messages": {
+          "discountApplied": "Descuento aplicado correctamente.",
+          "discountApplyError": "No se pudo aplicar el descuento.",
+          "discountRemoved": "Descuento eliminado correctamente.",
+          "discountRemoveError": "No se pudo eliminar el descuento."
+        }
+      },
+      "policies": {
+        "searchPlaceholder": "Buscar por nombre o porcentaje",
+        "empty": "No hay políticas registradas.",
+        "filters": {
+          "all": "Todos",
+          "active": "Activas",
+          "inactive": "Inactivas"
+        },
+        "table": {
+          "name": "Nombre",
+          "maxDiscount": "Máximo descuento",
+          "requiresApproval": "Requiere aprobación",
+          "status": "Estado"
+        },
+        "fields": {
+          "name": "Nombre",
+          "maxDiscountPercentage": "Porcentaje máximo",
+          "requiresApprovalAboveLimit": "Requiere aprobación por encima del límite",
+          "isActive": "Activa"
+        },
+        "validation": {
+          "nameRequired": "El nombre es obligatorio.",
+          "maxDiscountInvalid": "El porcentaje máximo no es válido."
+        },
+        "messages": {
+          "loadError": "No se pudieron cargar las políticas.",
+          "createSuccess": "Política creada correctamente.",
+          "createError": "No se pudo crear la política.",
+          "updateSuccess": "Política actualizada correctamente.",
+          "updateError": "No se pudo actualizar la política.",
+          "activated": "Política activada correctamente.",
+          "deactivated": "Política desactivada correctamente."
+        },
+        "modal": {
+          "createTitle": "Crear política",
+          "createDescription": "Configura una nueva regla de descuento.",
+          "editTitle": "Editar política",
+          "editDescription": "Actualiza la configuración de la política."
+        }
+      },
+      "approvals": {
+        "searchPlaceholder": "Buscar por orden, usuario o motivo",
+        "empty": "No hay solicitudes de aprobación.",
+        "filters": {
+          "all": "Todos los estados",
+          "pending": "Pendiente",
+          "approved": "Aprobada",
+          "rejected": "Rechazada"
+        },
+        "fields": {
+          "rejectionReason": "Motivo de rechazo"
+        },
+        "validation": {
+          "rejectionReasonRequired": "El motivo de rechazo es obligatorio."
+        },
+        "messages": {
+          "loadError": "No se pudieron cargar las aprobaciones.",
+          "approveSuccess": "Solicitud aprobada correctamente.",
+          "approveError": "No se pudo aprobar la solicitud.",
+          "rejectSuccess": "Solicitud rechazada correctamente.",
+          "rejectError": "No se pudo rechazar la solicitud."
+        },
+        "table": {
+          "salesOrder": "Orden",
+          "scope": "Ámbito",
+          "percentage": "Porcentaje",
+          "amount": "Monto",
+          "requestedBy": "Solicitado por",
+          "status": "Estado",
+          "requestedAt": "Solicitado el"
+        },
+        "drawer": {
+          "title": "Detalle de aprobación",
+          "description": "Información de la solicitud asociada a la orden {code}.",
+          "resolvedBy": "Resuelto por",
+          "resolvedAt": "Resuelto el"
+        },
+        "rejectModal": {
+          "title": "Rechazar solicitud",
+          "description": "Indica el motivo del rechazo para dejar trazabilidad."
+        }
+      },
+      "history": {
+        "searchPlaceholder": "Buscar por orden, usuario o motivo",
+        "empty": "No hay historial de descuentos.",
+        "filters": {
+          "allUsers": "Todos los usuarios"
+        },
+        "messages": {
+          "loadError": "No se pudo cargar el historial.",
+          "exportError": "No se pudo exportar el historial."
+        },
+        "table": {
+          "salesOrder": "Orden",
+          "scope": "Ámbito",
+          "action": "Acción",
+          "percentage": "Porcentaje",
+          "amount": "Monto",
+          "reason": "Motivo",
+          "user": "Usuario",
+          "eventDate": "Fecha"
+        },
+        "drawer": {
+          "title": "Detalle de historial",
+          "description": "Detalle del movimiento de descuento de la orden {code}."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Monitorea indicadores principales, ventas del mes, contratos activos e inventario crítico.",
+      "lastUpdated": "Última actualización",
+      "actions": {
+        "refresh": "Recargar",
+        "refreshing": "Recargando..."
+      },
+      "filters": {
+        "branch": "Sucursal",
+        "allBranches": "Todas las sucursales",
+        "autoRefresh": "Actualización automática",
+        "enabled": "Habilitada",
+        "interval": "Intervalo"
+      },
+      "permission": {
+        "title": "Acceso denegado",
+        "description": "No tienes permisos para visualizar este dashboard."
+      },
+      "messages": {
+        "loadError": "No se pudo cargar el dashboard.",
+        "refreshSuccess": "Dashboard actualizado correctamente."
+      },
+      "mainIndicators": {
+        "monthlySalesTotal": "Ventas del mes",
+        "monthlySalesSubtitle": "Monto total acumulado",
+        "activeContractsCount": "Contratos activos",
+        "activeContractsSubtitle": "Contratos actualmente vigentes",
+        "criticalInventoryCount": "Inventario crítico",
+        "criticalInventorySubtitle": "Productos con alerta de stock"
+      },
+      "monthlySales": {
+        "title": "Ventas del mes",
+        "totalSalesAmount": "Total vendido",
+        "salesOrdersCount": "Cantidad de ventas",
+        "servicesSoldQuantity": "Servicios vendidos",
+        "empty": "Sin registros"
+      },
+      "contracts": {
+        "title": "Contratos activos",
+        "activeContractsCount": "Activos",
+        "expiringSoonCount": "Próximos a vencer",
+        "expiredCount": "Vencidos",
+        "empty": "No hay contratos activos"
+      },
+      "inventory": {
+        "title": "Inventario crítico",
+        "noAlerts": "Sin alertas",
+        "noMatches": "No hay productos críticos para ese filtro.",
+        "filters": {
+          "allCategories": "Todas las categorías",
+          "uncategorized": "Sin categoría"
+        },
+        "currentStockBadge": "Actual: {stock}",
+        "minStockBadge": "Mínimo: {stock}",
+        "fields": {
+          "branchId": "Sucursal",
+          "maxStock": "Stock máximo",
+          "minStock": "Stock mínimo"
+        }
+      }
+    },
+    "reports": {
+      "title": "Reportes",
+      "subtitle": "Consulta reportes financieros, inventario, clientes, órdenes de trabajo y programaciones automáticas.",
+      "tabs": {
+        "financial": "Financiero",
+        "inventory": "Inventario",
+        "client": "Clientes",
+        "serviceOrders": "Órdenes de trabajo",
+        "schedules": "Programaciones"
+      },
+      "actions": {
+        "refresh": "Recargar",
+        "generate": "Generar",
+        "exportPdf": "Exportar PDF",
+        "exportExcel": "Exportar Excel",
+        "viewReport": "Ver reporte",
+        "search": "Buscar",
+        "edit": "Editar",
+        "activate": "Activar",
+        "deactivate": "Desactivar"
+      },
+      "filters": {
+        "allBranches": "Todas las sucursales",
+        "allCategories": "Todas las categorías"
       },
       "placeholders": {
         "selectClient": "Seleccione un cliente",
-        "selectBranch": "Seleccione una sucursal",
-        "selectContract": "Seleccione un contrato",
-        "selectService": "Seleccione un servicio",
-        "selectProduct": "Seleccione un producto"
+        "selectEmployee": "Seleccione un técnico",
+        "allEmployees": "Todos los técnicos"
       },
-      "actions": {
-        "newOrder": "Nueva orden de servicio",
-        "addService": "Agregar servicio",
-        "addMaterial": "Agregar material",
-        "addChecklist": "Agregar checklist"
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo"
       },
-      "table": {
-        "code": "Código",
+      "types": {
+        "financial": "Financiero",
+        "inventory": "Inventario",
         "client": "Cliente",
-        "status": "Estado",
-        "scheduledDate": "Fecha programada",
-        "address": "Dirección",
-        "options": "Opciones",
-        "branch": "Sucursal",
-        "contract": "Contrato",
-        "items": "Servicios"
+        "serviceOrders": "Órdenes de trabajo"
+      },
+      "frequencies": {
+        "daily": "Diaria",
+        "weekly": "Semanal",
+        "monthly": "Mensual"
       },
       "messages": {
-        "loadError": "No se pudieron cargar las órdenes de servicio.",
-        "createSuccess": "Orden de servicio creada correctamente.",
-        "createError": "No se pudo crear la orden de servicio.",
-        "loadDetailError": "No se pudo cargar el detalle de la orden de servicio.",
-        "loadCatalogsError": "No se pudieron cargar los catálogos de la orden de servicio."
+        "catalogsError": "No se pudieron cargar los catálogos del módulo."
       },
-      "validation": {
-        "required": "Código, cliente, fecha programada y dirección del servicio son obligatorios.",
-        "servicesRequired": "Debe agregar al menos un servicio válido."
+      "financial": {
+        "fields": {
+          "from": "Desde",
+          "to": "Hasta"
+        },
+        "summary": {
+          "sales": "Ventas",
+          "expenses": "Gastos",
+          "profit": "Utilidad"
+        },
+        "empty": "Sin información disponible",
+        "validation": {
+          "rangeRequired": "Debe seleccionar un rango de fechas."
+        },
+        "messages": {
+          "loadError": "No se pudo cargar el reporte financiero.",
+          "exportError": "No se pudo exportar el reporte financiero."
+        }
       },
-      "emptyServices": "No hay servicios agregados.",
-      "emptyMaterials": "No hay materiales agregados.",
-      "emptyChecklist": "No hay checklist agregado."
+      "inventory": {
+        "fields": {
+          "category": "Categoría"
+        },
+        "table": {
+          "product": "Producto",
+          "category": "Categoría",
+          "stock": "Existencias",
+          "updatedAt": "Actualizado"
+        },
+        "empty": "Sin información disponible",
+        "messages": {
+          "loadError": "No se pudo cargar el reporte de inventario.",
+          "exportError": "No se pudo exportar el reporte de inventario."
+        }
+      },
+      "client": {
+        "fields": {
+          "client": "Cliente"
+        },
+        "preview": {
+          "title": "Historial del cliente",
+          "description": "Selecciona un cliente y abre el drawer para ver compras, servicios y facturas.",
+          "loaded": "Puedes cambiar el cliente o volver a abrir el reporte."
+        },
+        "drawer": {
+          "title": "Reporte de cliente",
+          "description": "Detalle completo del historial del cliente"
+        },
+        "sections": {
+          "purchases": "Compras",
+          "services": "Servicios",
+          "invoices": "Facturas"
+        },
+        "table": {
+          "code": "Código",
+          "date": "Fecha",
+          "status": "Estado",
+          "total": "Total",
+          "contract": "Contrato",
+          "consecutive": "Consecutivo",
+          "paidAmount": "Pagado",
+          "pendingAmount": "Pendiente"
+        },
+        "noPurchases": "No hay compras registradas.",
+        "noServices": "No hay servicios registrados.",
+        "noInvoices": "No hay facturas registradas.",
+        "empty": "No existen registros previos",
+        "validation": {
+          "clientRequired": "Debe seleccionar un cliente."
+        },
+        "messages": {
+          "loadError": "No se pudo cargar el reporte del cliente.",
+          "exportError": "No se pudo exportar el historial del cliente."
+        }
+      },
+      "serviceOrders": {
+        "fields": {
+          "from": "Desde",
+          "to": "Hasta",
+          "employee": "Técnico"
+        },
+        "summary": {
+          "completed": "Completadas",
+          "pending": "Pendientes",
+          "canceled": "Canceladas"
+        },
+        "drawer": {
+          "title": "Reporte de órdenes de trabajo",
+          "description": "Detalle del período seleccionado"
+        },
+        "table": {
+          "code": "Código",
+          "client": "Cliente",
+          "date": "Fecha programada",
+          "status": "Estado",
+          "technicians": "Técnicos",
+          "services": "Servicios"
+        },
+        "empty": "Sin información disponible",
+        "validation": {
+          "rangeRequired": "Debe seleccionar un rango de fechas."
+        },
+        "messages": {
+          "loadError": "No se pudo cargar el reporte de órdenes de trabajo.",
+          "exportError": "No se pudo exportar el reporte de órdenes de trabajo."
+        }
+      },
+      "schedules": {
+        "searchPlaceholder": "Buscar programación por nombre, frecuencia o correo",
+        "filtered": "resultados",
+        "actions": {
+          "newSchedule": "Nueva programación"
+        },
+        "summary": {
+          "total": "Programaciones",
+          "active": "Activas",
+          "failed": "Con error"
+        },
+        "modal": {
+          "createTitle": "Nueva programación",
+          "createDescription": "Configura el envío automático de reportes por correo.",
+          "editTitle": "Editar programación",
+          "editDescription": "Actualiza la configuración de envío automático."
+        },
+        "fields": {
+          "name": "Nombre",
+          "reportType": "Tipo de reporte",
+          "frequency": "Frecuencia",
+          "recipientEmail": "Correo destinatario",
+          "timeOfDayUtc": "Hora (UTC)",
+          "isActive": "Programación activa",
+          "branch": "Sucursal",
+          "category": "Categoría",
+          "client": "Cliente",
+          "employee": "Técnico"
+        },
+        "table": {
+          "name": "Nombre",
+          "reportType": "Tipo",
+          "frequency": "Frecuencia",
+          "recipient": "Correo",
+          "time": "Hora",
+          "status": "Estado",
+          "lastAttempt": "Último intento",
+          "options": "Opciones"
+        },
+        "empty": "No hay programaciones registradas.",
+        "validation": {
+          "nameRequired": "El nombre es obligatorio.",
+          "recipientRequired": "El correo destinatario es obligatorio.",
+          "timeRequired": "La hora es obligatoria.",
+          "clientRequired": "Debe seleccionar un cliente.",
+          "employeeRequired": "Debe seleccionar un técnico."
+        },
+        "messages": {
+          "loadError": "No se pudieron cargar las programaciones.",
+          "createSuccess": "Programación creada correctamente.",
+          "createError": "No se pudo crear la programación.",
+          "updateSuccess": "Programación actualizada correctamente.",
+          "updateError": "No se pudo actualizar la programación.",
+          "activateSuccess": "Programación activada correctamente.",
+          "deactivateSuccess": "Programación desactivada correctamente.",
+          "statusError": "No se pudo actualizar el estado de la programación."
+        }
+      }
     },
-    "messages": {
-      "loadError": "No se pudieron cargar los servicios.",
-      "loadDetailError": "No se pudo cargar el detalle del servicio.",
-      "createSuccess": "Servicio creado correctamente.",
-      "createError": "No se pudo crear el servicio.",
-      "updateSuccess": "Servicio actualizado correctamente.",
-      "updateError": "No se pudo actualizar el servicio."
-    },
-    "validation": {
-      "required": "Código, nombre, categoría, tiempo estimado y tarifa son obligatorios.",
-      "invalidTime": "El tiempo estimado debe ser mayor que 0.",
-      "invalidRate": "La tarifa debe ser mayor o igual a 0.",
-      "protectedCategory": "Este servicio pertenece a una categoría protegida y no puede cambiar de categoría."
-    }
-  },
-
-  "discounts": {
-    "title": "Descuentos",
-    "subtitle": "Administra políticas, aprobaciones e historial de descuentos.",
-    "tabs": {
-      "policies": "Políticas",
-      "approvals": "Aprobaciones",
-      "history": "Historial"
-    },
-    "actions": {
-      "newPolicy": "Nueva política",
-      "apply": "Aplicar",
-      "reject": "Rechazar",
-      "approve": "Aprobar",
-      "export": "Exportar",
-      "requestApproval": "Solicitar aprobación",
-      "lineDiscount": "Descuento por línea",
-      "globalDiscount": "Descuento global",
-      "removeLineDiscount": "Quitar descuento línea",
-      "removeGlobalDiscount": "Quitar descuento global"
-    },
-    "fields": {
-      "globalDiscountPerc": "Descuento global %",
-      "globalDiscountAmount": "Monto descuento global",
-      "globalDiscountReason": "Motivo descuento global",
-      "discountReason": "Motivo descuento"
-    },
-    "apply": {
-      "lineTitle": "Aplicar descuento a línea",
-      "lineDescription": "Define un descuento específico para este producto o servicio.",
-      "globalTitle": "Aplicar descuento global",
-      "globalDescription": "Define un descuento sobre el total de la orden.",
-      "fields": {
-        "policy": "Política",
-        "discountPerc": "Porcentaje de descuento",
-        "reason": "Motivo"
+    
+    "accounting": {
+      "title": "Contabilidad",
+      "subtitle": "Registra ingresos y gastos, revisa el estado de resultados, flujo de caja y conciliación.",
+      "filtered": "resultados",
+      "tabs": {
+        "entries": "Entradas",
+        "incomeStatement": "Estado de resultados",
+        "cashFlow": "Flujo de caja"
       },
       "placeholders": {
-        "selectPolicy": "Seleccione una política"
+        "selectClient": "Seleccionar cliente",
+        "selectSupplier": "Seleccionar proveedor"
       },
-      "validation": {
-        "policyRequired": "La política es obligatoria.",
-        "reasonRequired": "El motivo es obligatorio.",
-        "discountInvalid": "El porcentaje de descuento no es válido."
-      }
-    },
-    "sales": {
-      "messages": {
-        "discountApplied": "Descuento aplicado correctamente.",
-        "discountApplyError": "No se pudo aplicar el descuento.",
-        "discountRemoved": "Descuento eliminado correctamente.",
-        "discountRemoveError": "No se pudo eliminar el descuento."
-      }
-    },
-    "policies": {
-      "searchPlaceholder": "Buscar por nombre o porcentaje",
-      "empty": "No hay políticas registradas.",
+      "actions": {
+        "newIncome": "Nuevo ingreso",
+        "newExpense": "Nuevo gasto",
+        "reconcile": "Conciliar",
+        "search": "Buscar",
+        "refresh": "Recargar",
+        "generate": "Generar",
+        "exportPdf": "Exportar PDF",
+        "exportExcel": "Exportar Excel",
+        "viewReconciliation": "Ver conciliación",
+        "alreadyReconciled": "Ya conciliado"
+      },
+      "summary": {
+        "totalIncome": "Ingresos",
+        "totalExpenses": "Egresos",
+        "balance": "Balance",
+        "reconciled": "Conciliados"
+      },
+      "entryTypes": {
+        "income": "Ingreso",
+        "expense": "Egreso"
+      },
+      "status": {
+        "reconciled": "Conciliado",
+        "pending": "Pendiente"
+      },
+      "searchPlaceholder": "Buscar por detalle, categoría, cliente, proveedor o factura",
       "filters": {
-        "all": "Todos",
-        "active": "Activas",
-        "inactive": "Inactivas"
-      },
-      "table": {
-        "name": "Nombre",
-        "maxDiscount": "Máximo descuento",
-        "requiresApproval": "Requiere aprobación",
-        "status": "Estado"
+        "allTypes": "Todos los tipos"
       },
       "fields": {
-        "name": "Nombre",
-        "maxDiscountPercentage": "Porcentaje máximo",
-        "requiresApprovalAboveLimit": "Requiere aprobación por encima del límite",
-        "isActive": "Activa"
-      },
-      "validation": {
-        "nameRequired": "El nombre es obligatorio.",
-        "maxDiscountInvalid": "El porcentaje máximo no es válido."
-      },
-      "messages": {
-        "loadError": "No se pudieron cargar las políticas.",
-        "createSuccess": "Política creada correctamente.",
-        "createError": "No se pudo crear la política.",
-        "updateSuccess": "Política actualizada correctamente.",
-        "updateError": "No se pudo actualizar la política.",
-        "activated": "Política activada correctamente.",
-        "deactivated": "Política desactivada correctamente."
-      },
-      "modal": {
-        "createTitle": "Crear política",
-        "createDescription": "Configura una nueva regla de descuento.",
-        "editTitle": "Editar política",
-        "editDescription": "Actualiza la configuración de la política."
-      }
-    },
-    "approvals": {
-      "searchPlaceholder": "Buscar por orden, usuario o motivo",
-      "empty": "No hay solicitudes de aprobación.",
-      "filters": {
-        "all": "Todos los estados",
-        "pending": "Pendiente",
-        "approved": "Aprobada",
-        "rejected": "Rechazada"
-      },
-      "fields": {
-        "rejectionReason": "Motivo de rechazo"
-      },
-      "validation": {
-        "rejectionReasonRequired": "El motivo de rechazo es obligatorio."
-      },
-      "messages": {
-        "loadError": "No se pudieron cargar las aprobaciones.",
-        "approveSuccess": "Solicitud aprobada correctamente.",
-        "approveError": "No se pudo aprobar la solicitud.",
-        "rejectSuccess": "Solicitud rechazada correctamente.",
-        "rejectError": "No se pudo rechazar la solicitud."
-      },
-      "table": {
-        "salesOrder": "Orden",
-        "scope": "Ámbito",
-        "percentage": "Porcentaje",
         "amount": "Monto",
-        "requestedBy": "Solicitado por",
-        "status": "Estado",
-        "requestedAt": "Solicitado el"
-      },
-      "drawer": {
-        "title": "Detalle de aprobación",
-        "description": "Información de la solicitud asociada a la orden {code}.",
-        "resolvedBy": "Resuelto por",
-        "resolvedAt": "Resuelto el"
-      },
-      "rejectModal": {
-        "title": "Rechazar solicitud",
-        "description": "Indica el motivo del rechazo para dejar trazabilidad."
-      }
-    },
-    "history": {
-      "searchPlaceholder": "Buscar por orden, usuario o motivo",
-      "empty": "No hay historial de descuentos.",
-      "filters": {
-        "allUsers": "Todos los usuarios"
-      },
-      "messages": {
-        "loadError": "No se pudo cargar el historial.",
-        "exportError": "No se pudo exportar el historial."
-      },
-      "table": {
-        "salesOrder": "Orden",
-        "scope": "Ámbito",
-        "action": "Acción",
-        "percentage": "Porcentaje",
-        "amount": "Monto",
-        "reason": "Motivo",
-        "user": "Usuario",
-        "eventDate": "Fecha"
-      },
-      "drawer": {
-        "title": "Detalle de historial",
-        "description": "Detalle del movimiento de descuento de la orden {code}."
-      }
-    }
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Monitorea indicadores principales, ventas del mes, contratos activos e inventario crítico.",
-    "lastUpdated": "Última actualización",
-    "actions": {
-      "refresh": "Recargar",
-      "refreshing": "Recargando..."
-    },
-    "filters": {
-      "branch": "Sucursal",
-      "allBranches": "Todas las sucursales",
-      "autoRefresh": "Actualización automática",
-      "enabled": "Habilitada",
-      "interval": "Intervalo"
-    },
-    "permission": {
-      "title": "Acceso denegado",
-      "description": "No tienes permisos para visualizar este dashboard."
-    },
-    "messages": {
-      "loadError": "No se pudo cargar el dashboard.",
-      "refreshSuccess": "Dashboard actualizado correctamente."
-    },
-    "mainIndicators": {
-      "monthlySalesTotal": "Ventas del mes",
-      "monthlySalesSubtitle": "Monto total acumulado",
-      "activeContractsCount": "Contratos activos",
-      "activeContractsSubtitle": "Contratos actualmente vigentes",
-      "criticalInventoryCount": "Inventario crítico",
-      "criticalInventorySubtitle": "Productos con alerta de stock"
-    },
-    "monthlySales": {
-      "title": "Ventas del mes",
-      "totalSalesAmount": "Total vendido",
-      "salesOrdersCount": "Cantidad de ventas",
-      "servicesSoldQuantity": "Servicios vendidos",
-      "empty": "Sin registros"
-    },
-    "contracts": {
-      "title": "Contratos activos",
-      "activeContractsCount": "Activos",
-      "expiringSoonCount": "Próximos a vencer",
-      "expiredCount": "Vencidos",
-      "empty": "No hay contratos activos"
-    },
-    "inventory": {
-      "title": "Inventario crítico",
-      "noAlerts": "Sin alertas",
-      "noMatches": "No hay productos críticos para ese filtro.",
-      "filters": {
-        "allCategories": "Todas las categorías",
-        "uncategorized": "Sin categoría"
-      },
-      "currentStockBadge": "Actual: {stock}",
-      "minStockBadge": "Mínimo: {stock}",
-      "fields": {
-        "branchId": "Sucursal",
-        "maxStock": "Stock máximo",
-        "minStock": "Stock mínimo"
-      }
-    }
-  },
-  "reports": {
-    "title": "Reportes",
-    "subtitle": "Consulta reportes financieros, inventario, clientes, órdenes de trabajo y programaciones automáticas.",
-    "tabs": {
-      "financial": "Financiero",
-      "inventory": "Inventario",
-      "client": "Clientes",
-      "serviceOrders": "Órdenes de trabajo",
-      "schedules": "Programaciones"
-    },
-    "actions": {
-      "refresh": "Recargar",
-      "generate": "Generar",
-      "exportPdf": "Exportar PDF",
-      "exportExcel": "Exportar Excel",
-      "viewReport": "Ver reporte",
-      "search": "Buscar",
-      "edit": "Editar",
-      "activate": "Activar",
-      "deactivate": "Desactivar"
-    },
-    "filters": {
-      "allBranches": "Todas las sucursales",
-      "allCategories": "Todas las categorías"
-    },
-    "placeholders": {
-      "selectClient": "Seleccione un cliente",
-      "selectEmployee": "Seleccione un técnico",
-      "allEmployees": "Todos los técnicos"
-    },
-    "status": {
-      "active": "Activo",
-      "inactive": "Inactivo"
-    },
-    "types": {
-      "financial": "Financiero",
-      "inventory": "Inventario",
-      "client": "Cliente",
-      "serviceOrders": "Órdenes de trabajo"
-    },
-    "frequencies": {
-      "daily": "Diaria",
-      "weekly": "Semanal",
-      "monthly": "Mensual"
-    },
-    "messages": {
-      "catalogsError": "No se pudieron cargar los catálogos del módulo."
-    },
-    "financial": {
-      "fields": {
+        "detail": "Detalle",
+        "category": "Categoría",
+        "entryDate": "Fecha de movimiento",
+        "client": "Cliente",
+        "supplier": "Proveedor",
+        "invoiceNumber": "Número de factura",
+        "receiptFileS3Key": "Comprobante / llave S3",
         "from": "Desde",
         "to": "Hasta"
       },
-      "summary": {
-        "sales": "Ventas",
-        "expenses": "Gastos",
-        "profit": "Utilidad"
-      },
-      "empty": "Sin información disponible",
-      "validation": {
-        "rangeRequired": "Debe seleccionar un rango de fechas."
-      },
-      "messages": {
-        "loadError": "No se pudo cargar el reporte financiero.",
-        "exportError": "No se pudo exportar el reporte financiero."
-      }
-    },
-    "inventory": {
-      "fields": {
-        "category": "Categoría"
-      },
       "table": {
-        "product": "Producto",
+        "entryType": "Tipo",
+        "amount": "Monto",
+        "detail": "Detalle",
         "category": "Categoría",
-        "stock": "Existencias",
-        "updatedAt": "Actualizado"
-      },
-      "empty": "Sin información disponible",
-      "messages": {
-        "loadError": "No se pudo cargar el reporte de inventario.",
-        "exportError": "No se pudo exportar el reporte de inventario."
-      }
-    },
-    "client": {
-      "fields": {
-        "client": "Cliente"
-      },
-      "preview": {
-        "title": "Historial del cliente",
-        "description": "Selecciona un cliente y abre el drawer para ver compras, servicios y facturas.",
-        "loaded": "Puedes cambiar el cliente o volver a abrir el reporte."
-      },
-      "drawer": {
-        "title": "Reporte de cliente",
-        "description": "Detalle completo del historial del cliente"
-      },
-      "sections": {
-        "purchases": "Compras",
-        "services": "Servicios",
-        "invoices": "Facturas"
-      },
-      "table": {
-        "code": "Código",
-        "date": "Fecha",
-        "status": "Estado",
-        "total": "Total",
-        "contract": "Contrato",
-        "consecutive": "Consecutivo",
-        "paidAmount": "Pagado",
-        "pendingAmount": "Pendiente"
-      },
-      "noPurchases": "No hay compras registradas.",
-      "noServices": "No hay servicios registrados.",
-      "noInvoices": "No hay facturas registradas.",
-      "empty": "No existen registros previos",
-      "validation": {
-        "clientRequired": "Debe seleccionar un cliente."
-      },
-      "messages": {
-        "loadError": "No se pudo cargar el reporte del cliente.",
-        "exportError": "No se pudo exportar el historial del cliente."
-      }
-    },
-    "serviceOrders": {
-      "fields": {
-        "from": "Desde",
-        "to": "Hasta",
-        "employee": "Técnico"
-      },
-      "summary": {
-        "completed": "Completadas",
-        "pending": "Pendientes",
-        "canceled": "Canceladas"
-      },
-      "drawer": {
-        "title": "Reporte de órdenes de trabajo",
-        "description": "Detalle del período seleccionado"
-      },
-      "table": {
-        "code": "Código",
-        "client": "Cliente",
-        "date": "Fecha programada",
-        "status": "Estado",
-        "technicians": "Técnicos",
-        "services": "Servicios"
-      },
-      "empty": "Sin información disponible",
-      "validation": {
-        "rangeRequired": "Debe seleccionar un rango de fechas."
-      },
-      "messages": {
-        "loadError": "No se pudo cargar el reporte de órdenes de trabajo.",
-        "exportError": "No se pudo exportar el reporte de órdenes de trabajo."
-      }
-    },
-    "schedules": {
-      "searchPlaceholder": "Buscar programación por nombre, frecuencia o correo",
-        "filtered": "resultados",
-      "actions": {
-        "newSchedule": "Nueva programación"
-      },
-      "summary": {
-        "total": "Programaciones",
-        "active": "Activas",
-        "failed": "Con error"
-      },
-      "modal": {
-        "createTitle": "Nueva programación",
-        "createDescription": "Configura el envío automático de reportes por correo.",
-        "editTitle": "Editar programación",
-        "editDescription": "Actualiza la configuración de envío automático."
-      },
-      "fields": {
-        "name": "Nombre",
-        "reportType": "Tipo de reporte",
-        "frequency": "Frecuencia",
-        "recipientEmail": "Correo destinatario",
-        "timeOfDayUtc": "Hora (UTC)",
-        "isActive": "Programación activa",
-        "branch": "Sucursal",
-        "category": "Categoría",
-        "client": "Cliente",
-        "employee": "Técnico"
-      },
-      "table": {
-        "name": "Nombre",
-        "reportType": "Tipo",
-        "frequency": "Frecuencia",
-        "recipient": "Correo",
-        "time": "Hora",
-        "status": "Estado",
-        "lastAttempt": "Último intento",
+        "clientSupplier": "Cliente / Proveedor",
+        "invoiceNumber": "Factura",
+        "entryDate": "Fecha",
+        "reconciled": "Conciliado",
         "options": "Opciones"
       },
-      "empty": "No hay programaciones registradas.",
+      "modal": {
+        "incomeTitle": "Registrar ingreso",
+        "incomeDescription": "Registra un ingreso por venta o servicio y refléjalo en contabilidad.",
+        "expenseTitle": "Registrar egreso",
+        "expenseDescription": "Registra un egreso por compra, pago o servicio y refléjalo en contabilidad."
+      },
+      "incomeStatement": {
+        "totalIncome": "Ingresos totales",
+        "totalExpenses": "Egresos totales",
+        "grossProfit": "Utilidad bruta",
+        "netProfit": "Utilidad neta"
+      },
+      "cashFlow": {
+        "totalIncome": "Ingresos del período",
+        "totalExpenses": "Egresos del período",
+        "balance": "Saldo del período",
+        "chartTitle": "Vista comparativa del flujo",
+        "chartDescription": "Resumen visual por fecha con ingresos, egresos y balance.",
+        "income": "Ingreso",
+        "expense": "Egreso"
+      },
+      "reconciliation": {
+        "drawerTitle": "Conciliación contable",
+        "drawerDescription": "Revisa movimientos conciliados y diferencias detectadas.",
+        "fields": {
+          "matchedCount": "Coincidencias",
+          "unmatchedCount": "Diferencias"
+        },
+        "table": {
+          "entryType": "Tipo",
+          "detail": "Detalle",
+          "date": "Fecha",
+          "invoiceNumber": "Factura",
+          "amount": "Monto"
+        },
+        "empty": "No se encontraron diferencias pendientes."
+      },
+      "emptyEntries": "No hay movimientos registrados.",
+      "emptyIncomeStatement": "No hay movimientos registrados.",
+      "emptyCashFlow": "No hay datos para el flujo de caja.",
       "validation": {
-        "nameRequired": "El nombre es obligatorio.",
-        "recipientRequired": "El correo destinatario es obligatorio.",
-        "timeRequired": "La hora es obligatoria.",
-        "clientRequired": "Debe seleccionar un cliente.",
-        "employeeRequired": "Debe seleccionar un técnico."
+        "requiredIncome": "Debes completar monto, detalle, categoría, fecha, cliente y factura.",
+        "requiredExpense": "Debes completar monto, detalle, categoría, fecha y proveedor.",
+        "rangeRequired": "Debes seleccionar un rango de fechas."
       },
       "messages": {
-        "loadError": "No se pudieron cargar las programaciones.",
-        "createSuccess": "Programación creada correctamente.",
-        "createError": "No se pudo crear la programación.",
-        "updateSuccess": "Programación actualizada correctamente.",
-        "updateError": "No se pudo actualizar la programación.",
-        "activateSuccess": "Programación activada correctamente.",
-        "deactivateSuccess": "Programación desactivada correctamente.",
-        "statusError": "No se pudo actualizar el estado de la programación."
+        "loadCatalogsError": "No se pudieron cargar los catálogos.",
+        "loadEntriesError": "No se pudieron cargar los movimientos contables.",
+        "createIncomeSuccess": "Ingreso registrado correctamente.",
+        "createIncomeError": "No se pudo registrar el ingreso.",
+        "createExpenseSuccess": "Egreso registrado correctamente.",
+        "createExpenseError": "No se pudo registrar el egreso.",
+        "loadIncomeStatementError": "No se pudo cargar el estado de resultados.",
+        "exportIncomeStatementError": "No se pudo exportar el estado de resultados.",
+        "loadCashFlowError": "No se pudo cargar el flujo de caja.",
+        "exportCashFlowError": "No se pudo exportar el flujo de caja.",
+        "reconciliationLoadError": "No se pudo cargar la conciliación."
       }
     }
   },
- "accounting": {
-  "title": "Contabilidad",
-  "subtitle": "Registra ingresos y gastos, revisa el estado de resultados, flujo de caja y conciliación.",
-  "filtered": "resultados",
-  "tabs": {
-    "entries": "Entradas",
-    "incomeStatement": "Estado de resultados",
-    "cashFlow": "Flujo de caja"
-  },
-  "placeholders": {
-    "selectClient": "Seleccionar cliente",
-    "selectSupplier": "Seleccionar proveedor"
-  },
-  "actions": {
-    "newIncome": "Nuevo ingreso",
-    "newExpense": "Nuevo gasto",
-    "reconcile": "Conciliar",
-    "search": "Buscar",
-    "refresh": "Recargar",
-    "generate": "Generar",
-    "exportPdf": "Exportar PDF",
-    "exportExcel": "Exportar Excel",
-    "viewReconciliation": "Ver conciliación",
-    "alreadyReconciled": "Ya conciliado"
-  },
-    "summary": {
-      "totalIncome": "Ingresos",
-      "totalExpenses": "Egresos",
-      "balance": "Balance",
-      "reconciled": "Conciliados"
-    },
-    "entryTypes": {
-      "income": "Ingreso",
-      "expense": "Egreso"
-    },
-    "status": {
-      "reconciled": "Conciliado",
-      "pending": "Pendiente"
-    },
-    "searchPlaceholder": "Buscar por detalle, categoría, cliente, proveedor o factura",
+   "audit": {
+    "title": "Registro de Auditoría",
+    "subtitle": "Monitoreo de cambios y actividad del sistema.",
+    "empty": "No se encontraron registros de auditoría.",
+    "filtered": "resultados",
+    "noData": "Sin datos",
     "filters": {
-      "allTypes": "Todos los tipos"
+      "allModules": "Todos los módulos",
+      "allActions": "Todas las acciones"
     },
-    "fields": {
-      "amount": "Monto",
-      "detail": "Detalle",
-      "category": "Categoría",
-      "entryDate": "Fecha de movimiento",
-      "client": "Cliente",
-      "supplier": "Proveedor",
-      "invoiceNumber": "Número de factura",
-      "receiptFileS3Key": "Comprobante / llave S3",
-      "from": "Desde",
-      "to": "Hasta"
+    "modules": {
+      "taxes": "Impuestos",
+      "products": "Productos",
+      "auth": "Seguridad",
+      "inventory": "Inventario",
+      "users": "Usuarios"
+    },
+    "actions": {
+      "search": "Buscar",
+      "refresh": "Recargar",
+      "create": "Creación",
+      "update": "Actualización",
+      "delete": "Eliminación",
+      "exportPdf": "Exportar PDF",
+      "exportExcel": "Exportar Excel"
     },
     "table": {
-      "entryType": "Tipo",
-      "amount": "Monto",
-      "detail": "Detalle",
-      "category": "Categoría",
-      "clientSupplier": "Cliente / Proveedor",
-      "invoiceNumber": "Factura",
-      "entryDate": "Fecha",
-      "reconciled": "Conciliado",
-      "options": "Opciones"
+      "date": "Fecha",
+      "module": "Módulo",
+      "entity": "Entidad",
+      "action": "Acción",
+      "user": "Usuario",
+      "ip": "IP"
     },
     "modal": {
-      "incomeTitle": "Registrar ingreso",
-      "incomeDescription": "Registra un ingreso por venta o servicio y refléjalo en contabilidad.",
-      "expenseTitle": "Registrar egreso",
-      "expenseDescription": "Registra un egreso por compra, pago o servicio y refléjalo en contabilidad."
-    },
-    "incomeStatement": {
-      "totalIncome": "Ingresos totales",
-      "totalExpenses": "Egresos totales",
-      "grossProfit": "Utilidad bruta",
-      "netProfit": "Utilidad neta"
-    },
-    "cashFlow": {
-      "totalIncome": "Ingresos del período",
-      "totalExpenses": "Egresos del período",
-      "balance": "Saldo del período",
-      "chartTitle": "Vista comparativa del flujo",
-      "chartDescription": "Resumen visual por fecha con ingresos, egresos y balance.",
-      "income": "Ingreso",
-      "expense": "Egreso"
-    },
-    "reconciliation": {
-      "drawerTitle": "Conciliación contable",
-      "drawerDescription": "Revisa movimientos conciliados y diferencias detectadas.",
-      "fields": {
-        "matchedCount": "Coincidencias",
-        "unmatchedCount": "Diferencias"
-      },
-      "table": {
-        "entryType": "Tipo",
-        "detail": "Detalle",
-        "date": "Fecha",
-        "invoiceNumber": "Factura",
-        "amount": "Monto"
-      },
-      "empty": "No se encontraron diferencias pendientes."
-    },
-    "emptyEntries": "No hay movimientos registrados.",
-    "emptyIncomeStatement": "No hay movimientos registrados.",
-    "emptyCashFlow": "No hay datos para el flujo de caja.",
-    "validation": {
-      "requiredIncome": "Debes completar monto, detalle, categoría, fecha, cliente y factura.",
-      "requiredExpense": "Debes completar monto, detalle, categoría, fecha y proveedor.",
-      "rangeRequired": "Debes seleccionar un rango de fechas."
+      "title": "Detalle del cambio",
+      "dataBefore": "Estado anterior",
+      "dataAfter": "Estado nuevo"
     },
     "messages": {
-      "loadCatalogsError": "No se pudieron cargar los catálogos.",
-      "loadEntriesError": "No se pudieron cargar los movimientos contables.",
-      "createIncomeSuccess": "Ingreso registrado correctamente.",
-      "createIncomeError": "No se pudo registrar el ingreso.",
-      "createExpenseSuccess": "Egreso registrado correctamente.",
-      "createExpenseError": "No se pudo registrar el egreso.",
-      "loadIncomeStatementError": "No se pudo cargar el estado de resultados.",
-      "exportIncomeStatementError": "No se pudo exportar el estado de resultados.",
-      "loadCashFlowError": "No se pudo cargar el flujo de caja.",
-      "exportCashFlowError": "No se pudo exportar el flujo de caja.",
-      "reconciliationLoadError": "No se pudo cargar la conciliación."
+      "loadError": "No se pudieron cargar los registros de auditoría."
     }
   }
 }
+

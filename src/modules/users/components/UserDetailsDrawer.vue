@@ -25,7 +25,6 @@ const auditEntries = ref<AuditLog[]>([]);
 
 async function loadUser() {
   loadingUser.value = true;
-
   try {
     user.value = await UsersService.readById(props.userId);
   } finally {
@@ -35,7 +34,6 @@ async function loadUser() {
 
 async function loadAuditEntries() {
   loadingAudit.value = true;
-
   try {
     const allEntries = await AuditService.browse({
       module: "Usuarios",
@@ -57,7 +55,6 @@ function closeDrawer() {
 
 function formatJson(value: string | null) {
   if (!value) return t("users.audit.noData");
-
   try {
     return JSON.stringify(JSON.parse(value), null, 2);
   } catch {
@@ -130,6 +127,7 @@ watch(
       </button>
     </div>
 
+    <!-- DETAILS TAB -->
     <template v-if="activeTab === 'details'">
       <div v-if="loadingUser" class="text-bt-grey-500">
         {{ $t("common.loading") }}
@@ -137,107 +135,58 @@ watch(
 
       <div v-else-if="user" class="space-y-bt-spacing-16">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.table.username") }}
-            </div>
-            <div class="text-bt-primary-700 font-bt-semibold">
-              {{ user.username }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.table.username") }}</div>
+            <div class="text-bt-primary-700 font-bt-semibold">{{ user.username }}</div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.table.email") }}
-            </div>
-            <div class="text-bt-primary-700 font-bt-semibold">
-              {{ user.email }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.table.email") }}</div>
+            <div class="text-bt-primary-700 font-bt-semibold">{{ user.email }}</div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.table.status") }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.table.status") }}</div>
             <div
               class="font-bt-semibold"
-              :class="
-                user.isActive ? 'text-bt-success-700' : 'text-bt-error-700'
-              "
+              :class="user.isActive ? 'text-bt-success-700' : 'text-bt-error-700'"
             >
-              {{
-                user.isActive
-                  ? $t("users.status.active")
-                  : $t("users.status.inactive")
-              }}
+              {{ user.isActive ? $t("users.status.active") : $t("users.status.inactive") }}
             </div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.fields.mustChangePassword") }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.fields.mustChangePassword") }}</div>
             <div class="text-bt-primary-700 font-bt-semibold">
               {{ user.mustChangePassword ? $t("common.yes") : $t("common.no") }}
             </div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.fields.failedAttempts") }}
-            </div>
-            <div class="text-bt-primary-700 font-bt-semibold">
-              {{ user.failedAttempts }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.fields.failedAttempts") }}</div>
+            <div class="text-bt-primary-700 font-bt-semibold">{{ user.failedAttempts }}</div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.fields.lockedUntil") }}
-            </div>
-            <div class="text-bt-primary-700 font-bt-semibold">
-              {{ user.lockedUntil ?? "N/A" }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.fields.lockedUntil") }}</div>
+            <div class="text-bt-primary-700 font-bt-semibold">{{ user.lockedUntil ?? "N/A" }}</div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.table.lastLogin") }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.table.lastLogin") }}</div>
             <div class="text-bt-primary-700 font-bt-semibold">
               {{ user.lastLogin ?? $t("users.never") }}
             </div>
           </div>
 
-          <div
-            class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-          >
-            <div class="text-xs text-bt-grey-500">
-              {{ $t("users.fields.createdAt") }}
-            </div>
-            <div class="text-bt-primary-700 font-bt-semibold">
-              {{ user.createdAt }}
-            </div>
+          <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+            <div class="text-xs text-bt-grey-500">{{ $t("users.fields.createdAt") }}</div>
+            <div class="text-bt-primary-700 font-bt-semibold">{{ user.createdAt }}</div>
           </div>
         </div>
 
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
+        <!-- Roles -->
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
           <div class="text-xs text-bt-grey-500 mb-bt-spacing-8">
             {{ $t("users.table.roles") }}
           </div>
@@ -249,28 +198,13 @@ watch(
             >
               {{ role.name }}
             </span>
-          </div>
-        </div>
-
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500 mb-bt-spacing-8">
-            {{ $t("users.fields.scopes") }}
-          </div>
-          <div class="flex flex-wrap gap-bt-spacing-8">
-            <span
-              v-for="scope in user.scopes"
-              :key="scope"
-              class="px-bt-spacing-8 py-bt-spacing-4 rounded-full bg-bt-accent-100 text-bt-accent-700 text-xs"
-            >
-              {{ scope }}
-            </span>
+            <span v-if="!user.roles.length" class="text-sm text-bt-grey-500">-</span>
           </div>
         </div>
       </div>
     </template>
 
+    <!-- AUDIT TAB -->
     <template v-else>
       <div v-if="loadingAudit" class="text-bt-grey-500">
         {{ $t("common.loading") }}
@@ -286,14 +220,9 @@ watch(
             class="flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-8 mb-bt-spacing-12"
           >
             <div>
-              <div class="text-sm font-bt-semibold text-bt-primary-700">
-                {{ entry.action }}
-              </div>
-              <div class="text-xs text-bt-grey-500">
-                {{ entry.eventDate }}
-              </div>
+              <div class="text-sm font-bt-semibold text-bt-primary-700">{{ entry.action }}</div>
+              <div class="text-xs text-bt-grey-500">{{ entry.eventDate }}</div>
             </div>
-
             <div class="text-xs text-bt-grey-600">
               {{ $t("users.audit.module") }}: {{ entry.module }} ·
               {{ $t("users.audit.entity") }}: {{ entry.entity }}
@@ -302,37 +231,22 @@ watch(
 
           <div class="grid grid-cols-1 gap-bt-spacing-12">
             <div>
-              <div
-                class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8"
-              >
+              <div class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8">
                 {{ $t("users.audit.dataBefore") }}
               </div>
-              <pre
-                class="text-xs bg-bt-white border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap"
-                >{{ formatJson(entry.dataBefore) }}</pre
-              >
+              <pre class="text-xs bg-bt-white border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap">{{ formatJson(entry.dataBefore) }}</pre>
             </div>
 
             <div>
-              <div
-                class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8"
-              >
+              <div class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8">
                 {{ $t("users.audit.dataAfter") }}
               </div>
-              <pre
-                class="text-xs bg-bt-white border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap"
-                >{{ formatJson(entry.dataAfter) }}</pre
-              >
+              <pre class="text-xs bg-bt-white border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap">{{ formatJson(entry.dataAfter) }}</pre>
             </div>
 
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-12 text-xs text-bt-grey-600"
-            >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-12 text-xs text-bt-grey-600">
               <div>{{ $t("users.audit.ip") }}: {{ entry.ip ?? "N/A" }}</div>
-              <div>
-                {{ $t("users.audit.userAgent") }}:
-                {{ entry.userAgent ?? "N/A" }}
-              </div>
+              <div>{{ $t("users.audit.userAgent") }}: {{ entry.userAgent ?? "N/A" }}</div>
             </div>
           </div>
         </div>

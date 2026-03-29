@@ -23,14 +23,12 @@ const drawerStore = useDrawerStore();
 const toastStore = useToastStore();
 
 const loading = ref(false);
-
 const order = ref<PurchaseOrder | null>(null);
 const receipt = ref<PurchaseReceipt | null>(null);
 const quote = ref<SupplierQuote | null>(null);
 
 async function loadEntity() {
   loading.value = true;
-
   try {
     order.value = null;
     receipt.value = null;
@@ -95,49 +93,24 @@ watch(
       {{ $t("common.loading") }}
     </div>
 
+    <!-- ORDER -->
     <template v-else-if="order">
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16 mb-bt-spacing-24"
-      >
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.orders.fields.code") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ order.code }}
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16 mb-bt-spacing-24">
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.orders.fields.code") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ order.code }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.orders.fields.status") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ order.status }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.orders.fields.status") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ order.status }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.orders.fields.supplier") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ order.supplierName ?? "-" }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.orders.fields.supplier") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ order.supplierName ?? "-" }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.orders.fields.branch") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ order.branchName ?? "-" }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.orders.fields.branch") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ order.branchName ?? "-" }}</div>
         </div>
       </div>
 
@@ -145,21 +118,11 @@ watch(
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.orders.lines.product") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.orders.lines.quantity") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.orders.lines.unitPrice") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.orders.lines.taxPerc") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.orders.lines.lineTotal") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.lines.product") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.lines.quantity") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.lines.unitPrice") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.lines.taxPerc") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.orders.lines.lineTotal") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -168,70 +131,39 @@ watch(
               :key="`${line.productId}-${line.purchaseOrderDetailId}`"
               class="border-t border-bt-grey-200"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.productName ?? line.productId }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.quantity }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.unitPrice }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.taxPerc }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.lineTotal ?? "-" }}
-              </td>
+              <!-- ← productId no se muestra, solo el nombre -->
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.productName ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.quantity }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.unitPrice }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.taxPerc }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.lineTotal ?? "-" }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </template>
 
+    <!-- RECEIPT -->
     <template v-else-if="receipt">
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16 mb-bt-spacing-24"
-      >
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.receipts.fields.receiptId") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ receipt.receiptId }}
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16 mb-bt-spacing-24">
+        <!-- ← receiptId eliminado, mostramos purchaseOrder y warehouse -->
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.receipts.fields.status") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ receipt.status }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.receipts.fields.status") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ receipt.status }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.receipts.fields.purchaseOrder") }}</div>
+          <!-- ← mostrar code si existe, sino no mostrar ID interno -->
+          <div class="text-bt-primary-700 font-bt-semibold">{{ receipt.purchaseOrderCode ?? "-" }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.receipts.fields.purchaseOrder") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ receipt.purchaseOrderCode ?? receipt.purchaseOrderId }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.receipts.fields.warehouse") }}</div>
+          <!-- ← mostrar name si existe, sino no mostrar ID interno -->
+          <div class="text-bt-primary-700 font-bt-semibold">{{ receipt.warehouseName ?? "-" }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.receipts.fields.warehouse") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ receipt.warehouseName ?? receipt.warehouseId }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.receipts.fields.receiptDate") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ receipt.receiptDate ?? "-" }}</div>
         </div>
       </div>
 
@@ -239,15 +171,9 @@ watch(
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.receipts.lines.product") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.receipts.lines.quantityReceived") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.receipts.lines.unitCost") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.lines.product") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.lines.quantityReceived") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.receipts.lines.unitCost") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -256,64 +182,34 @@ watch(
               :key="`${line.productId}-${line.receiptDetailId}`"
               class="border-t border-bt-grey-200"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.productName ?? line.productId }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.quantityReceived }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.unitCost }}
-              </td>
+              <!-- ← productId no se muestra, solo el nombre -->
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.productName ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.quantityReceived }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.unitCost }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </template>
 
+    <!-- QUOTE -->
     <template v-else-if="quote">
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16 mb-bt-spacing-24"
-      >
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.quotes.fields.code") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ quote.code }}
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16 mb-bt-spacing-24">
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.quotes.fields.code") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ quote.code }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.quotes.fields.status") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ quote.status }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.quotes.fields.status") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ quote.status }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.quotes.fields.supplier") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ quote.supplierName ?? "-" }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.quotes.fields.supplier") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ quote.supplierName ?? "-" }}</div>
         </div>
-        <div
-          class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-        >
-          <div class="text-xs text-bt-grey-500">
-            {{ $t("purchases.quotes.fields.branch") }}
-          </div>
-          <div class="text-bt-primary-700 font-bt-semibold">
-            {{ quote.branchName ?? "-" }}
-          </div>
+        <div class="p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+          <div class="text-xs text-bt-grey-500">{{ $t("purchases.quotes.fields.branch") }}</div>
+          <div class="text-bt-primary-700 font-bt-semibold">{{ quote.branchName ?? "-" }}</div>
         </div>
       </div>
 
@@ -321,12 +217,8 @@ watch(
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.quotes.lines.product") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("purchases.quotes.lines.quantity") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.lines.product") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("purchases.quotes.lines.quantity") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -335,12 +227,9 @@ watch(
               :key="line.supplierQuoteLineId"
               class="border-t border-bt-grey-200"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.productName ?? line.productId }}
-              </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ line.quantity }}
-              </td>
+              <!-- ← productId no se muestra, solo el nombre -->
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.productName ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ line.quantity }}</td>
             </tr>
           </tbody>
         </table>

@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-vue-next";
+import {
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  CheckCircle,
+  Milestone,
+  RefreshCw,
+} from "lucide-vue-next";
 
 import { ContractsService } from "@/core/services/contractsService";
 import { useModalStore } from "@/core/stores/modalStore";
@@ -26,24 +34,17 @@ const contracts = ref<Contract[]>([]);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-
-// Filtro de estado
 const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
 
-// Filtrado local en tiempo real
 const filteredContracts = computed(() => {
   let result = contracts.value;
 
   if (statusFilter.value === "active") {
-    result = result.filter((c) =>
-      (c.status ?? "").toLowerCase().includes("active"),
-    );
+    result = result.filter((c) => (c.status ?? "").toLowerCase().includes("active"));
   } else if (statusFilter.value === "inactive") {
-    result = result.filter(
-      (c) => !(c.status ?? "").toLowerCase().includes("active"),
-    );
+    result = result.filter((c) => !(c.status ?? "").toLowerCase().includes("active"));
   }
 
   const term = search.value.trim().toLowerCase();
@@ -121,7 +122,6 @@ async function fetchContracts(): Promise<Contract[]> {
   const response = await ContractsService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    // search removido: filtramos localmente
   });
   return normalizeArrayResponse<Contract>(response);
 }
@@ -157,6 +157,11 @@ async function reloadEventually(attempts = 10, delayMs = 500) {
   } finally {
     loading.value = false;
   }
+}
+
+async function onSearch() {
+  page.value = 1;
+  await loadData();
 }
 
 async function goToPage(targetPage: number) {
@@ -215,9 +220,7 @@ function openDetailsDrawer(contract: Contract) {
     description: t("contracts.drawer.description", { code: contract.code }),
     direction: "right",
     size: "xl",
-    onSuccess: async () => {
-      await reloadEventually();
-    },
+    onSuccess: async () => { await reloadEventually(); },
     onError: (error: any) => {
       showError(error?.message ?? t("contracts.messages.loadError"));
     },
@@ -255,40 +258,71 @@ onMounted(async () => {
       </p>
     </div>
 
-    <!-- KPI Cards -->
+    <!-- KPI Cards: icon + label + number style -->
     <div class="mb-bt-spacing-24 grid shrink-0 grid-cols-1 gap-bt-spacing-16 md:grid-cols-4">
       <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
-        <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.total") }}</div>
-        <div class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-primary-700">{{ summary.total }}</div>
+        <div class="flex items-center gap-bt-spacing-12">
+          <div class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600">
+            <FileText :size="22" />
+          </div>
+          <div>
+            <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.total") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-primary-700">{{ summary.total }}</div>
+          </div>
+        </div>
       </div>
+
       <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
-        <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.active") }}</div>
-        <div class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-success-700">{{ summary.active }}</div>
+        <div class="flex items-center gap-bt-spacing-12">
+          <div class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700">
+            <CheckCircle :size="22" />
+          </div>
+          <div>
+            <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.active") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-success-700">{{ summary.active }}</div>
+          </div>
+        </div>
       </div>
+
       <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
-        <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.withMilestones") }}</div>
-        <div class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-accent-600">{{ summary.withMilestones }}</div>
+        <div class="flex items-center gap-bt-spacing-12">
+          <div class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600">
+            <Milestone :size="22" />
+          </div>
+          <div>
+            <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.withMilestones") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-accent-600">{{ summary.withMilestones }}</div>
+          </div>
+        </div>
       </div>
+
       <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
-        <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.autoRenew") }}</div>
-        <div class="mt-bt-spacing-8 text-2xl font-bt-bold text-bt-warning-700">{{ summary.autoRenew }}</div>
+        <div class="flex items-center gap-bt-spacing-12">
+          <div class="w-12 h-12 rounded-full bg-bt-warning-100 flex items-center justify-center text-bt-warning-700">
+            <RefreshCw :size="22" />
+          </div>
+          <div>
+            <div class="text-sm text-bt-grey-500">{{ $t("contracts.summary.autoRenew") }}</div>
+            <div class="text-2xl font-bt-bold text-bt-warning-700">{{ summary.autoRenew }}</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
 
-      <!-- Toolbar -->
+      <!-- TOOLBAR -->
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+        <!-- Left: search + status filter + search button + refresh -->
         <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
-          <!-- Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('contracts.searchPlaceholder')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
           />
 
-          <!-- Filtro de estado -->
           <select
             v-model="statusFilter"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -298,6 +332,16 @@ onMounted(async () => {
             <option value="inactive">{{ $t("contracts.filters.inactive") }}</option>
           </select>
 
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("contracts.actions.search") }}
+          </button>
+
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -307,6 +351,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -328,7 +373,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Table -->
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
@@ -405,7 +450,7 @@ onMounted(async () => {
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- PAGINATION -->
       <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}

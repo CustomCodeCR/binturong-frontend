@@ -40,8 +40,21 @@ const loading = ref(false);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
+const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
+
+const filteredSuppliers = computed(() => {
+  let result = suppliers.value;
+
+  if (statusFilter.value === "active") {
+    result = result.filter((s) => s.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((s) => !s.isActive);
+  }
+
+  return result;
+});
 
 const pageNumbers = computed(() => {
   const current = page.value;
@@ -77,7 +90,6 @@ function replaceSuppliers(nextSuppliers: Supplier[]) {
 
 async function loadSuppliers() {
   loading.value = true;
-
   try {
     replaceSuppliers(await fetchSuppliers());
   } catch {
@@ -142,12 +154,7 @@ function patchSupplierInList(payload: SupplierSuccessPayload) {
 function patchSupplierStatusInList(supplierId: string, isActive: boolean) {
   replaceSuppliers(
     suppliers.value.map((supplier) =>
-      supplier.supplierId === supplierId
-        ? {
-            ...supplier,
-            isActive,
-          }
-        : supplier,
+      supplier.supplierId === supplierId ? { ...supplier, isActive } : supplier,
     ),
   );
 }
@@ -166,9 +173,7 @@ function hasSupplierReachedExpectedState(
     (supplier) => supplier.supplierId === expected.supplierId,
   );
 
-  if (!fetchedSupplier) {
-    return false;
-  }
+  if (!fetchedSupplier) return false;
 
   return (
     fetchedSupplier.identification === expected.identification &&
@@ -179,18 +184,14 @@ function hasSupplierReachedExpectedState(
     fetchedSupplier.phone === expected.phone &&
     fetchedSupplier.paymentTerms === expected.paymentTerms &&
     fetchedSupplier.mainCurrency === expected.mainCurrency &&
-    Number(fetchedSupplier.pendingPayables) ===
-      Number(expected.pendingPayables) &&
+    Number(fetchedSupplier.pendingPayables) === Number(expected.pendingPayables) &&
     fetchedSupplier.isActive === expected.isActive
   );
 }
 
 async function reloadSuppliersUntil(
   predicate: (fetchedSuppliers: Supplier[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
@@ -227,9 +228,7 @@ function openCreateModal() {
   modalStore.open({
     component: SupplierCreateModal,
     onSuccess: async (payload?: SupplierSuccessPayload) => {
-      if (payload?.supplierId) {
-        patchSupplierInList(payload);
-      }
+      if (payload?.supplierId) patchSupplierInList(payload);
 
       toastStore.addToast({
         severity: "success",
@@ -240,13 +239,8 @@ function openCreateModal() {
       if (payload?.supplierId) {
         await reloadSuppliersUntil(
           (fetchedSuppliers) =>
-            fetchedSuppliers.some(
-              (supplier) => supplier.supplierId === payload.supplierId,
-            ),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+            fetchedSuppliers.some((supplier) => supplier.supplierId === payload.supplierId),
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
@@ -266,9 +260,7 @@ function openCreateModal() {
 function openEditModal(supplier: Supplier) {
   modalStore.open({
     component: SupplierEditModal,
-    props: {
-      supplierId: supplier.supplierId,
-    },
+    props: { supplierId: supplier.supplierId },
     onSuccess: async (payload?: SupplierSuccessPayload) => {
       if (!payload?.supplierId) {
         await loadSuppliers();
@@ -284,12 +276,8 @@ function openEditModal(supplier: Supplier) {
       });
 
       await reloadSuppliersUntil(
-        (fetchedSuppliers) =>
-          hasSupplierReachedExpectedState(fetchedSuppliers, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        (fetchedSuppliers) => hasSupplierReachedExpectedState(fetchedSuppliers, payload),
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
@@ -305,9 +293,7 @@ function openEditModal(supplier: Supplier) {
 function openDetailsDrawer(supplier: Supplier) {
   drawerStore.openDrawer({
     component: SupplierDetailsDrawer,
-    props: {
-      supplierId: supplier.supplierId,
-    },
+    props: { supplierId: supplier.supplierId },
     title: t("suppliers.drawer.title"),
     description: t("suppliers.drawer.description", {
       name: supplier.tradeName || supplier.legalName,
@@ -348,10 +334,7 @@ async function toggleSupplierStatus(supplier: Supplier) {
         );
         return fetchedSupplier?.isActive === nextIsActive;
       },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -378,13 +361,8 @@ async function deleteSupplier(supplier: Supplier) {
 
     await reloadSuppliersUntil(
       (fetchedSuppliers) =>
-        !fetchedSuppliers.some(
-          (item) => item.supplierId === supplier.supplierId,
-        ),
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+        !fetchedSuppliers.some((item) => item.supplierId === supplier.supplierId),
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -401,10 +379,7 @@ async function onSearch() {
 }
 
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
-
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadSuppliers();
 }
@@ -443,12 +418,12 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
+        <!-- Left: search + status filter + search button + refresh -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
@@ -457,6 +432,16 @@ onMounted(async () => {
             @keyup.enter="onSearch"
           />
 
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option value="all">{{ $t("suppliers.filters.allStatus") }}</option>
+            <option value="active">{{ $t("suppliers.filters.active") }}</option>
+            <option value="inactive">{{ $t("suppliers.filters.inactive") }}</option>
+          </select>
+
+          <!-- Primary query action -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
@@ -465,6 +450,7 @@ onMounted(async () => {
             {{ $t("suppliers.actions.search") }}
           </button>
 
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -474,6 +460,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -495,6 +482,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -506,70 +494,32 @@ onMounted(async () => {
         <table v-else class="w-full border-collapse min-w-[1300px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.identification") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.legalName") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.tradeName") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.email") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.phone") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.pendingPayables") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("suppliers.table.status") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("suppliers.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.identification") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.legalName") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.tradeName") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.email") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.phone") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.pendingPayables") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("suppliers.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("suppliers.table.options") }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="supplier in suppliers"
+              v-for="supplier in filteredSuppliers"
               :key="supplier.supplierId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ supplier.identification }}
-                </div>
-                <div class="text-xs text-bt-grey-500">
-                  {{ supplier.identificationType }}
-                </div>
+                <div class="font-bt-semibold text-bt-primary-700">{{ supplier.identification }}</div>
+                <div class="text-xs text-bt-grey-500">{{ supplier.identificationType }}</div>
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ supplier.legalName }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ supplier.tradeName }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ supplier.email }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ supplier.phone }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ supplier.pendingPayables }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ supplier.legalName }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ supplier.tradeName }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ supplier.email }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ supplier.phone }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ supplier.pendingPayables }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -579,14 +529,9 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{
-                    supplier.isActive
-                      ? $t("suppliers.status.active")
-                      : $t("suppliers.status.inactive")
-                  }}
+                  {{ supplier.isActive ? $t("suppliers.status.active") : $t("suppliers.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <SupplierActionMenu
                   :items="[
@@ -624,7 +569,7 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!suppliers.length && !loading">
+            <tr v-if="!filteredSuppliers.length && !loading">
               <td
                 colspan="8"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -636,24 +581,38 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredSuppliers.length }} {{ $t("suppliers.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
           <button
             type="button"
             :disabled="!canGoPrevious"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goPrevious"
           >
             <ChevronLeft :size="16" />
             <span>{{ $t("pagination.previous") }}</span>
           </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -670,10 +629,24 @@ onMounted(async () => {
             {{ pageNumber }}
           </button>
 
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >...</span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
+
           <button
             type="button"
             :disabled="!canGoNext"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goNext"
           >
             <span>{{ $t("pagination.next") }}</span>

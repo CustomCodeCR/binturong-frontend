@@ -36,8 +36,21 @@ const loading = ref(false);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
+const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
+
+const filteredBranches = computed(() => {
+  let result = branches.value;
+
+  if (statusFilter.value === "active") {
+    result = result.filter((b) => b.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((b) => !b.isActive);
+  }
+
+  return result;
+});
 
 const pageNumbers = computed(() => {
   const current = page.value;
@@ -130,12 +143,7 @@ function patchBranchInList(payload: BranchSuccessPayload) {
 function patchBranchStatusInList(branchId: string, isActive: boolean) {
   replaceBranches(
     branches.value.map((branch) =>
-      branch.branchId === branchId
-        ? {
-            ...branch,
-            isActive,
-          }
-        : branch,
+      branch.branchId === branchId ? { ...branch, isActive } : branch,
     ),
   );
 }
@@ -147,10 +155,7 @@ function patchBranchWarehousesInList(
   replaceBranches(
     branches.value.map((branch) =>
       branch.branchId === branchId
-        ? {
-            ...branch,
-            warehouses: [...warehouses],
-          }
+        ? { ...branch, warehouses: [...warehouses] }
         : branch,
     ),
   );
@@ -170,9 +175,7 @@ function hasBranchReachedExpectedState(
     (branch) => branch.branchId === expected.branchId,
   );
 
-  if (!fetchedBranch) {
-    return false;
-  }
+  if (!fetchedBranch) return false;
 
   return (
     fetchedBranch.code === expected.code &&
@@ -186,10 +189,7 @@ function hasBranchReachedExpectedState(
 
 async function reloadBranchesUntil(
   predicate: (fetchedBranches: Branch[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
@@ -226,9 +226,7 @@ function openCreateModal() {
   modalStore.open({
     component: BranchCreateModal,
     onSuccess: async (payload?: BranchSuccessPayload) => {
-      if (payload?.branchId) {
-        patchBranchInList(payload);
-      }
+      if (payload?.branchId) patchBranchInList(payload);
 
       toastStore.addToast({
         severity: "success",
@@ -239,13 +237,8 @@ function openCreateModal() {
       if (payload?.branchId) {
         await reloadBranchesUntil(
           (fetchedBranches) =>
-            fetchedBranches.some(
-              (branch) => branch.branchId === payload.branchId,
-            ),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+            fetchedBranches.some((branch) => branch.branchId === payload.branchId),
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
@@ -265,9 +258,7 @@ function openCreateModal() {
 function openEditModal(branch: Branch) {
   modalStore.open({
     component: BranchEditModal,
-    props: {
-      branchId: branch.branchId,
-    },
+    props: { branchId: branch.branchId },
     onSuccess: async (payload?: BranchSuccessPayload) => {
       if (!payload?.branchId) {
         await loadBranches();
@@ -283,12 +274,8 @@ function openEditModal(branch: Branch) {
       });
 
       await reloadBranchesUntil(
-        (fetchedBranches) =>
-          hasBranchReachedExpectedState(fetchedBranches, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        (fetchedBranches) => hasBranchReachedExpectedState(fetchedBranches, payload),
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
@@ -314,15 +301,9 @@ function openDetailsDrawer(branch: Branch) {
             const fetchedBranch = fetchedBranches.find(
               (item) => item.branchId === branch.branchId,
             );
-
-            return (
-              (fetchedBranch?.warehouses?.length ?? 0) === warehouses.length
-            );
+            return (fetchedBranch?.warehouses?.length ?? 0) === warehouses.length;
           },
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+          { attempts: 12, delayMs: 500 },
         );
       },
     },
@@ -362,10 +343,7 @@ async function toggleBranchStatus(branch: Branch) {
         );
         return fetchedBranch?.isActive === nextIsActive;
       },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -393,10 +371,7 @@ async function deleteBranch(branch: Branch) {
     await reloadBranchesUntil(
       (fetchedBranches) =>
         !fetchedBranches.some((item) => item.branchId === branch.branchId),
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -408,10 +383,7 @@ async function deleteBranch(branch: Branch) {
 }
 
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
-
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadBranches();
 }
@@ -455,12 +427,12 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
+        <!-- Left: search + status filter + search button + refresh -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
@@ -469,6 +441,16 @@ onMounted(async () => {
             @keyup.enter="onSearch"
           />
 
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option value="all">{{ $t("branches.filters.allStatus") }}</option>
+            <option value="active">{{ $t("branches.filters.active") }}</option>
+            <option value="inactive">{{ $t("branches.filters.inactive") }}</option>
+          </select>
+
+          <!-- Primary query action -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
@@ -477,6 +459,7 @@ onMounted(async () => {
             {{ $t("branches.actions.search") }}
           </button>
 
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -486,6 +469,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -507,6 +491,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -518,60 +503,29 @@ onMounted(async () => {
         <table v-else class="w-full border-collapse min-w-[1100px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("branches.table.code") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("branches.table.name") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("branches.table.address") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("branches.table.phone") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("branches.table.warehouses") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("branches.table.status") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("branches.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.table.code") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.table.name") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.table.address") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.table.phone") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.table.warehouses") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("branches.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("branches.table.options") }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="branch in branches"
+              v-for="branch in filteredBranches"
               :key="branch.branchId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
                 {{ branch.code }}
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ branch.name }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ branch.address }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ branch.phone }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ branch.warehouses.length }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ branch.name }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ branch.address }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ branch.phone }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ branch.warehouses.length }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -581,14 +535,9 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{
-                    branch.isActive
-                      ? $t("branches.status.active")
-                      : $t("branches.status.inactive")
-                  }}
+                  {{ branch.isActive ? $t("branches.status.active") : $t("branches.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <BranchActionMenu
                   :items="[
@@ -626,7 +575,7 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!branches.length && !loading">
+            <tr v-if="!filteredBranches.length && !loading">
               <td
                 colspan="7"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -638,24 +587,38 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredBranches.length }} {{ $t("branches.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
           <button
             type="button"
             :disabled="!canGoPrevious"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goPrevious"
           >
             <ChevronLeft :size="16" />
             <span>{{ $t("pagination.previous") }}</span>
           </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -672,10 +635,24 @@ onMounted(async () => {
             {{ pageNumber }}
           </button>
 
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >...</span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
+
           <button
             type="button"
             :disabled="!canGoNext"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goNext"
           >
             <span>{{ $t("pagination.next") }}</span>

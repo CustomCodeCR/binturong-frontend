@@ -75,9 +75,7 @@ const filteredPolicies = computed(() => {
     const query = policiesSearch.value.toLowerCase().trim();
     result = result.filter(
       (policy) =>
-        String(policy.name ?? "")
-          .toLowerCase()
-          .includes(query) ||
+        String(policy.name ?? "").toLowerCase().includes(query) ||
         String(policy.maxDiscountPercentage ?? "").includes(query),
     );
   }
@@ -91,8 +89,7 @@ const filteredApprovals = computed(() => {
   if (approvalStatusFilter.value !== "all") {
     result = result.filter(
       (approval) =>
-        String(approval.status).toLowerCase() ===
-        approvalStatusFilter.value.toLowerCase(),
+        String(approval.status).toLowerCase() === approvalStatusFilter.value.toLowerCase(),
     );
   }
 
@@ -100,15 +97,9 @@ const filteredApprovals = computed(() => {
     const query = approvalsSearch.value.toLowerCase().trim();
     result = result.filter(
       (approval) =>
-        String(approval.salesOrderCode ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        String(approval.requestedByUserName ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        String(approval.reason ?? "")
-          .toLowerCase()
-          .includes(query),
+        String(approval.salesOrderCode ?? "").toLowerCase().includes(query) ||
+        String(approval.requestedByUserName ?? "").toLowerCase().includes(query) ||
+        String(approval.reason ?? "").toLowerCase().includes(query),
     );
   }
 
@@ -140,21 +131,11 @@ const filteredHistory = computed(() => {
     const query = historySearch.value.toLowerCase().trim();
     result = result.filter(
       (item) =>
-        String(item.salesOrderCode ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        String(item.userName ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        String(item.reason ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        String(item.scope ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        String(item.action ?? "")
-          .toLowerCase()
-          .includes(query),
+        String(item.salesOrderCode ?? "").toLowerCase().includes(query) ||
+        String(item.userName ?? "").toLowerCase().includes(query) ||
+        String(item.reason ?? "").toLowerCase().includes(query) ||
+        String(item.scope ?? "").toLowerCase().includes(query) ||
+        String(item.action ?? "").toLowerCase().includes(query),
     );
   }
 
@@ -167,6 +148,12 @@ const currentPage = computed(() => {
   return historyPage.value;
 });
 
+const filteredCount = computed(() => {
+  if (activeTab.value === "policies") return filteredPolicies.value.length;
+  if (activeTab.value === "approvals") return filteredApprovals.value.length;
+  return filteredHistory.value.length;
+});
+
 const canGoPrevious = computed(() => currentPage.value > 1);
 const canGoNext = computed(() => currentPage.value < MAX_PAGE);
 
@@ -174,55 +161,32 @@ const pageNumbers = computed(() => {
   const current = currentPage.value;
   const start = Math.max(1, current - 2);
   const end = Math.min(MAX_PAGE, current + 2);
-
   const pages: number[] = [];
-
   for (let index = start; index <= end; index += 1) {
     pages.push(index);
   }
-
   return pages;
 });
 
 function formatDateTime(value?: string | null): string {
-  if (!value) {
-    return "-";
-  }
-
+  if (!value) return "-";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("es-CR");
 }
 
 function formatPercent(value?: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return "-";
-  }
-
-  return `${Number(value).toLocaleString("es-CR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}%`;
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  return `${Number(value).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 }
 
 function formatMoney(value?: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return "-";
-  }
-
-  return Number(value).toLocaleString("es-CR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  return Number(value).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 async function loadPolicies() {
   loadingPolicies.value = true;
-
   try {
     policies.value = await DiscountsService.browsePolicies({
       page: policyPage.value,
@@ -230,11 +194,7 @@ async function loadPolicies() {
       search: policiesSearch.value.trim() || undefined,
     });
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.policies.messages.loadError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("discounts.policies.messages.loadError") });
   } finally {
     loadingPolicies.value = false;
   }
@@ -242,23 +202,15 @@ async function loadPolicies() {
 
 async function loadApprovals() {
   loadingApprovals.value = true;
-
   try {
     approvals.value = await DiscountsService.browseApprovalRequests({
       page: approvalPage.value,
       pageSize: pageSize.value,
       search: approvalsSearch.value.trim() || undefined,
-      status:
-        approvalStatusFilter.value === "all"
-          ? undefined
-          : approvalStatusFilter.value,
+      status: approvalStatusFilter.value === "all" ? undefined : approvalStatusFilter.value,
     });
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.approvals.messages.loadError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("discounts.approvals.messages.loadError") });
   } finally {
     loadingApprovals.value = false;
   }
@@ -266,7 +218,6 @@ async function loadApprovals() {
 
 async function loadHistory() {
   loadingHistory.value = true;
-
   try {
     history.value = await DiscountsService.browseHistory({
       page: historyPage.value,
@@ -277,11 +228,7 @@ async function loadHistory() {
       toUtc: historyToUtc.value || undefined,
     });
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.history.messages.loadError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("discounts.history.messages.loadError") });
   } finally {
     loadingHistory.value = false;
   }
@@ -296,40 +243,36 @@ async function loadUsers() {
 }
 
 async function loadActiveTab() {
-  if (activeTab.value === "policies") {
-    await loadPolicies();
-    return;
-  }
+  if (activeTab.value === "policies") { await loadPolicies(); return; }
+  if (activeTab.value === "approvals") { await loadApprovals(); return; }
+  await loadHistory();
+}
 
-  if (activeTab.value === "approvals") {
-    await loadApprovals();
-    return;
-  }
+async function onPoliciesSearch() {
+  policyPage.value = 1;
+  await loadPolicies();
+}
 
+async function onApprovalsSearch() {
+  approvalPage.value = 1;
+  await loadApprovals();
+}
+
+async function onHistorySearch() {
+  historyPage.value = 1;
   await loadHistory();
 }
 
 function openCreatePolicyModal() {
   modalStore.open({
     component: DiscountPolicyModal,
-    props: {
-      policy: null,
-    },
+    props: { policy: null },
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("discounts.policies.messages.createSuccess"),
-      });
-
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("discounts.policies.messages.createSuccess") });
       await loadPolicies();
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("discounts.policies.messages.createError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("discounts.policies.messages.createError") });
     },
   });
 }
@@ -337,24 +280,13 @@ function openCreatePolicyModal() {
 function openEditPolicyModal(policy: DiscountPolicy) {
   modalStore.open({
     component: DiscountPolicyModal,
-    props: {
-      policy,
-    },
+    props: { policy },
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("discounts.policies.messages.updateSuccess"),
-      });
-
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("discounts.policies.messages.updateSuccess") });
       await loadPolicies();
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message: error?.message ?? t("discounts.policies.messages.updateError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("discounts.policies.messages.updateError") });
     },
   });
 }
@@ -362,13 +294,9 @@ function openEditPolicyModal(policy: DiscountPolicy) {
 function openPolicyDetailsDrawer(policy: DiscountPolicy) {
   drawerStore.openDrawer({
     component: DiscountPolicyDetailsDrawer,
-    props: {
-      policy,
-    },
+    props: { policy },
     title: t("discounts.policies.drawer.title"),
-    description: t("discounts.policies.drawer.description", {
-      name: policy.name || "-",
-    }),
+    description: t("discounts.policies.drawer.description", { name: policy.name || "-" }),
     direction: "right",
     size: "lg",
   });
@@ -376,7 +304,6 @@ function openPolicyDetailsDrawer(policy: DiscountPolicy) {
 
 async function togglePolicyStatus(policy: DiscountPolicy) {
   const nextIsActive = !policy.isActive;
-
   try {
     await DiscountsService.updatePolicy(policy.policyId, {
       name: policy.name,
@@ -384,69 +311,39 @@ async function togglePolicyStatus(policy: DiscountPolicy) {
       requiresApprovalAboveLimit: policy.requiresApprovalAboveLimit,
       isActive: nextIsActive,
     });
-
     toastStore.addToast({
       severity: "success",
       title: t("toast.success"),
-      message: nextIsActive
-        ? t("discounts.policies.messages.activated")
-        : t("discounts.policies.messages.deactivated"),
+      message: nextIsActive ? t("discounts.policies.messages.activated") : t("discounts.policies.messages.deactivated"),
     });
-
     await loadPolicies();
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.policies.messages.updateError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("discounts.policies.messages.updateError") });
   }
 }
 
 async function approveRequest(item: DiscountApprovalRequest) {
   try {
     await DiscountsService.approveApprovalRequest(item.approvalRequestId);
-
-    toastStore.addToast({
-      severity: "success",
-      title: t("toast.success"),
-      message: t("discounts.approvals.messages.approveSuccess"),
-    });
-
+    toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("discounts.approvals.messages.approveSuccess") });
     await loadApprovals();
     await loadHistory();
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.approvals.messages.approveError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("discounts.approvals.messages.approveError") });
   }
 }
 
 function openRejectApprovalModal(item: DiscountApprovalRequest) {
   modalStore.open({
     component: DiscountApprovalRejectModal,
-    props: {
-      approvalRequestId: item.approvalRequestId,
-    },
+    props: { approvalRequestId: item.approvalRequestId },
     onSuccess: async () => {
-      toastStore.addToast({
-        severity: "success",
-        title: t("toast.success"),
-        message: t("discounts.approvals.messages.rejectSuccess"),
-      });
-
+      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("discounts.approvals.messages.rejectSuccess") });
       await loadApprovals();
       await loadHistory();
     },
     onError: (error) => {
-      toastStore.addToast({
-        severity: "error",
-        title: t("toast.error"),
-        message:
-          error?.message ?? t("discounts.approvals.messages.rejectError"),
-      });
+      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("discounts.approvals.messages.rejectError") });
     },
   });
 }
@@ -454,13 +351,9 @@ function openRejectApprovalModal(item: DiscountApprovalRequest) {
 function openApprovalDetailsDrawer(item: DiscountApprovalRequest) {
   drawerStore.openDrawer({
     component: DiscountApprovalDetailsDrawer,
-    props: {
-      approval: item,
-    },
+    props: { approval: item },
     title: t("discounts.approvals.drawer.title"),
-    description: t("discounts.approvals.drawer.description", {
-      code: item.salesOrderCode || "-",
-    }),
+    description: t("discounts.approvals.drawer.description", { code: item.salesOrderCode || "-" }),
     direction: "right",
     size: "xl",
   });
@@ -469,13 +362,9 @@ function openApprovalDetailsDrawer(item: DiscountApprovalRequest) {
 function openHistoryDetailsDrawer(item: DiscountHistoryItem) {
   drawerStore.openDrawer({
     component: DiscountHistoryDetailsDrawer,
-    props: {
-      historyItem: item,
-    },
+    props: { historyItem: item },
     title: t("discounts.history.drawer.title"),
-    description: t("discounts.history.drawer.description", {
-      code: item.salesOrderCode || "-",
-    }),
+    description: t("discounts.history.drawer.description", { code: item.salesOrderCode || "-" }),
     direction: "right",
     size: "xl",
   });
@@ -483,7 +372,6 @@ function openHistoryDetailsDrawer(item: DiscountHistoryItem) {
 
 async function exportHistory() {
   exporting.value = true;
-
   try {
     const blob = await DiscountsService.exportHistory({
       page: historyPage.value,
@@ -493,7 +381,6 @@ async function exportHistory() {
       fromUtc: historyFromUtc.value || undefined,
       toUtc: historyToUtc.value || undefined,
     });
-
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -501,24 +388,14 @@ async function exportHistory() {
     anchor.click();
     URL.revokeObjectURL(url);
   } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.history.messages.exportError"),
-    });
+    toastStore.addToast({ severity: "error", title: t("toast.error"), message: t("discounts.history.messages.exportError") });
   } finally {
     exporting.value = false;
   }
 }
 
 async function goToPage(targetPage: number) {
-  if (
-    targetPage < 1 ||
-    targetPage > MAX_PAGE ||
-    targetPage === currentPage.value
-  ) {
-    return;
-  }
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === currentPage.value) return;
 
   if (activeTab.value === "policies") {
     policyPage.value = targetPage;
@@ -532,18 +409,12 @@ async function goToPage(targetPage: number) {
 }
 
 async function goPrevious() {
-  if (!canGoPrevious.value) {
-    return;
-  }
-
+  if (!canGoPrevious.value) return;
   await goToPage(currentPage.value - 1);
 }
 
 async function goNext() {
-  if (!canGoNext.value) {
-    return;
-  }
-
+  if (!canGoNext.value) return;
   await goToPage(currentPage.value + 1);
 }
 
@@ -559,17 +430,13 @@ watch(activeTab, async () => {
 });
 
 onMounted(async () => {
-  await Promise.all([
-    loadUsers(),
-    loadPolicies(),
-    loadApprovals(),
-    loadHistory(),
-  ]);
+  await Promise.all([loadUsers(), loadPolicies(), loadApprovals(), loadHistory()]);
 });
 </script>
 
 <template>
   <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
+    <!-- HEADER -->
     <div class="mb-bt-spacing-24 shrink-0">
       <h1 class="text-2xl font-bt-bold text-bt-primary-700">
         {{ $t("discounts.title") }}
@@ -588,76 +455,100 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
-      <div class="flex flex-wrap gap-bt-spacing-8 mb-bt-spacing-24 shrink-0">
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
-          :class="
-            activeTab === 'policies'
-              ? 'bg-bt-primary-500 text-bt-white'
-              : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'
-          "
-          @click="activeTab = 'policies'"
-        >
-          {{ $t("discounts.tabs.policies") }}
-        </button>
+      <!-- TOOLBAR: tabs (left) + page size + create/export (right) -->
+      <div
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+      >
+        <div class="flex flex-wrap gap-bt-spacing-8">
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
+            :class="activeTab === 'policies' ? 'bg-bt-primary-500 text-bt-white' : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'"
+            @click="activeTab = 'policies'"
+          >
+            {{ $t("discounts.tabs.policies") }}
+          </button>
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
+            :class="activeTab === 'approvals' ? 'bg-bt-primary-500 text-bt-white' : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'"
+            @click="activeTab = 'approvals'"
+          >
+            {{ $t("discounts.tabs.approvals") }}
+          </button>
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
+            :class="activeTab === 'history' ? 'bg-bt-primary-500 text-bt-white' : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'"
+            @click="activeTab = 'history'"
+          >
+            {{ $t("discounts.tabs.history") }}
+          </button>
+        </div>
 
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
-          :class="
-            activeTab === 'approvals'
-              ? 'bg-bt-primary-500 text-bt-white'
-              : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'
-          "
-          @click="activeTab = 'approvals'"
-        >
-          {{ $t("discounts.tabs.approvals") }}
-        </button>
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
 
-        <button
-          type="button"
-          class="px-bt-spacing-16 py-bt-spacing-12 rounded-m transition"
-          :class="
-            activeTab === 'history'
-              ? 'bg-bt-primary-500 text-bt-white'
-              : 'bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300'
-          "
-          @click="activeTab = 'history'"
-        >
-          {{ $t("discounts.tabs.history") }}
-        </button>
+          <!-- New policy: bt-accent-500 + font-bt-semibold -->
+          <button
+            v-if="activeTab === 'policies'"
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
+            @click="openCreatePolicyModal"
+          >
+            {{ $t("discounts.actions.newPolicy") }}
+          </button>
+
+          <!-- Export Excel history: bt-success-500 + font-bt-semibold -->
+          <button
+            v-if="activeTab === 'history'"
+            type="button"
+            :disabled="exporting"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold disabled:bg-bt-disabled"
+            @click="exportHistory"
+          >
+            {{ exporting ? $t("common.loading") : $t("discounts.actions.exportExcel") }}
+          </button>
+        </div>
       </div>
 
+      <!-- ── POLICIES ── -->
       <template v-if="activeTab === 'policies'">
+        <!-- Filter bar: row 1 -->
         <div
-          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0"
         >
-          <div
-            class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-          >
+          <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
             <input
               v-model="policiesSearch"
               type="text"
               :placeholder="$t('discounts.policies.searchPlaceholder')"
               class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              @keyup.enter="onPoliciesSearch"
             />
-
             <select
               v-model="policyStatusFilter"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             >
-              <option value="all">
-                {{ $t("discounts.policies.filters.all") }}
-              </option>
-              <option value="active">
-                {{ $t("discounts.policies.filters.active") }}
-              </option>
-              <option value="inactive">
-                {{ $t("discounts.policies.filters.inactive") }}
-              </option>
+              <option value="all">{{ $t("discounts.policies.filters.all") }}</option>
+              <option value="active">{{ $t("discounts.policies.filters.active") }}</option>
+              <option value="inactive">{{ $t("discounts.policies.filters.inactive") }}</option>
             </select>
-
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+              @click="onPoliciesSearch"
+            >
+              {{ $t("common.search") }}
+            </button>
             <button
               type="button"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -666,123 +557,51 @@ onMounted(async () => {
               {{ $t("common.refresh") }}
             </button>
           </div>
-
-          <div class="flex items-center gap-bt-spacing-12 shrink-0">
-            <select
-              v-model.number="pageSize"
-              class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            >
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-
-            <button
-              type="button"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 transition font-bt-semibold"
-              @click="openCreatePolicyModal"
-            >
-              {{ $t("discounts.actions.newPolicy") }}
-            </button>
-          </div>
         </div>
 
         <div class="flex-1 min-h-0 overflow-auto">
-          <div
-            v-if="loadingPolicies"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
+          <div v-if="loadingPolicies" class="py-bt-spacing-32 text-center text-bt-grey-500">
             {{ $t("common.loading") }}
           </div>
 
           <table v-else class="w-full border-collapse min-w-[900px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.policies.table.name") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.policies.table.maxDiscount") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.policies.table.requiresApproval") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.policies.table.status") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-                >
-                  {{ $t("common.actions") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.policies.table.name") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.policies.table.maxDiscount") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.policies.table.requiresApproval") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.policies.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("common.actions") }}</th>
               </tr>
             </thead>
-
             <tbody>
               <tr
                 v-for="policy in filteredPolicies"
                 :key="policy.policyId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ policy.name }}
-                </td>
-
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ policy.name }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatPercent(policy.maxDiscountPercentage) }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatPercent(policy.maxDiscountPercentage) }}
+                  {{ policy.requiresApprovalAboveLimit ? $t("common.yes") : $t("common.no") }}
                 </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{
-                    policy.requiresApprovalAboveLimit
-                      ? $t("common.yes")
-                      : $t("common.no")
-                  }}
-                </td>
-
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <span
                     :class="[
                       'inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold',
-                      policy.isActive
-                        ? 'bg-bt-success-100 text-bt-success-700'
-                        : 'bg-bt-error-100 text-bt-error-700',
+                      policy.isActive ? 'bg-bt-success-100 text-bt-success-700' : 'bg-bt-error-100 text-bt-error-700',
                     ]"
                   >
-                    {{
-                      policy.isActive
-                        ? $t("common.active")
-                        : $t("common.inactive")
-                    }}
+                    {{ policy.isActive ? $t("common.active") : $t("common.inactive") }}
                   </span>
                 </td>
-
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <DiscountActionMenu
                     :items="[
+                      { label: t('common.viewDetails'), action: () => openPolicyDetailsDrawer(policy) },
+                      { label: t('common.edit'), action: () => openEditPolicyModal(policy) },
                       {
-                        label: t('common.viewDetails'),
-                        action: () => openPolicyDetailsDrawer(policy),
-                      },
-                      {
-                        label: t('common.edit'),
-                        action: () => openEditPolicyModal(policy),
-                      },
-                      {
-                        label: policy.isActive
-                          ? t('common.deactivate')
-                          : t('common.activate'),
+                        label: policy.isActive ? t('common.deactivate') : t('common.activate'),
                         action: () => togglePolicyStatus(policy),
                         danger: policy.isActive,
                       },
@@ -799,12 +618,8 @@ onMounted(async () => {
                   </DiscountActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!filteredPolicies.length && !loadingPolicies">
-                <td
-                  colspan="5"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="5" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("discounts.policies.empty") }}
                 </td>
               </tr>
@@ -813,38 +628,36 @@ onMounted(async () => {
         </div>
       </template>
 
+      <!-- ── APPROVALS ── -->
       <template v-else-if="activeTab === 'approvals'">
+        <!-- Filter bar -->
         <div
-          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0"
         >
-          <div
-            class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-3xl"
-          >
+          <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
             <input
               v-model="approvalsSearch"
               type="text"
               :placeholder="$t('discounts.approvals.searchPlaceholder')"
               class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              @keyup.enter="onApprovalsSearch"
             />
-
             <select
               v-model="approvalStatusFilter"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             >
-              <option value="all">
-                {{ $t("discounts.approvals.filters.all") }}
-              </option>
-              <option value="pending">
-                {{ $t("discounts.approvals.filters.pending") }}
-              </option>
-              <option value="approved">
-                {{ $t("discounts.approvals.filters.approved") }}
-              </option>
-              <option value="rejected">
-                {{ $t("discounts.approvals.filters.rejected") }}
-              </option>
+              <option value="all">{{ $t("discounts.approvals.filters.all") }}</option>
+              <option value="pending">{{ $t("discounts.approvals.filters.pending") }}</option>
+              <option value="approved">{{ $t("discounts.approvals.filters.approved") }}</option>
+              <option value="rejected">{{ $t("discounts.approvals.filters.rejected") }}</option>
             </select>
-
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+              @click="onApprovalsSearch"
+            >
+              {{ $t("common.search") }}
+            </button>
             <button
               type="button"
               class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -853,102 +666,37 @@ onMounted(async () => {
               {{ $t("common.refresh") }}
             </button>
           </div>
-
-          <div class="flex items-center gap-bt-spacing-12 shrink-0">
-            <select
-              v-model.number="pageSize"
-              class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-            >
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-          </div>
         </div>
 
         <div class="flex-1 min-h-0 overflow-auto">
-          <div
-            v-if="loadingApprovals"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
+          <div v-if="loadingApprovals" class="py-bt-spacing-32 text-center text-bt-grey-500">
             {{ $t("common.loading") }}
           </div>
 
           <table v-else class="w-full border-collapse min-w-[1200px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.salesOrder") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.scope") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.percentage") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.amount") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.requestedBy") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.status") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.approvals.table.requestedAt") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-                >
-                  {{ $t("common.actions") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.salesOrder") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.scope") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.percentage") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.amount") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.requestedBy") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.status") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.approvals.table.requestedAt") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("common.actions") }}</th>
               </tr>
             </thead>
-
             <tbody>
               <tr
                 v-for="approval in filteredApprovals"
                 :key="approval.approvalRequestId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ approval.salesOrderCode || "-" }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ approval.scope }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatPercent(approval.requestedPercentage) }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatMoney(approval.requestedAmount) }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ approval.requestedByUserName || "-" }}
-                </td>
-
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ approval.salesOrderCode || "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ approval.scope }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatPercent(approval.requestedPercentage) }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatMoney(approval.requestedAmount) }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ approval.requestedByUserName || "-" }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <span
                     :class="[
@@ -963,31 +711,20 @@ onMounted(async () => {
                     {{ approval.status }}
                   </span>
                 </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatDateTime(approval.requestedAtUtc) }}
-                </td>
-
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDateTime(approval.requestedAtUtc) }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <DiscountActionMenu
                     :items="[
                       {
                         label: t('discounts.actions.approve'),
-                        action: () => approveRequest(approval),
-                        disabled:
-                          String(approval.status).toLowerCase() !== 'pending',
+                        action: String(approval.status).toLowerCase() === 'pending' ? () => approveRequest(approval) : undefined,
                       },
                       {
                         label: t('discounts.actions.reject'),
-                        action: () => openRejectApprovalModal(approval),
+                        action: String(approval.status).toLowerCase() === 'pending' ? () => openRejectApprovalModal(approval) : undefined,
                         danger: true,
-                        disabled:
-                          String(approval.status).toLowerCase() !== 'pending',
                       },
-                      {
-                        label: t('common.viewDetails'),
-                        action: () => openApprovalDetailsDrawer(approval),
-                      },
+                      { label: t('common.viewDetails'), action: () => openApprovalDetailsDrawer(approval) },
                     ]"
                   >
                     <template #trigger>
@@ -1001,12 +738,8 @@ onMounted(async () => {
                   </DiscountActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!filteredApprovals.length && !loadingApprovals">
-                <td
-                  colspan="8"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="8" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("discounts.approvals.empty") }}
                 </td>
               </tr>
@@ -1015,174 +748,100 @@ onMounted(async () => {
         </div>
       </template>
 
+      <!-- ── HISTORY ── -->
       <template v-else>
-        <div class="flex flex-col gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-bt-spacing-12"
-          >
+        <!-- Filter bar: fila 1 — search + buscar + refresh -->
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-12 shrink-0"
+        >
+          <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
             <input
               v-model="historySearch"
               type="text"
               :placeholder="$t('discounts.history.searchPlaceholder')"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              @keyup.enter="onHistorySearch"
             />
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+              @click="onHistorySearch"
+            >
+              {{ $t("common.search") }}
+            </button>
+            <button
+              type="button"
+              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+              @click="loadHistory"
+            >
+              {{ $t("common.refresh") }}
+            </button>
+          </div>
+        </div>
 
+        <!-- Filter bar: fila 2 — usuario + fecha desde + fecha hasta -->
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0"
+        >
+          <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
             <select
               v-model="historyUserFilter"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             >
-              <option value="">
-                {{ $t("discounts.history.filters.allUsers") }}
-              </option>
+              <option value="">{{ $t("discounts.history.filters.allUsers") }}</option>
               <option v-for="user in users" :key="user.id" :value="user.id">
                 {{ user.label }}
               </option>
             </select>
-
             <input
               v-model="historyFromUtc"
               type="datetime-local"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
-
             <input
               v-model="historyToUtc"
               type="datetime-local"
-              class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
             />
-
-            <div class="flex gap-bt-spacing-12">
-              <button
-                type="button"
-                class="flex-1 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
-                @click="loadHistory"
-              >
-                {{ $t("common.refresh") }}
-              </button>
-
-              <button
-                type="button"
-                :disabled="exporting"
-                class="flex-1 px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-accent-500 text-bt-white hover:bg-bt-accent-600 disabled:bg-bt-disabled transition"
-                @click="exportHistory"
-              >
-                {{
-                  exporting
-                    ? $t("common.loading")
-                    : $t("discounts.actions.export")
-                }}
-              </button>
-            </div>
           </div>
         </div>
 
         <div class="flex-1 min-h-0 overflow-auto">
-          <div
-            v-if="loadingHistory"
-            class="py-bt-spacing-32 text-center text-bt-grey-500"
-          >
+          <div v-if="loadingHistory" class="py-bt-spacing-32 text-center text-bt-grey-500">
             {{ $t("common.loading") }}
           </div>
 
           <table v-else class="w-full border-collapse min-w-[1300px]">
             <thead class="sticky top-0 z-10">
               <tr class="bg-bt-primary-50 text-left">
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.salesOrder") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.scope") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.action") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.percentage") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.amount") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.reason") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.user") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ $t("discounts.history.table.eventDate") }}
-                </th>
-                <th
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-                >
-                  {{ $t("common.actions") }}
-                </th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.salesOrder") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.scope") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.action") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.percentage") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.amount") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.reason") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.user") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("discounts.history.table.eventDate") }}</th>
+                <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("common.actions") }}</th>
               </tr>
             </thead>
-
             <tbody>
               <tr
                 v-for="item in filteredHistory"
                 :key="item.historyId"
                 class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
               >
-                <td
-                  class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700"
-                >
-                  {{ item.salesOrderCode || "-" }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ item.scope }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ item.action }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatPercent(item.discountPercentage) }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatMoney(item.discountAmount) }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ item.reason || item.rejectionReason || "-" }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ item.userName || "-" }}
-                </td>
-
-                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                  {{ formatDateTime(item.eventDateUtc) }}
-                </td>
-
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">{{ item.salesOrderCode || "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ item.scope }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ item.action }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatPercent(item.discountPercentage) }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatMoney(item.discountAmount) }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ item.reason || item.rejectionReason || "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ item.userName || "-" }}</td>
+                <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDateTime(item.eventDateUtc) }}</td>
                 <td class="px-bt-spacing-16 py-bt-spacing-12">
                   <DiscountActionMenu
-                    :items="[
-                      {
-                        label: t('common.viewDetails'),
-                        action: () => openHistoryDetailsDrawer(item),
-                      },
-                    ]"
+                    :items="[{ label: t('common.viewDetails'), action: () => openHistoryDetailsDrawer(item) }]"
                   >
                     <template #trigger>
                       <button
@@ -1195,12 +854,8 @@ onMounted(async () => {
                   </DiscountActionMenu>
                 </td>
               </tr>
-
               <tr v-if="!filteredHistory.length && !loadingHistory">
-                <td
-                  colspan="9"
-                  class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
-                >
+                <td colspan="9" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                   {{ $t("discounts.history.empty") }}
                 </td>
               </tr>
@@ -1209,13 +864,15 @@ onMounted(async () => {
         </div>
       </template>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ currentPage }}
-          {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ currentPage }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredCount }} {{ $t("discounts.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
@@ -1238,12 +895,7 @@ onMounted(async () => {
             1
           </button>
 
-          <span
-            v-if="pageNumbers[0] > 2"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -1263,9 +915,7 @@ onMounted(async () => {
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          >...</span>
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"

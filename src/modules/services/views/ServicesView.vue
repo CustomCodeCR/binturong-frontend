@@ -32,24 +32,19 @@ const services = ref<Service[]>([]);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-
-// Filtro de estado
 const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
 
-// Filtrado local en tiempo real
 const filteredServices = computed(() => {
   let result = services.value;
 
-  // Filtrar por estado
   if (statusFilter.value === "active") {
     result = result.filter((s) => s.isActive);
   } else if (statusFilter.value === "inactive") {
     result = result.filter((s) => !s.isActive);
   }
 
-  // Filtrar por búsqueda
   const term = search.value.trim().toLowerCase();
   if (term) {
     result = result.filter(
@@ -127,7 +122,6 @@ async function fetchServices(): Promise<Service[]> {
   const response = await ServicesService.browse({
     page: page.value,
     pageSize: pageSize.value,
-    // search removido: filtramos localmente
   });
   return Array.isArray(response) ? [...response] : [];
 }
@@ -155,6 +149,11 @@ async function reloadEventually(attempts = 10, delayMs = 500) {
   } finally {
     loading.value = false;
   }
+}
+
+async function onSearch() {
+  page.value = 1;
+  await loadData();
 }
 
 async function goToPage(targetPage: number) {
@@ -209,9 +208,7 @@ function openDetailsDrawer(service: Service) {
     direction: "right",
     size: "xl",
     props: { serviceId: service.serviceId },
-    onSuccess: async () => {
-      await reloadEventually();
-    },
+    onSuccess: async () => { await reloadEventually(); },
     onError: (error: any) => {
       showError(error?.message ?? t("services.messages.loadError"));
     },
@@ -289,18 +286,18 @@ onBeforeUnmount(() => {
 
     <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
 
-      <!-- Toolbar -->
+      <!-- TOOLBAR -->
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+        <!-- Left: search + status filter + search button + refresh -->
         <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
-          <!-- Search en tiempo real -->
           <input
             v-model="search"
             type="text"
             :placeholder="$t('services.filters.search')"
             class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            @keyup.enter="onSearch"
           />
 
-          <!-- Filtro de estado -->
           <select
             v-model="statusFilter"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -310,6 +307,16 @@ onBeforeUnmount(() => {
             <option value="inactive">{{ $t("services.filters.inactive") }}</option>
           </select>
 
+          <!-- Primary query action -->
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
+            @click="onSearch"
+          >
+            {{ $t("services.actions.search") }}
+          </button>
+
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -319,6 +326,7 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -340,7 +348,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Table -->
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
           {{ $t("common.loading") }}
@@ -369,24 +377,13 @@ onBeforeUnmount(() => {
               <td class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700">
                 {{ service.code }}
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
                 <div class="font-bt-semibold text-bt-primary-700">{{ service.name }}</div>
                 <div class="text-xs text-bt-grey-500">{{ service.description || "-" }}</div>
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ service.categoryName || "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ service.standardTimeMin ?? "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">
-                {{ formatMoney(service.baseRate) }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ service.categoryName || "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ service.standardTimeMin ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">{{ formatMoney(service.baseRate) }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
@@ -395,7 +392,6 @@ onBeforeUnmount(() => {
                   {{ service.availabilityStatus || "-" }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
@@ -404,7 +400,6 @@ onBeforeUnmount(() => {
                   {{ service.isActive ? $t("services.status.active") : $t("services.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <ServiceRowActionMenu :items="getServiceActions(service)">
                   <template #trigger>
@@ -428,7 +423,7 @@ onBeforeUnmount(() => {
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- PAGINATION -->
       <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
         <div class="text-sm text-bt-grey-600">
           {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}

@@ -102,15 +102,7 @@ function closeDrawer() {
         </div>
       </div>
 
-      <div
-        v-if="'policyId' in policy"
-        class="md:col-span-2 p-bt-spacing-16 rounded-m border border-bt-grey-200 bg-bt-grey-50"
-      >
-        <div class="text-xs text-bt-grey-500">ID</div>
-        <div class="text-bt-primary-700 font-bt-semibold break-all">
-          {{ policy.policyId || "-" }}
-        </div>
-      </div>
+     
     </div>
   </div>
 </template>

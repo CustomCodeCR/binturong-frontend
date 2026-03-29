@@ -44,8 +44,21 @@ const loading = ref(false);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
+const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
+
+const filteredEmployees = computed(() => {
+  let result = employees.value;
+
+  if (statusFilter.value === "active") {
+    result = result.filter((e) => e.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((e) => !e.isActive);
+  }
+
+  return result;
+});
 
 const pageNumbers = computed(() => {
   const current = page.value;
@@ -81,7 +94,6 @@ function replaceEmployees(nextEmployees: Employee[]) {
 
 async function loadEmployees() {
   loading.value = true;
-
   try {
     replaceEmployees(await fetchEmployees());
   } catch {
@@ -116,8 +128,7 @@ function patchEmployeeInList(payload: EmployeeSuccessPayload) {
               address: payload.address ?? employee.address ?? null,
               birthDate: payload.birthDate ?? employee.birthDate ?? null,
               hireDate: payload.hireDate ?? employee.hireDate ?? null,
-              terminationDate:
-                payload.terminationDate ?? employee.terminationDate ?? null,
+              terminationDate: payload.terminationDate ?? employee.terminationDate ?? null,
               jobTitle: payload.jobTitle,
               baseSalary: payload.baseSalary,
               isActive: payload.isActive,
@@ -155,12 +166,7 @@ function patchEmployeeInList(payload: EmployeeSuccessPayload) {
 function patchEmployeeStatusInList(employeeId: string, isActive: boolean) {
   replaceEmployees(
     employees.value.map((employee) =>
-      employee.employeeId === employeeId
-        ? {
-            ...employee,
-            isActive,
-          }
-        : employee,
+      employee.employeeId === employeeId ? { ...employee, isActive } : employee,
     ),
   );
 }
@@ -179,9 +185,7 @@ function hasEmployeeReachedExpectedState(
     (employee) => employee.employeeId === expected.employeeId,
   );
 
-  if (!fetchedEmployee) {
-    return false;
-  }
+  if (!fetchedEmployee) return false;
 
   return (
     fetchedEmployee.branchId === expected.branchId &&
@@ -197,10 +201,7 @@ function hasEmployeeReachedExpectedState(
 
 async function reloadEmployeesUntil(
   predicate: (fetchedEmployees: Employee[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
@@ -237,9 +238,7 @@ function openCreateModal() {
   modalStore.open({
     component: EmployeeCreateModal,
     onSuccess: async (payload?: EmployeeSuccessPayload) => {
-      if (payload?.employeeId) {
-        patchEmployeeInList(payload);
-      }
+      if (payload?.employeeId) patchEmployeeInList(payload);
 
       toastStore.addToast({
         severity: "success",
@@ -250,13 +249,8 @@ function openCreateModal() {
       if (payload?.employeeId) {
         await reloadEmployeesUntil(
           (fetchedEmployees) =>
-            fetchedEmployees.some(
-              (employee) => employee.employeeId === payload.employeeId,
-            ),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+            fetchedEmployees.some((employee) => employee.employeeId === payload.employeeId),
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
@@ -276,9 +270,7 @@ function openCreateModal() {
 function openEditModal(employee: Employee) {
   modalStore.open({
     component: EmployeeEditModal,
-    props: {
-      employeeId: employee.employeeId,
-    },
+    props: { employeeId: employee.employeeId },
     onSuccess: async (payload?: EmployeeSuccessPayload) => {
       if (!payload?.employeeId) {
         await loadEmployees();
@@ -294,12 +286,8 @@ function openEditModal(employee: Employee) {
       });
 
       await reloadEmployeesUntil(
-        (fetchedEmployees) =>
-          hasEmployeeReachedExpectedState(fetchedEmployees, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        (fetchedEmployees) => hasEmployeeReachedExpectedState(fetchedEmployees, payload),
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
@@ -315,13 +303,9 @@ function openEditModal(employee: Employee) {
 function openDetailsDrawer(employee: Employee) {
   drawerStore.openDrawer({
     component: EmployeeDetailsDrawer,
-    props: {
-      employeeId: employee.employeeId,
-    },
+    props: { employeeId: employee.employeeId },
     title: t("employees.drawer.title"),
-    description: t("employees.drawer.description", {
-      fullName: employee.fullName,
-    }),
+    description: t("employees.drawer.description", { fullName: employee.fullName }),
     direction: "right",
     size: "xl",
   });
@@ -358,10 +342,7 @@ async function toggleEmployeeStatus(employee: Employee) {
         );
         return fetchedEmployee?.isActive === nextIsActive;
       },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -388,13 +369,8 @@ async function deleteEmployee(employee: Employee) {
 
     await reloadEmployeesUntil(
       (fetchedEmployees) =>
-        !fetchedEmployees.some(
-          (item) => item.employeeId === employee.employeeId,
-        ),
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+        !fetchedEmployees.some((item) => item.employeeId === employee.employeeId),
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -405,11 +381,13 @@ async function deleteEmployee(employee: Employee) {
   }
 }
 
-async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
+async function onSearch() {
+  page.value = 1;
+  await loadEmployees();
+}
 
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadEmployees();
 }
@@ -422,11 +400,6 @@ async function goPrevious() {
 async function goNext() {
   if (!canGoNext.value) return;
   await goToPage(page.value + 1);
-}
-
-async function onSearch() {
-  page.value = 1;
-  await loadEmployees();
 }
 
 watch(pageSize, async () => {
@@ -453,12 +426,12 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
+        <!-- Left: search + status filter + search button + refresh -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
@@ -467,6 +440,16 @@ onMounted(async () => {
             @keyup.enter="onSearch"
           />
 
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option value="all">{{ $t("employees.filters.allStatus") }}</option>
+            <option value="active">{{ $t("employees.filters.active") }}</option>
+            <option value="inactive">{{ $t("employees.filters.inactive") }}</option>
+          </select>
+
+          <!-- Primary query action -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
@@ -475,6 +458,7 @@ onMounted(async () => {
             {{ $t("employees.actions.search") }}
           </button>
 
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -484,6 +468,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -505,6 +490,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -516,67 +502,31 @@ onMounted(async () => {
         <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.fullName") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.nationalId") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.email") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.branch") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.jobTitle") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.baseSalary") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("employees.table.status") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("employees.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.fullName") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.nationalId") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.email") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.branch") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.jobTitle") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.baseSalary") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("employees.table.options") }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="employee in employees"
+              v-for="employee in filteredEmployees"
               :key="employee.employeeId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
                 {{ employee.fullName }}
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ employee.nationalId }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ employee.email }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ employee.branchName ?? "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ employee.jobTitle }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ employee.baseSalary }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.nationalId }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.email }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.branchName ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.jobTitle }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.baseSalary }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -586,14 +536,9 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{
-                    employee.isActive
-                      ? $t("employees.status.active")
-                      : $t("employees.status.inactive")
-                  }}
+                  {{ employee.isActive ? $t("employees.status.active") : $t("employees.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <EmployeeActionMenu
                   :items="[
@@ -631,7 +576,7 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!employees.length && !loading">
+            <tr v-if="!filteredEmployees.length && !loading">
               <td
                 colspan="8"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -643,24 +588,38 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredEmployees.length }} {{ $t("employees.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
           <button
             type="button"
             :disabled="!canGoPrevious"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goPrevious"
           >
             <ChevronLeft :size="16" />
             <span>{{ $t("pagination.previous") }}</span>
           </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -677,10 +636,24 @@ onMounted(async () => {
             {{ pageNumber }}
           </button>
 
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >...</span>
+
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
+
           <button
             type="button"
             :disabled="!canGoNext"
-            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
             @click="goNext"
           >
             <span>{{ $t("pagination.next") }}</span>

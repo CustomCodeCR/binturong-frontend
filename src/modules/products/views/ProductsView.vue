@@ -46,8 +46,35 @@ const loading = ref(false);
 const search = ref("");
 const page = ref(1);
 const pageSize = ref(10);
+const statusFilter = ref<"all" | "active" | "inactive">("all");
 
 const MAX_PAGE = 100;
+
+const filteredProducts = computed(() => {
+  let result = products.value;
+
+  if (statusFilter.value === "active") {
+    result = result.filter((p) => p.isActive);
+  } else if (statusFilter.value === "inactive") {
+    result = result.filter((p) => !p.isActive);
+  }
+
+  if (search.value.trim()) {
+    const query = search.value.toLowerCase().trim();
+    result = result.filter(
+      (p) =>
+        (p.sku ?? "").toLowerCase().includes(query) ||
+        (p.name ?? "").toLowerCase().includes(query) ||
+        (p.barcode ?? "").toLowerCase().includes(query) ||
+        (p.categoryName ?? "").toLowerCase().includes(query) ||
+        (p.uomCode ?? "").toLowerCase().includes(query) ||
+        (p.uomName ?? "").toLowerCase().includes(query) ||
+        (p.taxCode ?? "").toLowerCase().includes(query),
+    );
+  }
+
+  return result;
+});
 
 const pageNumbers = computed(() => {
   const current = page.value;
@@ -83,7 +110,6 @@ function replaceProducts(nextProducts: Product[]) {
 
 async function loadProducts() {
   loading.value = true;
-
   try {
     replaceProducts(await fetchProducts());
   } catch {
@@ -160,12 +186,7 @@ function patchProductInList(payload: ProductSuccessPayload) {
 function patchProductStatusInList(productId: string, isActive: boolean) {
   replaceProducts(
     products.value.map((product) =>
-      product.productId === productId
-        ? {
-            ...product,
-            isActive,
-          }
-        : product,
+      product.productId === productId ? { ...product, isActive } : product,
     ),
   );
 }
@@ -184,16 +205,13 @@ function hasProductReachedExpectedState(
     (product) => product.productId === expected.productId,
   );
 
-  if (!fetchedProduct) {
-    return false;
-  }
+  if (!fetchedProduct) return false;
 
   return (
     fetchedProduct.sku === expected.sku &&
     String(fetchedProduct.barcode ?? "") === String(expected.barcode ?? "") &&
     fetchedProduct.name === expected.name &&
-    String(fetchedProduct.description ?? "") ===
-      String(expected.description ?? "") &&
+    String(fetchedProduct.description ?? "") === String(expected.description ?? "") &&
     fetchedProduct.categoryId === expected.categoryId &&
     fetchedProduct.uomId === expected.uomId &&
     fetchedProduct.taxId === expected.taxId &&
@@ -206,10 +224,7 @@ function hasProductReachedExpectedState(
 
 async function reloadProductsUntil(
   predicate: (fetchedProducts: Product[]) => boolean,
-  options?: {
-    attempts?: number;
-    delayMs?: number;
-  },
+  options?: { attempts?: number; delayMs?: number },
 ) {
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
@@ -246,9 +261,7 @@ function openCreateModal() {
   modalStore.open({
     component: ProductCreateModal,
     onSuccess: async (payload?: ProductSuccessPayload) => {
-      if (payload?.productId) {
-        patchProductInList(payload);
-      }
+      if (payload?.productId) patchProductInList(payload);
 
       toastStore.addToast({
         severity: "success",
@@ -259,13 +272,8 @@ function openCreateModal() {
       if (payload?.productId) {
         await reloadProductsUntil(
           (fetchedProducts) =>
-            fetchedProducts.some(
-              (product) => product.productId === payload.productId,
-            ),
-          {
-            attempts: 12,
-            delayMs: 500,
-          },
+            fetchedProducts.some((product) => product.productId === payload.productId),
+          { attempts: 12, delayMs: 500 },
         );
         return;
       }
@@ -285,9 +293,7 @@ function openCreateModal() {
 function openEditModal(product: Product) {
   modalStore.open({
     component: ProductEditModal,
-    props: {
-      productId: product.productId,
-    },
+    props: { productId: product.productId },
     onSuccess: async (payload?: ProductSuccessPayload) => {
       if (!payload?.productId) {
         await loadProducts();
@@ -303,12 +309,8 @@ function openEditModal(product: Product) {
       });
 
       await reloadProductsUntil(
-        (fetchedProducts) =>
-          hasProductReachedExpectedState(fetchedProducts, payload),
-        {
-          attempts: 12,
-          delayMs: 500,
-        },
+        (fetchedProducts) => hasProductReachedExpectedState(fetchedProducts, payload),
+        { attempts: 12, delayMs: 500 },
       );
     },
     onError: (error) => {
@@ -324,9 +326,7 @@ function openEditModal(product: Product) {
 function openDetailsDrawer(product: Product) {
   drawerStore.openDrawer({
     component: ProductDetailsDrawer,
-    props: {
-      productId: product.productId,
-    },
+    props: { productId: product.productId },
     title: t("products.drawer.title"),
     description: t("products.drawer.description", { name: product.name }),
     direction: "right",
@@ -369,10 +369,7 @@ async function toggleProductStatus(product: Product) {
         );
         return fetchedProduct?.isActive === nextIsActive;
       },
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -400,10 +397,7 @@ async function deleteProduct(product: Product) {
     await reloadProductsUntil(
       (fetchedProducts) =>
         !fetchedProducts.some((item) => item.productId === product.productId),
-      {
-        attempts: 12,
-        delayMs: 500,
-      },
+      { attempts: 12, delayMs: 500 },
     );
   } catch {
     toastStore.addToast({
@@ -414,11 +408,13 @@ async function deleteProduct(product: Product) {
   }
 }
 
-async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) {
-    return;
-  }
+async function onSearch() {
+  page.value = 1;
+  await loadProducts();
+}
 
+async function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
   page.value = targetPage;
   await loadProducts();
 }
@@ -431,11 +427,6 @@ async function goPrevious() {
 async function goNext() {
   if (!canGoNext.value) return;
   await goToPage(page.value + 1);
-}
-
-async function onSearch() {
-  page.value = 1;
-  await loadProducts();
 }
 
 watch(pageSize, async () => {
@@ -462,12 +453,12 @@ onMounted(async () => {
     <div
       class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
+      <!-- TOOLBAR -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <div
-          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
-        >
+        <!-- Left: search + status filter + search button + refresh -->
+        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
           <input
             v-model="search"
             type="text"
@@ -476,6 +467,16 @@ onMounted(async () => {
             @keyup.enter="onSearch"
           />
 
+          <select
+            v-model="statusFilter"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option value="all">{{ $t("products.filters.allStatus") }}</option>
+            <option value="active">{{ $t("products.filters.active") }}</option>
+            <option value="inactive">{{ $t("products.filters.inactive") }}</option>
+          </select>
+
+          <!-- Primary query action -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition"
@@ -484,6 +485,7 @@ onMounted(async () => {
             {{ $t("products.actions.search") }}
           </button>
 
+          <!-- Secondary: no data impact -->
           <button
             type="button"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
@@ -493,6 +495,7 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Right: page size + create -->
         <div class="flex items-center gap-bt-spacing-12 shrink-0">
           <select
             v-model.number="pageSize"
@@ -514,6 +517,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
         <div
           v-if="loading"
@@ -525,72 +529,34 @@ onMounted(async () => {
         <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.sku") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.name") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.category") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.uom") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.tax") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.basePrice") }}
-              </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
-                {{ $t("products.table.status") }}
-              </th>
-              <th
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
-              >
-                {{ $t("products.table.options") }}
-              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.sku") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.name") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.category") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.uom") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.tax") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.basePrice") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.status") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("products.table.options") }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="product in products"
+              v-for="product in filteredProducts"
               :key="product.productId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td
-                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
-              >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
                 {{ product.sku }}
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="font-bt-semibold text-bt-primary-700">
-                  {{ product.name }}
-                </div>
-                <div class="text-xs text-bt-grey-500">
-                  {{ product.barcode }}
-                </div>
+                <div class="font-bt-semibold text-bt-primary-700">{{ product.name }}</div>
+                <div class="text-xs text-bt-grey-500">{{ product.barcode }}</div>
               </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ product.categoryName ?? "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ product.uomCode ?? product.uomName ?? "-" }}
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ product.taxCode ?? "-" }} ({{ product.taxPercentage }}%)
-              </td>
-
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                {{ product.basePrice }}
-              </td>
-
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.categoryName ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.uomCode ?? product.uomName ?? "-" }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.taxCode ?? "-" }} ({{ product.taxPercentage }}%)</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.basePrice }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -600,14 +566,9 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{
-                    product.isActive
-                      ? $t("products.status.active")
-                      : $t("products.status.inactive")
-                  }}
+                  {{ product.isActive ? $t("products.status.active") : $t("products.status.inactive") }}
                 </span>
               </td>
-
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <ProductActionMenu
                   :items="[
@@ -645,7 +606,7 @@ onMounted(async () => {
               </td>
             </tr>
 
-            <tr v-if="!products.length && !loading">
+            <tr v-if="!filteredProducts.length && !loading">
               <td
                 colspan="8"
                 class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
@@ -657,12 +618,15 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
-          {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          <span class="text-bt-grey-500">
+            ({{ filteredProducts.length }} {{ $t("products.filtered") }})
+          </span>
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 flex-wrap">
@@ -681,16 +645,9 @@ onMounted(async () => {
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(1)"
-          >
-            1
-          </button>
+          >1</button>
 
-          <span
-            v-if="pageNumbers[0] > 2"
-            class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -703,25 +660,19 @@ onMounted(async () => {
                 : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
             "
             @click="goToPage(pageNumber)"
-          >
-            {{ pageNumber }}
-          </button>
+          >{{ pageNumber }}</button>
 
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >
-            ...
-          </span>
+          >...</span>
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(MAX_PAGE)"
-          >
-            {{ MAX_PAGE }}
-          </button>
+          >{{ MAX_PAGE }}</button>
 
           <button
             type="button"

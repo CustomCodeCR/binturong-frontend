@@ -1,35 +1,25 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import {
-  History,
-  Search,
-  FileText,
-  Download,
-  LayoutGrid,
-  Info,
-  X,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
+import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-vue-next";
+
 import { AuditService } from "@/core/services/auditService";
-import type { AuditLog, AuditBrowseQuery } from "@/core/interfaces/audit";
 import { useToastStore } from "@/core/stores/toastStore";
 
+import type { AuditLog, AuditBrowseQuery } from "@/core/interfaces/audit";
+
+const { t } = useI18n();
 const toastStore = useToastStore();
+
 const logs = ref<AuditLog[]>([]);
 const loading = ref(false);
 
-// --- PAGINACIÓN ---
-const currentPage = ref(1);
+const page = ref(1);
 const itemsPerPage = 10;
 
-const totalPages = computed(() => Math.ceil(logs.value.length / itemsPerPage));
-const paginatedLogs = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return logs.value.slice(start, start + itemsPerPage);
-});
+const selectedLog = ref<AuditLog | null>(null);
+const showDetailModal = ref(false);
 
-// --- FILTROS ---
 const filters = ref({
   from: "",
   to: "",
@@ -37,25 +27,36 @@ const filters = ref({
   action: "",
 });
 
-// --- MODAL ---
-const selectedLog = ref<AuditLog | null>(null);
-const showDetailModal = ref(false);
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(logs.value.length / itemsPerPage)),
+);
 
-/**
- * Formatea la fecha para el backend.
- * .NET y PostgreSQL prefieren el formato ISO8601 con tiempo explícito.
- */
-function formatToBackendDate(
-  dateStr: string,
-  isEndOfDay: boolean = false,
-): string | undefined {
+const paginatedLogs = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  return logs.value.slice(start, start + itemsPerPage);
+});
+
+const pageNumbers = computed(() => {
+  const current = page.value;
+  const total = totalPages.value;
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+  const pages: number[] = [];
+  for (let i = start; i <= end; i += 1) pages.push(i);
+  return pages;
+});
+
+const canGoPrevious = computed(() => page.value > 1);
+const canGoNext = computed(() => page.value < totalPages.value);
+
+function formatToBackendDate(dateStr: string, isEndOfDay = false): string | undefined {
   if (!dateStr) return undefined;
   return isEndOfDay ? `${dateStr}T23:59:59Z` : `${dateStr}T00:00:00Z`;
 }
 
 async function fetchLogs() {
   loading.value = true;
-  currentPage.value = 1;
+  page.value = 1;
 
   try {
     const query: AuditBrowseQuery = {
@@ -65,18 +66,13 @@ async function fetchLogs() {
       action: filters.value.action || undefined,
     };
 
-    // Usamos tu AuditService.browse tal cual está definido
     const response = await AuditService.browse(query);
-
-    // Validamos que sea un array para evitar errores de renderizado
     logs.value = Array.isArray(response) ? response : [];
-  } catch (error) {
-    console.error("Error fetching logs:", error);
+  } catch {
     toastStore.addToast({
       severity: "error",
-      title: "Error de Carga",
-      message:
-        "El servidor no respondió correctamente. Revisa el UserId en el backend.",
+      title: t("toast.error"),
+      message: t("audit.messages.loadError"),
     });
     logs.value = [];
   } finally {
@@ -84,348 +80,399 @@ async function fetchLogs() {
   }
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return "N/A";
+function formatDate(dateStr: string): string {
+  if (!dateStr) return "-";
   const date = new Date(dateStr);
-  return date.toLocaleString("es-CR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return date.toLocaleString("es-CR");
 }
 
-function parseJson(data: string | null) {
-  if (!data) return "N/A";
+function parseJson(data: string | null): string {
+  if (!data) return t("audit.noData");
   try {
-    // Si ya es un objeto (JSON.parsed por axios), lo devolvemos formateado
     if (typeof data === "object") return JSON.stringify(data, null, 2);
     return JSON.stringify(JSON.parse(data), null, 2);
   } catch {
-    return data;
+    return String(data);
   }
+}
+
+function getActionClass(action?: string): string {
+  const a = String(action ?? "").toLowerCase();
+  if (a === "create") return "bg-bt-success-100 text-bt-success-700";
+  if (a === "update") return "bg-bt-warning-100 text-bt-warning-700";
+  if (a === "delete") return "bg-bt-error-100 text-bt-error-700";
+  return "bg-bt-info-100 text-bt-info-700";
+}
+
+function goToPage(targetPage: number) {
+  if (targetPage < 1 || targetPage > totalPages.value) return;
+  page.value = targetPage;
 }
 
 onMounted(fetchLogs);
 </script>
 
 <template>
-  <div class="p-8 space-y-8 max-w-[1600px] mx-auto">
-    <header
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-    >
-      <div>
-        <div class="flex items-center gap-3 mb-1">
-          <div class="p-2 bg-slate-800 rounded-lg text-white shadow-lg">
-            <History :size="24" />
-          </div>
-          <h1
-            class="text-2xl font-black text-slate-800 tracking-tight uppercase"
-          >
-            Registro de Auditoría
-          </h1>
-        </div>
-        <p class="text-gray-400 text-sm font-medium">
-          Monitoreo de cambios y actividad del sistema.
-        </p>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button
-          @click="
-            () => {
-              /* Lógica para exportar Excel */
-            }
-          "
-          class="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black transition shadow-lg shadow-green-900/20"
-        >
-          <Download :size="16" /> EXCEL
-        </button>
-        <button
-          @click="
-            () => {
-              /* Lógica para exportar PDF */
-            }
-          "
-          class="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition shadow-lg shadow-red-900/20"
-        >
-          <FileText :size="16" /> PDF
-        </button>
-      </div>
-    </header>
-
-    <section
-      class="grid grid-cols-1 md:grid-cols-5 gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
-    >
-      <div v-for="label in ['Desde', 'Hasta']" :key="label" class="space-y-1">
-        <label
-          class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1"
-          >{{ label }}</label
-        >
-        <input
-          v-model="filters[label === 'Desde' ? 'from' : 'to']"
-          type="date"
-          class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-slate-50/50 text-sm focus:ring-2 focus:ring-slate-800 outline-none transition"
-        />
-      </div>
-
-      <div class="space-y-1">
-        <label
-          class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1"
-          >Módulo</label
-        >
-        <select
-          v-model="filters.module"
-          class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-slate-50/50 text-sm focus:ring-2 focus:ring-slate-800 outline-none transition"
-        >
-          <option value="">Todos los módulos</option>
-          <option value="Taxes">Impuestos</option>
-          <option value="Products">Productos</option>
-          <option value="Auth">Seguridad</option>
-          <option value="Inventory">Inventario</option>
-        </select>
-      </div>
-
-      <div class="space-y-1">
-        <label
-          class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1"
-          >Acción</label
-        >
-        <select
-          v-model="filters.action"
-          class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-slate-50/50 text-sm focus:ring-2 focus:ring-slate-800 outline-none transition"
-        >
-          <option value="">Todas las acciones</option>
-          <option value="Create">Creación</option>
-          <option value="Update">Actualización</option>
-          <option value="Delete">Eliminación</option>
-        </select>
-      </div>
-
-      <div class="flex items-end">
-        <button
-          @click="fetchLogs"
-          :disabled="loading"
-          class="w-full py-2.5 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-lg"
-        >
-          <Search :size="16" /> {{ loading ? "BUSCANDO..." : "FILTRAR" }}
-        </button>
-      </div>
-    </section>
+  <section class="h-full min-h-0 bg-bt-grey-50 p-bt-spacing-24 flex flex-col">
+    <!-- HEADER -->
+    <div class="mb-bt-spacing-24 shrink-0">
+      <h1 class="text-2xl font-bt-bold text-bt-primary-700">
+        {{ $t("audit.title") }}
+      </h1>
+      <p class="text-bt-grey-600 mt-bt-spacing-8">
+        {{ $t("audit.subtitle") }}
+      </p>
+    </div>
 
     <div
-      class="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden min-h-[400px]"
+      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
     >
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-slate-50/50 border-b border-slate-100">
-            <th
-              class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest"
-            >
-              Fecha y Hora
-            </th>
-            <th
-              class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest"
-            >
-              Entidad
-            </th>
-            <th
-              class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center"
-            >
-              Acción
-            </th>
-            <th
-              class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest"
-            >
-              Usuario
-            </th>
-            <th
-              class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right"
-            >
-              Detalles
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50">
-          <tr v-if="loading">
-            <td colspan="5" class="px-6 py-20 text-center">
-              <div class="flex flex-col items-center gap-3">
-                <div
-                  class="w-8 h-8 border-4 border-slate-800 border-t-transparent rounded-full animate-spin"
-                ></div>
-                <span
-                  class="text-xs font-black text-slate-400 uppercase tracking-widest"
-                  >Obteniendo Auditoría...</span
-                >
-              </div>
-            </td>
-          </tr>
-          <tr v-else-if="logs.length === 0">
-            <td colspan="5" class="px-6 py-20 text-center text-gray-400 italic">
-              No hay registros disponibles.
-            </td>
-          </tr>
-          <tr
-            v-for="log in paginatedLogs"
-            :key="log.auditId"
-            class="hover:bg-slate-50/80 transition-colors group"
-          >
-            <td class="px-6 py-4">
-              <div class="flex flex-col">
-                <span class="text-sm font-bold text-slate-700">{{
-                  formatDate(log.eventDate).split(",")[0]
-                }}</span>
-                <span class="text-[11px] text-gray-400 font-medium">{{
-                  formatDate(log.eventDate).split(",")[1]
-                }}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-white transition-colors"
-                >
-                  <LayoutGrid :size="14" />
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-slate-700 leading-tight">
-                    {{ log.module }}
-                  </p>
-                  <p
-                    class="text-[11px] text-gray-400 font-bold uppercase tracking-tighter"
-                  >
-                    {{ log.entity }} #{{ log.entityId }}
-                  </p>
-                </div>
-              </div>
-            </td>
-            <td class="px-6 py-4 text-center">
-              <span
-                class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
-                :class="
-                  log.action === 'Create'
-                    ? 'bg-green-100 text-green-700'
-                    : log.action === 'Update'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-red-100 text-red-700'
-                "
-              >
-                {{ log.action }}
-              </span>
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex flex-col text-sm text-slate-600">
-                <span class="font-bold">User: {{ log.userId }}</span>
-                <span class="text-[10px] text-gray-400 font-mono">{{
-                  log.ip || "0.0.0.0"
-                }}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button
-                @click="
-                  selectedLog = log;
-                  showDetailModal = true;
-                "
-                class="text-[11px] font-black text-[#C6983A] hover:text-[#b08733] transition uppercase flex items-center gap-1.5 ml-auto"
-              >
-                <Info :size="14" /> Datos
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
+      <!-- TOOLBAR -->
       <div
-        class="p-4 border-t bg-slate-50/30 flex justify-between items-center"
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
-        <span
-          class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest"
-          >Total: {{ logs.length }}</span
-        >
-        <div class="flex items-center gap-6">
-          <button
-            @click="currentPage--"
-            :disabled="currentPage === 1"
-            class="p-2 text-slate-400 hover:text-slate-800 disabled:opacity-20 transition"
+        <!-- Left: date range + module + action + Search + Refresh -->
+        <div class="flex flex-col sm:flex-row flex-wrap gap-bt-spacing-12 flex-1">
+          <input
+            v-model="filters.from"
+            type="date"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          />
+
+          <input
+            v-model="filters.to"
+            type="date"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          />
+
+          <select
+            v-model="filters.module"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
-            <ChevronLeft :size="20" />
+            <option value="">{{ $t("audit.filters.allModules") }}</option>
+            <option value="Taxes">{{ $t("audit.modules.taxes") }}</option>
+            <option value="Products">{{ $t("audit.modules.products") }}</option>
+            <option value="Auth">{{ $t("audit.modules.auth") }}</option>
+            <option value="Inventory">{{ $t("audit.modules.inventory") }}</option>
+            <option value="Usuarios">{{ $t("audit.modules.users") }}</option>
+          </select>
+
+          <select
+            v-model="filters.action"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option value="">{{ $t("audit.filters.allActions") }}</option>
+            <option value="Create">{{ $t("audit.actions.create") }}</option>
+            <option value="Update">{{ $t("audit.actions.update") }}</option>
+            <option value="Delete">{{ $t("audit.actions.delete") }}</option>
+          </select>
+
+          <!-- Primary query action -->
+          <button
+            type="button"
+            :disabled="loading"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-primary-500 text-bt-white hover:bg-bt-primary-600 transition disabled:bg-bt-disabled disabled:cursor-not-allowed"
+            @click="fetchLogs"
+          >
+            {{ loading ? $t("common.loading") : $t("audit.actions.search") }}
           </button>
-          <span class="text-xs font-black text-slate-700 uppercase"
-            >Página {{ currentPage }} de {{ totalPages || 1 }}</span
-          >
+
+          <!-- Secondary: refresh, no data impact -->
           <button
-            @click="currentPage++"
-            :disabled="currentPage === totalPages || totalPages === 0"
-            class="p-2 text-slate-400 hover:text-slate-800 disabled:opacity-20 transition"
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+            @click="fetchLogs"
           >
-            <ChevronRight :size="20" />
+            {{ $t("audit.actions.refresh") }}
+          </button>
+        </div>
+
+        <!-- Right: Export PDF + Export Excel -->
+        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition font-bt-semibold"
+          >
+            {{ $t("audit.actions.exportPdf") }}
+          </button>
+          <button
+            type="button"
+            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold"
+          >
+            {{ $t("audit.actions.exportExcel") }}
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="flex-1 min-h-0 overflow-auto">
+        <div
+          v-if="loading"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
+        >
+          {{ $t("common.loading") }}
+        </div>
+
+        <table v-else class="w-full border-collapse min-w-[900px]">
+          <thead class="sticky top-0 z-10">
+            <tr class="bg-bt-primary-50 text-left">
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("audit.table.date") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("audit.table.module") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("audit.table.entity") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("audit.table.action") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("audit.table.user") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("audit.table.ip") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-24">
+                {{ $t("common.actions") }}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr v-if="!paginatedLogs.length">
+              <td
+                colspan="7"
+                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+              >
+                {{ $t("audit.empty") }}
+              </td>
+            </tr>
+
+            <tr
+              v-for="log in paginatedLogs"
+              :key="log.auditId"
+              class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
+            >
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm">
+                {{ formatDate(log.eventDate) }}
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <div class="flex items-center gap-bt-spacing-8">
+                  <div
+                    class="w-8 h-8 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600 shrink-0"
+                  >
+                    <LayoutGrid :size="14" />
+                  </div>
+                  <span class="text-bt-primary-700 font-bt-semibold text-sm">
+                    {{ log.module }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm">
+                {{ log.entity }}
+                <span v-if="log.entityId" class="text-bt-grey-400 text-xs ml-1">
+                  #{{ log.entityId }}
+                </span>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <span
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
+                  :class="getActionClass(log.action)"
+                >
+                  {{ log.action }}
+                </span>
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm">
+                {{ log.userId || "-" }}
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-500 text-sm font-mono">
+                {{ log.ip || "-" }}
+              </td>
+
+              <td class="px-bt-spacing-16 py-bt-spacing-12">
+                <button
+                  type="button"
+                  class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition text-sm"
+                  @click="selectedLog = log; showDetailModal = true"
+                >
+                  {{ $t("common.viewDetails") }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
+        <div class="text-sm text-bt-grey-600">
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ totalPages }}
+          <span class="text-bt-grey-500">
+            ({{ logs.length }} {{ $t("audit.filtered") }})
+          </span>
+        </div>
+
+        <div class="flex items-center gap-bt-spacing-8 flex-wrap">
+          <button
+            type="button"
+            :disabled="!canGoPrevious"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goToPage(page - 1)"
+          >
+            <ChevronLeft :size="16" />
+            <span>{{ $t("pagination.previous") }}</span>
+          </button>
+
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >1</button>
+          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+
+          <button
+            v-for="pageNumber in pageNumbers"
+            :key="pageNumber"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
+            @click="goToPage(pageNumber)"
+          >{{ pageNumber }}</button>
+
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < totalPages - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+          >...</span>
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < totalPages"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(totalPages)"
+          >{{ totalPages }}</button>
+
+          <button
+            type="button"
+            :disabled="!canGoNext"
+            class="inline-flex items-center gap-bt-spacing-8 px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 disabled:bg-bt-disabled disabled:text-bt-grey-500 disabled:cursor-not-allowed"
+            @click="goToPage(page + 1)"
+          >
+            <span>{{ $t("pagination.next") }}</span>
+            <ChevronRight :size="16" />
           </button>
         </div>
       </div>
     </div>
 
-    <div
-      v-if="showDetailModal"
-      class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/70 backdrop-blur-md"
-    >
+    <!-- DETAIL MODAL -->
+    <Teleport to="body">
       <div
-        class="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+        v-if="showDetailModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-bt-spacing-24 bg-bt-primary-700/60"
+        @click.self="showDetailModal = false"
       >
-        <header
-          class="p-6 border-b flex justify-between items-center bg-slate-50/50"
+        <div
+          class="bg-bt-white rounded-l shadow-bt-elevation-200 w-full max-w-4xl max-h-[85vh] flex flex-col"
         >
-          <h3 class="font-black text-slate-800 text-lg uppercase leading-none">
-            Detalles del Cambio
-          </h3>
-          <button
-            @click="showDetailModal = false"
-            class="p-2 hover:bg-white rounded-full transition shadow-sm border border-transparent hover:border-slate-100"
-          >
-            <X :size="20" class="text-gray-400" />
-          </button>
-        </header>
-        <main
-          class="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white"
-        >
+          <!-- Modal header -->
           <div
-            v-for="s in ['dataBefore', 'dataAfter']"
-            :key="s"
-            class="space-y-3"
+            class="flex items-center justify-between px-bt-spacing-24 py-bt-spacing-16 border-b border-bt-grey-200 shrink-0"
           >
-            <h4
-              class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"
+            <h3 class="text-lg font-bt-bold text-bt-primary-700">
+              {{ $t("audit.modal.title") }}
+            </h3>
+            <button
+              type="button"
+              class="px-bt-spacing-12 py-bt-spacing-8 rounded-m bg-bt-grey-200 text-bt-primary-700 hover:bg-bt-grey-300 transition"
+              @click="showDetailModal = false"
             >
-              <span
-                class="w-2 h-2 rounded-full"
-                :class="s === 'dataBefore' ? 'bg-slate-300' : 'bg-amber-400'"
-              ></span>
-              {{ s === "dataBefore" ? "Estado Anterior" : "Estado Nuevo" }}
-            </h4>
-            <div
-              :class="
-                s === 'dataBefore'
-                  ? 'bg-slate-50 border-slate-100'
-                  : 'bg-amber-50/20 border-amber-100'
-              "
-              class="p-5 rounded-2xl border font-mono text-[11px] text-slate-600 min-h-[300px] overflow-auto shadow-inner"
-            >
-              <pre class="leading-relaxed">{{
-                parseJson(selectedLog?.[s as keyof AuditLog] || null)
-              }}</pre>
+              {{ $t("common.close") }}
+            </button>
+          </div>
+
+          <!-- Modal meta chips -->
+          <div
+            class="px-bt-spacing-24 py-bt-spacing-16 border-b border-bt-grey-200 shrink-0"
+          >
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-bt-spacing-12">
+              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+                <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
+                  {{ $t("audit.table.module") }}
+                </div>
+                <div class="text-bt-primary-700 font-bt-semibold text-sm">
+                  {{ selectedLog?.module || "-" }}
+                </div>
+              </div>
+              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+                <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
+                  {{ $t("audit.table.entity") }}
+                </div>
+                <div class="text-bt-primary-700 font-bt-semibold text-sm">
+                  {{ selectedLog?.entity || "-" }}
+                  <span v-if="selectedLog?.entityId" class="text-bt-grey-400 text-xs ml-1">
+                    #{{ selectedLog.entityId }}
+                  </span>
+                </div>
+              </div>
+              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+                <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
+                  {{ $t("audit.table.action") }}
+                </div>
+                <span
+                  class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
+                  :class="getActionClass(selectedLog?.action)"
+                >
+                  {{ selectedLog?.action }}
+                </span>
+              </div>
+              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+                <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
+                  {{ $t("audit.table.date") }}
+                </div>
+                <div class="text-bt-primary-700 font-bt-semibold text-sm">
+                  {{ formatDate(selectedLog?.eventDate ?? "") }}
+                </div>
+              </div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
-  </div>
-</template>
 
-<style scoped>
-pre {
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-</style>
+          <!-- Modal content: before / after -->
+          <div class="flex-1 min-h-0 overflow-y-auto p-bt-spacing-24">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
+              <div>
+                <div class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8">
+                  {{ $t("audit.modal.dataBefore") }}
+                </div>
+                <pre
+                  class="text-xs bg-bt-grey-50 border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap min-h-[200px]"
+                >{{ parseJson(selectedLog?.dataBefore ?? null) }}</pre>
+              </div>
+              <div>
+                <div class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8">
+                  {{ $t("audit.modal.dataAfter") }}
+                </div>
+                <pre
+                  class="text-xs bg-bt-grey-50 border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap min-h-[200px]"
+                >{{ parseJson(selectedLog?.dataAfter ?? null) }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </section>
+</template>

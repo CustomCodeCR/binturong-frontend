@@ -4,9 +4,13 @@ import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
 import { SuppliersService } from "@/core/services/suppliersService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildSupplierSchema } from "@/modules/suppliers/supplierFormSchema";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const identificationType = ref("CedulaJuridica");
 const identification = ref("");
@@ -42,21 +46,23 @@ function closeModal() {
   modalStore.close();
 }
 
+function validateForm(): boolean {
+  return validate(
+    {
+      identification: identification.value,
+      legalName: legalName.value,
+      tradeName: tradeName.value,
+      email: email.value,
+      phone: phone.value,
+      paymentTerms: paymentTerms.value,
+    },
+    buildSupplierSchema(rules, t, identificationType.value),
+  );
+}
+
 async function submit() {
-  if (
-    !identificationType.value.trim() ||
-    !identification.value.trim() ||
-    !legalName.value.trim() ||
-    !tradeName.value.trim() ||
-    !email.value.trim() ||
-    !phone.value.trim() ||
-    !paymentTerms.value.trim() ||
-    !mainCurrency.value.trim()
-  ) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("suppliers.validation.requiredCreate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -133,8 +139,10 @@ async function submit() {
         <input
           v-model="identification"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('identification')"
         />
+        <BTFieldError :message="getError('identification')" />
       </div>
 
       <!-- Legal Name -->
@@ -147,8 +155,10 @@ async function submit() {
         <input
           v-model="legalName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('legalName')"
         />
+        <BTFieldError :message="getError('legalName')" />
       </div>
 
       <!-- Trade Name -->
@@ -161,8 +171,10 @@ async function submit() {
         <input
           v-model="tradeName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('tradeName')"
         />
+        <BTFieldError :message="getError('tradeName')" />
       </div>
 
       <!-- Email -->
@@ -175,8 +187,10 @@ async function submit() {
         <input
           v-model="email"
           type="email"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('email')"
         />
+        <BTFieldError :message="getError('email')" />
       </div>
 
       <!-- Phone -->
@@ -189,8 +203,10 @@ async function submit() {
         <input
           v-model="phone"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('phone')"
         />
+        <BTFieldError :message="getError('phone')" />
       </div>
 
       <!-- Payment Terms -->
@@ -203,8 +219,10 @@ async function submit() {
         <input
           v-model="paymentTerms"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('paymentTerms')"
         />
+        <BTFieldError :message="getError('paymentTerms')" />
       </div>
 
       <!-- Currency -->

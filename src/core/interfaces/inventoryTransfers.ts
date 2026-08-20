@@ -86,8 +86,14 @@ export interface ApproveInventoryTransferRequest {
   approvedByUserId: string; // uuid
 }
 
+/**
+ * `POST /api/inventory-transfers/{id}/confirm`
+ *
+ * El backend solo acepta `RequireApproval`; el campo `receivedByUserId` que
+ * declaraba antes esta interfaz no existe en la API y se descartaba.
+ */
 export interface ConfirmInventoryTransferRequest {
-  receivedByUserId: string; // uuid
+  requireApproval?: boolean;
 }
 
 export interface RejectInventoryTransferRequest {

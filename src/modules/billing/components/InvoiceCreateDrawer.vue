@@ -64,21 +64,26 @@ const lines = ref<InvoiceLineForm[]>([
   },
 ]);
 
+/** Solo las líneas con producto seleccionado suman a los totales. */
+const billableLines = computed(() =>
+  lines.value.filter((line) => String(line.productId ?? "").trim().length > 0),
+);
+
 const subtotal = computed(() => {
-  return lines.value.reduce((acc, line) => {
+  return billableLines.value.reduce((acc, line) => {
     return acc + Number(line.quantity) * Number(line.unitPrice);
   }, 0);
 });
 
 const totalDiscount = computed(() => {
-  return lines.value.reduce((acc, line) => {
+  return billableLines.value.reduce((acc, line) => {
     const lineSubtotal = Number(line.quantity) * Number(line.unitPrice);
     return acc + lineSubtotal * (Number(line.discountPerc) / 100);
   }, 0);
 });
 
 const totalTaxes = computed(() => {
-  return lines.value.reduce((acc, line) => {
+  return billableLines.value.reduce((acc, line) => {
     const lineSubtotal = Number(line.quantity) * Number(line.unitPrice);
     const discount = lineSubtotal * (Number(line.discountPerc) / 100);
     const taxable = lineSubtotal - discount;
@@ -97,7 +102,16 @@ function formatMoney(value: number): string {
   });
 }
 
+/** Una línea solo tiene importe cuando ya se eligió un producto. */
+function hasProduct(line: InvoiceLineForm): boolean {
+  return String(line.productId ?? "").trim().length > 0;
+}
+
 function getLineTotal(line: InvoiceLineForm): number {
+  // Sin producto seleccionado no se calcula monto: antes la línea recién
+  // agregada ya mostraba un importe aunque no hubiera producto.
+  if (!hasProduct(line)) return 0;
+
   const lineSubtotal = Number(line.quantity) * Number(line.unitPrice);
   const discount = lineSubtotal * (Number(line.discountPerc) / 100);
   const taxable = lineSubtotal - discount;
@@ -170,6 +184,15 @@ function applyProductDefaults(line: InvoiceLineForm) {
 }
 
 function onProductChange(line: InvoiceLineForm) {
+  if (!hasProduct(line)) {
+    // Al deseleccionar el producto se limpian los importes heredados.
+    line.description = "";
+    line.unitPrice = 0;
+    line.discountPerc = 0;
+    line.taxPerc = 0;
+    return;
+  }
+
   applyProductDefaults(line);
 }
 
@@ -268,14 +291,16 @@ async function preloadFromSalesOrder(selectedSalesOrderId: string) {
       await SalesOrdersService.readById(selectedSalesOrderId);
 
     clientId.value = order.clientId;
-    branchId.value = order.branchId;
+    branchId.value = order.branchId ?? "";
     currency.value = order.currency || "CRC";
     exchangeRate.value = Number(order.exchangeRate ?? 1);
     notes.value = order.notes ?? "";
 
+    // El read model de la API expone `itemName`, no `productName`, y
+    // `productId` puede venir nulo cuando la línea es un servicio.
     lines.value = order.lines.map((line) => ({
-      productId: line.productId,
-      description: line.productName || "",
+      productId: line.productId ?? "",
+      description: line.itemName || "",
       quantity: Number(line.quantity ?? 0),
       unitPrice: Number(line.unitPrice ?? 0),
       discountPerc: Number(line.discountPerc ?? 0),
@@ -734,6 +759,7 @@ onMounted(async () => {
                   </label>
                   <input
                     v-model="line.description"
+                    :disabled="!hasProduct(line)"
                     type="text"
                     class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
                   />
@@ -747,6 +773,7 @@ onMounted(async () => {
                   </label>
                   <input
                     v-model.number="line.quantity"
+                    :disabled="!hasProduct(line)"
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -762,6 +789,7 @@ onMounted(async () => {
                   </label>
                   <input
                     v-model.number="line.unitPrice"
+                    :disabled="!hasProduct(line)"
                     type="number"
                     min="0"
                     step="0.01"
@@ -777,6 +805,7 @@ onMounted(async () => {
                   </label>
                   <input
                     v-model.number="line.discountPerc"
+                    :disabled="!hasProduct(line)"
                     type="number"
                     min="0"
                     step="0.01"
@@ -793,6 +822,7 @@ onMounted(async () => {
                   <div class="flex gap-bt-spacing-8">
                     <input
                       v-model.number="line.taxPerc"
+                      :disabled="!hasProduct(line)"
                       type="number"
                       min="0"
                       step="0.01"
@@ -815,8 +845,18 @@ onMounted(async () => {
                   <div class="text-sm text-bt-grey-600">
                     {{ $t("billing.fields.lineTotal") }}
                   </div>
-                  <div class="text-base font-bt-bold text-bt-primary-700">
+                  <!--
+                    Sin producto seleccionado no se muestra ningún importe:
+                    la línea recién agregada mostraba un monto engañoso.
+                  -->
+                  <div
+                    v-if="hasProduct(line)"
+                    class="text-base font-bt-bold text-bt-primary-700"
+                  >
                     {{ formatMoney(getLineTotal(line)) }}
+                  </div>
+                  <div v-else class="text-base font-bt-bold text-bt-grey-500">
+                    {{ $t("billing.lines.selectProductFirst") }}
                   </div>
                 </div>
               </div>

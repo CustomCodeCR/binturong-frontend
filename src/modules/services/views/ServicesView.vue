@@ -37,26 +37,14 @@ const statusFilter = ref<"all" | "active" | "inactive">("all");
 const MAX_PAGE = 100;
 
 const filteredServices = computed(() => {
+  // El backend ya filtró por estado y búsqueda; esto solo mantiene la lista
+  // coherente si el usuario cambia el selector antes de pulsar "Buscar".
   let result = services.value;
 
   if (statusFilter.value === "active") {
     result = result.filter((s) => s.isActive);
   } else if (statusFilter.value === "inactive") {
     result = result.filter((s) => !s.isActive);
-  }
-
-  const term = search.value.trim().toLowerCase();
-  if (term) {
-    result = result.filter(
-      (service) =>
-        (service.code ?? "").toLowerCase().includes(term) ||
-        (service.name ?? "").toLowerCase().includes(term) ||
-        (service.description ?? "").toLowerCase().includes(term) ||
-        (service.categoryName ?? "").toLowerCase().includes(term) ||
-        (service.availabilityStatus ?? "").toLowerCase().includes(term) ||
-        String(service.standardTimeMin ?? "").toLowerCase().includes(term) ||
-        String(service.baseRate ?? "").toLowerCase().includes(term),
-    );
   }
 
   return result;
@@ -80,7 +68,8 @@ const summary = computed(() => {
   const averageRate =
     total === 0
       ? 0
-      : services.value.reduce((acc, s) => acc + Number(s.baseRate || 0), 0) / total;
+      : services.value.reduce((acc, s) => acc + Number(s.baseRate || 0), 0) /
+        total;
   return { total, active, averageRate };
 });
 
@@ -89,7 +78,11 @@ function sleep(ms: number) {
 }
 
 function showSuccess(message: string) {
-  toastStore.addToast({ severity: "success", title: t("toast.success"), message });
+  toastStore.addToast({
+    severity: "success",
+    title: t("toast.success"),
+    message,
+  });
 }
 
 function showError(message: string) {
@@ -97,31 +90,83 @@ function showError(message: string) {
 }
 
 function formatMoney(value?: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  if (value === null || value === undefined || Number.isNaN(Number(value)))
+    return "-";
   return Number(value).toLocaleString("es-CR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
+function normalizeAvailability(status?: string | null): string {
+  return String(status ?? "")
+    .trim()
+    .toLowerCase();
+}
+
 function getAvailabilityClass(status?: string | null): string {
-  const normalized = String(status ?? "").trim().toLowerCase();
-  if (normalized === "active" || normalized === "available") return "bg-bt-success-100 text-bt-success-700";
-  if (normalized === "maintenance") return "bg-bt-warning-100 text-bt-warning-700";
+  const normalized = normalizeAvailability(status);
+  if (normalized === "active" || normalized === "available")
+    return "bg-bt-success-100 text-bt-success-700";
+  if (normalized === "maintenance")
+    return "bg-bt-warning-100 text-bt-warning-700";
   return "bg-bt-error-100 text-bt-error-700";
+}
+
+/** La API devuelve el enum en inglés; se muestra traducido. */
+function getAvailabilityLabel(status?: string | null): string {
+  const normalized = normalizeAvailability(status);
+  if (!normalized) return "-";
+  if (normalized === "active" || normalized === "available") {
+    return t("services.availability.active");
+  }
+  if (normalized === "maintenance")
+    return t("services.availability.maintenance");
+  if (normalized === "inactive") return t("services.availability.inactive");
+  return String(status);
+}
+
+/**
+ * "Estado" (alta/baja en el catálogo) y "Disponibilidad" (si el servicio puede
+ * prestarse) son campos distintos. Cuando divergen se marca el estado en tono
+ * de advertencia para que no se lea como plenamente activo.
+ */
+function isAvailabilityMismatch(service: Service): boolean {
+  if (!service.isActive) return false;
+  const normalized = normalizeAvailability(service.availabilityStatus);
+  return (
+    normalized !== "" && normalized !== "active" && normalized !== "available"
+  );
+}
+
+function getStatusClass(service: Service): string {
+  if (!service.isActive) return "bg-bt-error-100 text-bt-error-700";
+  if (isAvailabilityMismatch(service))
+    return "bg-bt-warning-100 text-bt-warning-700";
+  return "bg-bt-success-100 text-bt-success-700";
 }
 
 function getServiceActions(service: Service) {
   return [
-    { label: t("services.actions.viewDetails"), action: () => openDetailsDrawer(service) },
+    {
+      label: t("services.actions.viewDetails"),
+      action: () => openDetailsDrawer(service),
+    },
     { label: t("services.actions.edit"), action: () => openEditModal(service) },
   ];
 }
 
 async function fetchServices(): Promise<Service[]> {
+  // El filtrado se delega al backend: aplicarlo solo en cliente filtraba
+  // únicamente la página cargada, por lo que "Inactivo" parecía no funcionar.
   const response = await ServicesService.browse({
     page: page.value,
     pageSize: pageSize.value,
+    search: search.value.trim() || undefined,
+    isActive:
+      statusFilter.value === "all"
+        ? undefined
+        : statusFilter.value === "active",
   });
   return Array.isArray(response) ? [...response] : [];
 }
@@ -156,8 +201,14 @@ async function onSearch() {
   await loadData();
 }
 
+watch(statusFilter, async () => {
+  page.value = 1;
+  await loadData();
+});
+
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value)
+    return;
   page.value = targetPage;
   await loadData();
 }
@@ -208,7 +259,9 @@ function openDetailsDrawer(service: Service) {
     direction: "right",
     size: "xl",
     props: { serviceId: service.serviceId },
-    onSuccess: async () => { await reloadEventually(); },
+    onSuccess: async () => {
+      await reloadEventually();
+    },
     onError: (error: any) => {
       showError(error?.message ?? t("services.messages.loadError"));
     },
@@ -246,50 +299,81 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+    <div
+      class="grid grid-cols-1 md:grid-cols-3 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+    >
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600"
+          >
             <Wrench :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("services.summary.total") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-primary-700">{{ summary.total }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("services.summary.total") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-primary-700">
+              {{ summary.total }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700"
+          >
             <Layers3 :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("services.summary.active") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-success-700">{{ summary.active }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("services.summary.active") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-success-700">
+              {{ summary.active }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-accent-50 flex items-center justify-center text-bt-accent-600"
+          >
             <CircleDollarSign :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("services.summary.averageRate") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-accent-700">{{ formatMoney(summary.averageRate) }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("services.summary.averageRate") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-accent-700">
+              {{ formatMoney(summary.averageRate) }}
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
-
+    <div
+      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
+    >
       <!-- TOOLBAR -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
+      <div
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+      >
         <!-- Left: search + status filter + search button + refresh -->
-        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+        >
           <input
             v-model="search"
             type="text"
@@ -304,7 +388,9 @@ onBeforeUnmount(() => {
           >
             <option value="all">{{ $t("services.filters.allStatus") }}</option>
             <option value="active">{{ $t("services.filters.active") }}</option>
-            <option value="inactive">{{ $t("services.filters.inactive") }}</option>
+            <option value="inactive">
+              {{ $t("services.filters.inactive") }}
+            </option>
           </select>
 
           <!-- Primary query action -->
@@ -350,21 +436,42 @@ onBeforeUnmount(() => {
 
       <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
-        <div v-if="loading" class="py-bt-spacing-32 text-center text-bt-grey-500">
+        <div
+          v-if="loading"
+          class="py-bt-spacing-32 text-center text-bt-grey-500"
+        >
           {{ $t("common.loading") }}
         </div>
 
         <table v-else class="w-full border-collapse min-w-[1100px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.code") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.name") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.category") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.standardTimeMin") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.baseRate") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.availabilityStatus") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("services.table.status") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("services.table.options") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.code") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.name") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.category") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.standardTimeMin") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.baseRate") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.availabilityStatus") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("services.table.status") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("services.table.options") }}
+              </th>
             </tr>
           </thead>
 
@@ -374,31 +481,60 @@ onBeforeUnmount(() => {
               :key="service.serviceId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 font-bt-semibold text-bt-primary-700"
+              >
                 {{ service.code }}
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="font-bt-semibold text-bt-primary-700">{{ service.name }}</div>
-                <div class="text-xs text-bt-grey-500">{{ service.description || "-" }}</div>
+                <div class="font-bt-semibold text-bt-primary-700">
+                  {{ service.name }}
+                </div>
+                <div class="text-xs text-bt-grey-500">
+                  {{ service.description || "-" }}
+                </div>
               </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ service.categoryName || "-" }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ service.standardTimeMin ?? "-" }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">{{ formatMoney(service.baseRate) }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ service.categoryName || "-" }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ service.standardTimeMin ?? "-" }}
+              </td>
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
+              >
+                {{ formatMoney(service.baseRate) }}
+              </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
                   :class="getAvailabilityClass(service.availabilityStatus)"
                 >
-                  {{ service.availabilityStatus || "-" }}
+                  {{ getAvailabilityLabel(service.availabilityStatus) }}
                 </span>
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   class="inline-flex px-bt-spacing-12 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
-                  :class="service.isActive ? 'bg-bt-success-100 text-bt-success-700' : 'bg-bt-error-100 text-bt-error-700'"
+                  :class="getStatusClass(service)"
+                  :title="
+                    isAvailabilityMismatch(service)
+                      ? $t('services.status.availabilityMismatch')
+                      : undefined
+                  "
                 >
-                  {{ service.isActive ? $t("services.status.active") : $t("services.status.inactive") }}
+                  {{
+                    service.isActive
+                      ? $t("services.status.active")
+                      : $t("services.status.inactive")
+                  }}
                 </span>
+                <div
+                  v-if="isAvailabilityMismatch(service)"
+                  class="mt-bt-spacing-4 text-xs text-bt-warning-700"
+                >
+                  {{ $t("services.status.availabilityMismatch") }}
+                </div>
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <ServiceRowActionMenu :items="getServiceActions(service)">
@@ -415,7 +551,10 @@ onBeforeUnmount(() => {
             </tr>
 
             <tr v-if="!filteredServices.length && !loading">
-              <td colspan="8" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
+              <td
+                colspan="8"
+                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+              >
                 {{ $t("services.empty") }}
               </td>
             </tr>
@@ -424,9 +563,12 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- PAGINATION -->
-      <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
             ({{ filteredServices.length }} {{ $t("services.filtered") }})
           </span>
@@ -448,27 +590,45 @@ onBeforeUnmount(() => {
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(1)"
-          >1</button>
+          >
+            1
+          </button>
 
-          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
 
           <button
             v-for="pageNumber in pageNumbers"
             :key="pageNumber"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
-            :class="pageNumber === page ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white' : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
             @click="goToPage(pageNumber)"
-          >{{ pageNumber }}</button>
+          >
+            {{ pageNumber }}
+          </button>
 
-          <span v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(MAX_PAGE)"
-          >{{ MAX_PAGE }}</button>
+          >
+            {{ MAX_PAGE }}
+          </button>
 
           <button
             type="button"

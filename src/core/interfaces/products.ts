@@ -3,9 +3,11 @@ export interface Product {
   productId: string;
 
   sku: string;
-  barcode: string;
+  /** `string?` en el backend. */
+  barcode: string | null;
   name: string;
-  description: string;
+  /** `string?` en el backend. */
+  description: string | null;
 
   categoryId: string;
   categoryName: string | null;

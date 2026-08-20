@@ -5,6 +5,10 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
+    // `String.replaceAll` y otras APIs modernas usadas en las vistas.
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
+    "target": "ES2021",
+
     "paths": {
       "@/*": ["./src/*"]
     }

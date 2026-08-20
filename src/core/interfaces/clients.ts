@@ -39,6 +39,11 @@ export interface ClientCreateResponse {
 }
 
 export interface ClientUpdateRequest {
+  /**
+   * El backend acepta y persiste la identificación en el update; el tipo de
+   * identificación, en cambio, se mantiene fijo y no forma parte del request.
+   */
+  identification: string;
   tradeName: string;
   contactName: string;
   email: string;

@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
 
-interface ActionItem {
-  label: string;
-  action: () => void | Promise<void>;
-  danger?: boolean;
-}
+import type { ActionItem } from "@/shared/components/ui/actionMenu";
 
 defineProps<{
   items: ActionItem[];
@@ -53,11 +49,14 @@ onBeforeUnmount(() => {
         v-for="item in items"
         :key="item.label"
         type="button"
-        class="w-full text-left px-bt-spacing-16 py-bt-spacing-12 text-sm transition"
+        :disabled="item.disabled"
+        class="w-full text-left px-bt-spacing-16 py-bt-spacing-12 text-sm transition disabled:cursor-not-allowed disabled:text-bt-grey-400"
         :class="
-          item.danger
-            ? 'text-bt-error-700 hover:bg-bt-error-100'
-            : 'text-bt-primary-700 hover:bg-bt-grey-100'
+          item.disabled
+            ? 'text-bt-grey-400'
+            : item.danger
+              ? 'text-bt-error-700 hover:bg-bt-error-100'
+              : 'text-bt-primary-700 hover:bg-bt-grey-100'
         "
         @click="
           async () => {

@@ -6,10 +6,15 @@ import { useModalStore } from "@/core/stores/modalStore";
 import { ProductsService } from "@/core/services/productsService";
 import { SelectService } from "@/core/services/selectService";
 
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildProductSchema } from "@/modules/products/productFormSchema";
+
 import type { SelectOption } from "@/core/interfaces/select";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const sku = ref("");
 const barcode = ref("");
@@ -61,22 +66,26 @@ async function loadCatalogs() {
   }
 }
 
+function validateForm(): boolean {
+  return validate(
+    {
+      sku: sku.value,
+      barcode: barcode.value,
+      name: name.value,
+      description: description.value,
+      categoryId: categoryId.value,
+      uomId: uomId.value,
+      taxId: taxId.value,
+      basePrice: basePrice.value,
+      averageCost: averageCost.value,
+    },
+    buildProductSchema(rules, t),
+  );
+}
+
 async function submit() {
-  if (
-    !sku.value.trim() ||
-    !barcode.value.trim() ||
-    !name.value.trim() ||
-    !description.value.trim() ||
-    !categoryId.value ||
-    !uomId.value ||
-    !taxId.value ||
-    basePrice.value === null ||
-    averageCost.value === null
-  ) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("products.validation.requiredCreate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -142,8 +151,10 @@ onMounted(async () => {
         <input
           v-model="sku"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('sku')"
         />
+        <BTFieldError :message="getError('sku')" />
       </div>
 
       <div>
@@ -153,8 +164,10 @@ onMounted(async () => {
         <input
           v-model="barcode"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('barcode')"
         />
+        <BTFieldError :message="getError('barcode')" />
       </div>
 
       <div>
@@ -164,8 +177,10 @@ onMounted(async () => {
         <input
           v-model="name"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('name')"
         />
+        <BTFieldError :message="getError('name')" />
       </div>
 
       <div>
@@ -174,7 +189,8 @@ onMounted(async () => {
         }}</label>
         <select
           v-model="categoryId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('categoryId')"
         >
           <option value="">
             {{ $t("products.placeholders.selectCategory") }}
@@ -187,6 +203,7 @@ onMounted(async () => {
             {{ category.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('categoryId')" />
       </div>
 
       <div class="md:col-span-2">
@@ -196,8 +213,10 @@ onMounted(async () => {
         <textarea
           v-model="description"
           rows="4"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('description')"
         />
+        <BTFieldError :message="getError('description')" />
       </div>
 
       <div>
@@ -206,13 +225,15 @@ onMounted(async () => {
         }}</label>
         <select
           v-model="uomId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('uomId')"
         >
           <option value="">{{ $t("products.placeholders.selectUom") }}</option>
           <option v-for="unit in units" :key="unit.id" :value="unit.id">
             {{ unit.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('uomId')" />
       </div>
 
       <div>
@@ -221,13 +242,15 @@ onMounted(async () => {
         }}</label>
         <select
           v-model="taxId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('taxId')"
         >
           <option value="">{{ $t("products.placeholders.selectTax") }}</option>
           <option v-for="tax in taxes" :key="tax.id" :value="tax.id">
             {{ tax.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('taxId')" />
       </div>
 
       <div>
@@ -239,8 +262,10 @@ onMounted(async () => {
           type="number"
           min="0"
           step="0.01"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('basePrice')"
         />
+        <BTFieldError :message="getError('basePrice')" />
       </div>
 
       <div>
@@ -252,8 +277,10 @@ onMounted(async () => {
           type="number"
           min="0"
           step="0.01"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('averageCost')"
         />
+        <BTFieldError :message="getError('averageCost')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8">

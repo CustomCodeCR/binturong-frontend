@@ -3,9 +3,13 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { TaxesService } from "@/core/services/taxesService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildTaxSchema } from "@/modules/taxes/taxFormSchema";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const name = ref("");
 const code = ref("");
@@ -17,12 +21,16 @@ function closeModal() {
   modalStore.close();
 }
 
+function validateForm(): boolean {
+  return validate(
+    { name: name.value, code: code.value, percentage: percentage.value },
+    buildTaxSchema(rules, t),
+  );
+}
+
 async function submit() {
-  if (!name.value.trim() || !code.value.trim() || percentage.value === null) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("taxes.validation.requiredCreate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -70,8 +78,10 @@ async function submit() {
         <input
           v-model="name"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('name')"
         />
+        <BTFieldError :message="getError('name')" />
       </div>
 
       <div>
@@ -81,8 +91,10 @@ async function submit() {
         <input
           v-model="code"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('code')"
         />
+        <BTFieldError :message="getError('code')" />
       </div>
 
       <div>
@@ -94,8 +106,10 @@ async function submit() {
           type="number"
           min="0"
           step="0.01"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('percentage')"
         />
+        <BTFieldError :message="getError('percentage')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">

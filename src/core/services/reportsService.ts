@@ -35,7 +35,6 @@ export const ReportsService = {
     return callEndpoint<Blob>({
       ...Endpoints.exportFinancialReportPdf,
       path,
-      responseType: "blob",
     });
   },
 
@@ -58,7 +57,6 @@ export const ReportsService = {
     return callEndpoint<Blob>({
       ...Endpoints.exportInventoryReportExcel,
       path,
-      responseType: "blob",
     });
   },
 
@@ -71,7 +69,6 @@ export const ReportsService = {
   exportClientHistoryExcel(clientId: string): Promise<Blob> {
     return callEndpoint<Blob>(Endpoints.exportClientReportExcel, {
       params: { clientId },
-      responseType: "blob",
     });
   },
 
@@ -110,7 +107,6 @@ export const ReportsService = {
     return callEndpoint<Blob>({
       ...Endpoints.exportServiceOrdersReportExcel,
       path,
-      responseType: "blob",
     });
   },
 

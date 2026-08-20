@@ -20,6 +20,13 @@ import { EmployeesService } from "@/core/services/employeesService";
 
 type AttendanceState = "CHECK_IN" | "CHECK_OUT" | null;
 
+function toAttendanceState(value?: string | null): AttendanceState {
+  const normalized = String(value ?? "").toUpperCase();
+  if (normalized === "CHECK_IN" || normalized === "CHECK_OUT")
+    return normalized;
+  return null;
+}
+
 const router = useRouter();
 const { t, locale } = useI18n();
 
@@ -86,7 +93,9 @@ const lastAttendanceEvent = computed(() => {
 watch(
   lastAttendanceEvent,
   (event) => {
-    attendanceState.value = event?.eventType ?? null;
+    // `eventType` llega como `string` desde la API: se normaliza al par de
+    // estados que entiende la barra superior.
+    attendanceState.value = toAttendanceState(event?.eventType);
   },
   { immediate: true },
 );

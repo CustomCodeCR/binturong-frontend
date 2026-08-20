@@ -3,6 +3,9 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { ProductCategoriesService } from "@/core/services/productCategoriesService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildCategorySchema } from "@/modules/categories/categoryFormSchema";
 import type { ProductCategory } from "@/core/interfaces/productCategories";
 
 const props = defineProps<{
@@ -11,6 +14,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -39,14 +43,18 @@ async function loadCategory() {
   }
 }
 
+function validateForm(): boolean {
+  return validate(
+    { name: name.value, description: description.value },
+    buildCategorySchema(rules, t),
+  );
+}
+
 async function submit() {
   if (!category.value) return;
 
-  if (!name.value.trim() || !description.value.trim()) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("categories.validation.requiredUpdate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -101,8 +109,10 @@ onMounted(async () => {
         <input
           v-model="name"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('name')"
         />
+        <BTFieldError :message="getError('name')" />
       </div>
 
       <div>
@@ -112,8 +122,10 @@ onMounted(async () => {
         <textarea
           v-model="description"
           rows="4"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('description')"
         />
+        <BTFieldError :message="getError('description')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8">

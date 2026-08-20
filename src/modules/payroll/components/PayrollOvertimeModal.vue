@@ -5,11 +5,14 @@ import { useI18n } from "vue-i18n";
 import { PayrollService } from "@/core/services/payrollService";
 import { SelectService } from "@/core/services/selectService";
 import { useModalStore } from "@/core/stores/modalStore";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 
 import type { SelectOption } from "@/core/interfaces/select";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const loadingCatalogs = ref(false);
 const loading = ref(false);
@@ -35,20 +38,40 @@ async function loadEmployees() {
   }
 }
 
-async function submit() {
-  if (!employeeId.value.trim() || !workDate.value.trim() || !hours.value) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("payroll.overtime.validation.required"),
-    });
-    return;
-  }
+function validateForm(): boolean {
+  const employeeLabel = t("payroll.overtime.fields.employee");
+  const workDateLabel = t("payroll.overtime.fields.workDate");
+  const hoursLabel = t("payroll.overtime.fields.hours");
+  const notesLabel = t("payroll.overtime.fields.notes");
 
-  if (Number(hours.value) <= 0 || Number(hours.value) > 16) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("payroll.overtime.validation.invalidHours"),
-    });
+  return validate(
+    {
+      employeeId: employeeId.value,
+      workDate: workDate.value,
+      hours: hours.value,
+      notes: notes.value,
+    },
+    {
+      employeeId: [rules.required(employeeLabel)],
+      workDate: [rules.required(workDateLabel)],
+      hours: [
+        rules.required(hoursLabel),
+        rules.positive(hoursLabel),
+        rules.max(16, hoursLabel),
+      ],
+      // Las notas justifican el pago de horas extra: no pueden ser solo números.
+      notes: [
+        rules.required(notesLabel),
+        rules.meaningfulText(notesLabel, 5),
+        rules.maxLength(255, notesLabel),
+      ],
+    },
+  );
+}
+
+async function submit() {
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -106,7 +129,8 @@ onMounted(async () => {
         </label>
         <select
           v-model="employeeId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('employeeId')"
         >
           <option value="">
             {{ $t("payroll.overtime.placeholders.selectEmployee") }}
@@ -119,6 +143,7 @@ onMounted(async () => {
             {{ employee.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('employeeId')" />
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
@@ -129,8 +154,10 @@ onMounted(async () => {
           <input
             v-model="workDate"
             type="date"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('workDate')"
           />
+          <BTFieldError :message="getError('workDate')" />
         </div>
 
         <div>
@@ -142,8 +169,10 @@ onMounted(async () => {
             type="number"
             min="0"
             step="0.5"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('hours')"
           />
+          <BTFieldError :message="getError('hours')" />
         </div>
       </div>
 
@@ -154,8 +183,10 @@ onMounted(async () => {
         <textarea
           v-model="notes"
           rows="3"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('notes')"
         />
+        <BTFieldError :message="getError('notes')" />
       </div>
 
       <div class="flex justify-end gap-bt-spacing-12">

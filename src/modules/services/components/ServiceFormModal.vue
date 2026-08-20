@@ -5,6 +5,8 @@ import { useI18n } from "vue-i18n";
 import { ServicesService } from "@/core/services/servicesService";
 import { SelectService } from "@/core/services/selectService";
 import { useModalStore } from "@/core/stores/modalStore";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 
 import type {
   Service,
@@ -18,6 +20,13 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const {
+  rules,
+  validate: validateSchema,
+  getError,
+  fieldClass,
+  firstError,
+} = useValidation();
 
 const loading = ref(false);
 const loadingCatalogs = ref(false);
@@ -68,23 +77,41 @@ function loadForm() {
 }
 
 function validate(): string | null {
-  if (
-    !code.value.trim() ||
-    !name.value.trim() ||
-    !categoryId.value.trim() ||
-    standardTimeMin.value === null ||
-    baseRate.value === null
-  ) {
-    return t("services.validation.required");
-  }
+  const codeLabel = t("services.fields.code");
+  const nameLabel = t("services.fields.name");
+  const descriptionLabel = t("services.fields.description");
+  const categoryLabel = t("services.fields.category");
+  const timeLabel = t("services.fields.standardTimeMin");
+  const rateLabel = t("services.fields.baseRate");
 
-  if (Number(standardTimeMin.value) <= 0) {
-    return t("services.validation.invalidTime");
-  }
+  const valid = validateSchema(
+    {
+      code: code.value,
+      name: name.value,
+      description: description.value,
+      categoryId: categoryId.value,
+      standardTimeMin: standardTimeMin.value,
+      baseRate: baseRate.value,
+    },
+    {
+      code: [rules.required(codeLabel), rules.code(codeLabel, 2, 30)],
+      name: [
+        rules.required(nameLabel),
+        rules.meaningfulText(nameLabel, 3),
+        rules.maxLength(120, nameLabel),
+      ],
+      description: [
+        rules.required(descriptionLabel),
+        rules.meaningfulText(descriptionLabel, 5),
+        rules.maxLength(500, descriptionLabel),
+      ],
+      categoryId: [rules.required(categoryLabel)],
+      standardTimeMin: [rules.required(timeLabel), rules.positive(timeLabel)],
+      baseRate: [rules.required(rateLabel), rules.min(0, rateLabel)],
+    },
+  );
 
-  if (Number(baseRate.value) < 0) {
-    return t("services.validation.invalidRate");
-  }
+  if (!valid) return firstError.value;
 
   if (
     isEdit.value &&
@@ -189,8 +216,10 @@ onMounted(async () => {
           <input
             v-model="code"
             type="text"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('code')"
           />
+          <BTFieldError :message="getError('code')" />
         </div>
 
         <div>
@@ -200,8 +229,10 @@ onMounted(async () => {
           <input
             v-model="name"
             type="text"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('name')"
           />
+          <BTFieldError :message="getError('name')" />
         </div>
 
         <div class="md:col-span-2">
@@ -211,8 +242,10 @@ onMounted(async () => {
           <textarea
             v-model="description"
             rows="3"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('description')"
           />
+          <BTFieldError :message="getError('description')" />
         </div>
 
         <div>
@@ -222,7 +255,8 @@ onMounted(async () => {
           <select
             v-model="categoryId"
             :disabled="isEdit && props.service?.isCategoryProtected"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white disabled:bg-bt-grey-100 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white disabled:bg-bt-grey-100 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('categoryId')"
           >
             <option value="">
               {{ $t("services.placeholders.selectCategory") }}
@@ -235,6 +269,7 @@ onMounted(async () => {
               {{ category.label }}
             </option>
           </select>
+          <BTFieldError :message="getError('categoryId')" />
         </div>
 
         <div class="flex items-end">
@@ -255,8 +290,10 @@ onMounted(async () => {
             type="number"
             min="1"
             step="1"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('standardTimeMin')"
           />
+          <BTFieldError :message="getError('standardTimeMin')" />
         </div>
 
         <div>
@@ -268,8 +305,10 @@ onMounted(async () => {
             type="number"
             min="0"
             step="0.01"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('baseRate')"
           />
+          <BTFieldError :message="getError('baseRate')" />
         </div>
 
         <div>

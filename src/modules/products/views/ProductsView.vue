@@ -211,7 +211,8 @@ function hasProductReachedExpectedState(
     fetchedProduct.sku === expected.sku &&
     String(fetchedProduct.barcode ?? "") === String(expected.barcode ?? "") &&
     fetchedProduct.name === expected.name &&
-    String(fetchedProduct.description ?? "") === String(expected.description ?? "") &&
+    String(fetchedProduct.description ?? "") ===
+      String(expected.description ?? "") &&
     fetchedProduct.categoryId === expected.categoryId &&
     fetchedProduct.uomId === expected.uomId &&
     fetchedProduct.taxId === expected.taxId &&
@@ -272,7 +273,9 @@ function openCreateModal() {
       if (payload?.productId) {
         await reloadProductsUntil(
           (fetchedProducts) =>
-            fetchedProducts.some((product) => product.productId === payload.productId),
+            fetchedProducts.some(
+              (product) => product.productId === payload.productId,
+            ),
           { attempts: 12, delayMs: 500 },
         );
         return;
@@ -309,7 +312,8 @@ function openEditModal(product: Product) {
       });
 
       await reloadProductsUntil(
-        (fetchedProducts) => hasProductReachedExpectedState(fetchedProducts, payload),
+        (fetchedProducts) =>
+          hasProductReachedExpectedState(fetchedProducts, payload),
         { attempts: 12, delayMs: 500 },
       );
     },
@@ -340,9 +344,9 @@ async function toggleProductStatus(product: Product) {
   try {
     await ProductsService.update(product.productId, {
       sku: product.sku,
-      barcode: product.barcode,
+      barcode: product.barcode ?? "",
       name: product.name,
-      description: product.description,
+      description: product.description ?? "",
       categoryId: product.categoryId,
       uomId: product.uomId,
       taxId: product.taxId,
@@ -414,7 +418,8 @@ async function onSearch() {
 }
 
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value)
+    return;
   page.value = targetPage;
   await loadProducts();
 }
@@ -458,7 +463,9 @@ onMounted(async () => {
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
         <!-- Left: search + status filter + search button + refresh -->
-        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+        >
           <input
             v-model="search"
             type="text"
@@ -473,7 +480,9 @@ onMounted(async () => {
           >
             <option value="all">{{ $t("products.filters.allStatus") }}</option>
             <option value="active">{{ $t("products.filters.active") }}</option>
-            <option value="inactive">{{ $t("products.filters.inactive") }}</option>
+            <option value="inactive">
+              {{ $t("products.filters.inactive") }}
+            </option>
           </select>
 
           <!-- Primary query action -->
@@ -529,14 +538,32 @@ onMounted(async () => {
         <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.sku") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.name") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.category") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.uom") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.tax") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.basePrice") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("products.table.status") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("products.table.options") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.sku") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.name") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.category") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.uom") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.tax") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.basePrice") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("products.table.status") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("products.table.options") }}
+              </th>
             </tr>
           </thead>
 
@@ -546,17 +573,31 @@ onMounted(async () => {
               :key="product.productId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
+              >
                 {{ product.sku }}
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
-                <div class="font-bt-semibold text-bt-primary-700">{{ product.name }}</div>
-                <div class="text-xs text-bt-grey-500">{{ product.barcode }}</div>
+                <div class="font-bt-semibold text-bt-primary-700">
+                  {{ product.name }}
+                </div>
+                <div class="text-xs text-bt-grey-500">
+                  {{ product.barcode }}
+                </div>
               </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.categoryName ?? "-" }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.uomCode ?? product.uomName ?? "-" }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.taxCode ?? "-" }} ({{ product.taxPercentage }}%)</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ product.basePrice }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ product.categoryName ?? "-" }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ product.uomCode ?? product.uomName ?? "-" }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ product.taxCode ?? "-" }} ({{ product.taxPercentage }}%)
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ product.basePrice }}
+              </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -566,7 +607,11 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{ product.isActive ? $t("products.status.active") : $t("products.status.inactive") }}
+                  {{
+                    product.isActive
+                      ? $t("products.status.active")
+                      : $t("products.status.inactive")
+                  }}
                 </span>
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
@@ -623,7 +668,8 @@ onMounted(async () => {
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
             ({{ filteredProducts.length }} {{ $t("products.filtered") }})
           </span>
@@ -645,9 +691,15 @@ onMounted(async () => {
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(1)"
-          >1</button>
+          >
+            1
+          </button>
 
-          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -660,19 +712,24 @@ onMounted(async () => {
                 : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
             "
             @click="goToPage(pageNumber)"
-          >{{ pageNumber }}</button>
+          >
+            {{ pageNumber }}
+          </button>
 
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >...</span>
+            >...</span
+          >
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(MAX_PAGE)"
-          >{{ MAX_PAGE }}</button>
+          >
+            {{ MAX_PAGE }}
+          </button>
 
           <button
             type="button"

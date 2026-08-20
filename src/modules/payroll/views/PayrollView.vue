@@ -12,6 +12,7 @@ import {
 } from "lucide-vue-next";
 
 import { PayrollService } from "@/core/services/payrollService";
+import { isDateRangeValid } from "@/shared/validation/rules";
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useModalStore } from "@/core/stores/modalStore";
 import { useToastStore } from "@/core/stores/toastStore";
@@ -20,6 +21,7 @@ import PayrollCreateModal from "@/modules/payroll/components/PayrollCreateModal.
 import PayrollOvertimeModal from "@/modules/payroll/components/PayrollOvertimeModal.vue";
 import PayrollDetailsDrawer from "@/modules/payroll/components/PayrollDetailsDrawer.vue";
 import PayrollRowActionMenu from "@/modules/payroll/components/PayrollRowActionMenu.vue";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 
 import type { Payroll } from "@/core/interfaces/payroll";
 
@@ -38,6 +40,10 @@ const searchPeriodCode = ref("");
 const searchStatus = ref("");
 const searchFromUtc = ref("");
 const searchToUtc = ref("");
+
+const searchRangeInvalid = computed(
+  () => !isDateRangeValid(searchFromUtc.value, searchToUtc.value),
+);
 
 const MAX_PAGE = 100;
 
@@ -80,7 +86,10 @@ const summary = computed(() => {
     payrolls.value.flatMap((p) => (p.details ?? []).map((d) => d.employeeId)),
   );
 
-  const totalNet = payrolls.value.reduce((acc, p) => acc + totalNetSalary(p), 0);
+  const totalNet = payrolls.value.reduce(
+    (acc, p) => acc + totalNetSalary(p),
+    0,
+  );
 
   const totalCommissions = payrolls.value.reduce((acc, p) => {
     return (
@@ -92,7 +101,12 @@ const summary = computed(() => {
     );
   }, 0);
 
-  return { totalPayrolls, totalEmployees: uniqueEmployeeIds.size, totalNet, totalCommissions };
+  return {
+    totalPayrolls,
+    totalEmployees: uniqueEmployeeIds.size,
+    totalNet,
+    totalCommissions,
+  };
 });
 
 function formatDate(value?: string | null): string {
@@ -110,7 +124,8 @@ function formatDateTime(value?: string | null): string {
 }
 
 function formatMoney(value?: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  if (value === null || value === undefined || Number.isNaN(Number(value)))
+    return "-";
   return Number(value).toLocaleString("es-CR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -139,8 +154,16 @@ async function loadPayrolls() {
   loading.value = true;
   try {
     payrolls.value = await PayrollService.getPayrolls({
-      fromtUtc: searchFromUtc.value || undefined,
-      toUtc: searchToUtc.value || undefined,
+      // El backend espera `fromUtc`; el nombre anterior (`fromtUtc`) nunca
+      // llegaba a aplicarse y el listado ignoraba la fecha inicial.
+      fromUtc: toUtcStartOfDay(searchFromUtc.value),
+      // `EndDate <= toUtc`: sin el fin del día se perdían las planillas que
+      // terminan el mismo día seleccionado.
+      toUtc: toUtcEndOfDay(searchToUtc.value),
+      // `periodCode` se resuelve en el backend como búsqueda parcial sobre el
+      // código y el tipo de planilla. El estado se sigue filtrando en cliente
+      // porque el backend exige coincidencia exacta.
+      periodCode: searchPeriodCode.value.trim() || undefined,
       page: page.value,
       pageSize: pageSize.value,
     });
@@ -156,13 +179,35 @@ async function loadPayrolls() {
   }
 }
 
+/** Convierte `YYYY-MM-DD` al inicio del día en UTC (o `undefined` si viene vacío). */
+function toUtcStartOfDay(localDate: string): string | undefined {
+  if (!localDate) return undefined;
+  return new Date(`${localDate}T00:00:00`).toISOString();
+}
+
+/** Convierte `YYYY-MM-DD` al final del día en UTC (o `undefined` si viene vacío). */
+function toUtcEndOfDay(localDate: string): string | undefined {
+  if (!localDate) return undefined;
+  return new Date(`${localDate}T23:59:59.999`).toISOString();
+}
+
 async function onSearch() {
+  if (searchRangeInvalid.value) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("validation.dateRange"),
+    });
+    return;
+  }
+
   page.value = 1;
   await loadPayrolls();
 }
 
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value)
+    return;
   page.value = targetPage;
   await loadPayrolls();
 }
@@ -182,11 +227,19 @@ function openCreatePayrollModal() {
     component: PayrollCreateModal,
     props: {},
     onSuccess: async () => {
-      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("payroll.messages.createSuccess") });
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("payroll.messages.createSuccess"),
+      });
       await loadPayrolls();
     },
     onError: (error) => {
-      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("payroll.messages.createError") });
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("payroll.messages.createError"),
+      });
     },
   });
 }
@@ -196,11 +249,19 @@ function openOvertimeModal() {
     component: PayrollOvertimeModal,
     props: {},
     onSuccess: async () => {
-      toastStore.addToast({ severity: "success", title: t("toast.success"), message: t("payroll.overtime.messages.createSuccess") });
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("payroll.overtime.messages.createSuccess"),
+      });
       await loadPayrolls();
     },
     onError: (error) => {
-      toastStore.addToast({ severity: "error", title: t("toast.error"), message: error?.message ?? t("payroll.overtime.messages.createError") });
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("payroll.overtime.messages.createError"),
+      });
     },
   });
 }
@@ -247,58 +308,93 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0">
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
+    >
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-primary-50 flex items-center justify-center text-bt-primary-600"
+          >
             <ReceiptText :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("payroll.summary.totalPayrolls") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-primary-700">{{ summary.totalPayrolls }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("payroll.summary.totalPayrolls") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-primary-700">
+              {{ summary.totalPayrolls }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-info-100 flex items-center justify-center text-bt-info-700">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-info-100 flex items-center justify-center text-bt-info-700"
+          >
             <Calculator :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("payroll.summary.totalEmployees") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-info-700">{{ summary.totalEmployees }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("payroll.summary.totalEmployees") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-info-700">
+              {{ summary.totalEmployees }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-success-100 flex items-center justify-center text-bt-success-700"
+          >
             <HandCoins :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("payroll.summary.totalNet") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-success-700">{{ formatMoney(summary.totalNet) }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("payroll.summary.totalNet") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-success-700">
+              {{ formatMoney(summary.totalNet) }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100">
+      <div
+        class="rounded-l border border-bt-grey-200 bg-bt-white p-bt-spacing-16 shadow-bt-elevation-100"
+      >
         <div class="flex items-center gap-bt-spacing-12">
-          <div class="w-12 h-12 rounded-full bg-bt-warning-100 flex items-center justify-center text-bt-warning-700">
+          <div
+            class="w-12 h-12 rounded-full bg-bt-warning-100 flex items-center justify-center text-bt-warning-700"
+          >
             <Clock3 :size="22" />
           </div>
           <div>
-            <div class="text-sm text-bt-grey-500">{{ $t("payroll.summary.totalCommissions") }}</div>
-            <div class="text-2xl font-bt-bold text-bt-warning-700">{{ formatMoney(summary.totalCommissions) }}</div>
+            <div class="text-sm text-bt-grey-500">
+              {{ $t("payroll.summary.totalCommissions") }}
+            </div>
+            <div class="text-2xl font-bt-bold text-bt-warning-700">
+              {{ formatMoney(summary.totalCommissions) }}
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col">
-
+    <div
+      class="bg-bt-white rounded-l shadow-bt-elevation-200 border border-bt-grey-200 p-bt-spacing-24 flex-1 min-h-0 flex flex-col"
+    >
       <!-- TOOLBAR: page size + create actions (right) -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-16 shrink-0"
@@ -339,7 +435,9 @@ onBeforeUnmount(() => {
       <div
         class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-12 shrink-0"
       >
-        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl"
+        >
           <input
             v-model="searchPeriodCode"
             type="text"
@@ -377,39 +475,93 @@ onBeforeUnmount(() => {
       <div
         class="flex flex-col sm:flex-row gap-bt-spacing-12 mb-bt-spacing-24 shrink-0"
       >
-        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl">
-          <input
-            v-model="searchFromUtc"
-            type="datetime-local"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
-          <input
-            v-model="searchToUtc"
-            type="datetime-local"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-          />
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 flex-1 lg:max-w-2xl"
+        >
+          <div class="w-full">
+            <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+              {{ $t("payroll.filters.fromDate") }}
+            </label>
+            <input
+              v-model="searchFromUtc"
+              type="date"
+              :max="searchToUtc || undefined"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              :class="
+                searchRangeInvalid
+                  ? 'border-bt-error-500'
+                  : 'border-bt-grey-300'
+              "
+            />
+          </div>
+
+          <div class="w-full">
+            <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+              {{ $t("payroll.filters.toDate") }}
+            </label>
+            <input
+              v-model="searchToUtc"
+              type="date"
+              :min="searchFromUtc || undefined"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+              :class="
+                searchRangeInvalid
+                  ? 'border-bt-error-500'
+                  : 'border-bt-grey-300'
+              "
+            />
+          </div>
         </div>
+      </div>
+
+      <div v-if="searchRangeInvalid" class="mb-bt-spacing-16 shrink-0">
+        <BTFieldError :message="$t('validation.dateRange')" />
       </div>
 
       <!-- TABLE -->
       <div class="flex-1 min-h-0 overflow-auto">
-        <div v-if="loading" class="py-bt-spacing-24 text-center text-bt-grey-500">
+        <div
+          v-if="loading"
+          class="py-bt-spacing-24 text-center text-bt-grey-500"
+        >
           {{ $t("common.loading") }}
         </div>
 
         <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.periodCode") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.startDate") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.endDate") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.payrollType") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.status") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.employees") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.grossTotal") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.totalNet") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("payroll.table.updatedAt") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("payroll.table.options") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.periodCode") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.startDate") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.endDate") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.payrollType") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.status") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.employees") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.grossTotal") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.totalNet") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("payroll.table.updatedAt") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("payroll.table.options") }}
+              </th>
             </tr>
           </thead>
 
@@ -419,19 +571,28 @@ onBeforeUnmount(() => {
               :key="payroll.payrollId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
+              >
                 {{ payroll.periodCode }}
               </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDate(payroll.startDate) }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDate(payroll.endDate) }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ payroll.payrollType }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ formatDate(payroll.startDate) }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ formatDate(payroll.endDate) }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ payroll.payrollType }}
+              </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   class="inline-flex px-bt-spacing-8 py-bt-spacing-4 rounded-full text-xs font-bt-semibold"
                   :class="
                     payroll.status?.toLowerCase().includes('draft')
                       ? 'bg-bt-warning-100 text-bt-warning-700'
-                      : payroll.status?.toLowerCase().includes('calculated') || payroll.status?.toLowerCase().includes('closed')
+                      : payroll.status?.toLowerCase().includes('calculated') ||
+                          payroll.status?.toLowerCase().includes('closed')
                         ? 'bg-bt-success-100 text-bt-success-700'
                         : 'bg-bt-info-100 text-bt-info-700'
                   "
@@ -439,13 +600,28 @@ onBeforeUnmount(() => {
                   {{ payroll.status }}
                 </span>
               </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ countEmployees(payroll) }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatMoney(totalGrossSalary(payroll)) }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold">{{ formatMoney(totalNetSalary(payroll)) }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDateTime(payroll.updatedAtUtc) }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ countEmployees(payroll) }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ formatMoney(totalGrossSalary(payroll)) }}
+              </td>
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 font-bt-semibold"
+              >
+                {{ formatMoney(totalNetSalary(payroll)) }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ formatDateTime(payroll.updatedAtUtc) }}
+              </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <PayrollRowActionMenu
-                  :items="[{ label: t('payroll.actions.viewDetails'), action: () => openPayrollDrawer(payroll.payrollId) }]"
+                  :items="[
+                    {
+                      label: t('payroll.actions.viewDetails'),
+                      action: () => openPayrollDrawer(payroll.payrollId),
+                    },
+                  ]"
                 >
                   <template #trigger>
                     <button
@@ -460,7 +636,10 @@ onBeforeUnmount(() => {
             </tr>
 
             <tr v-if="!filteredPayrolls.length && !loading">
-              <td colspan="10" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
+              <td
+                colspan="10"
+                class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500"
+              >
                 {{ $t("payroll.empty") }}
               </td>
             </tr>
@@ -469,9 +648,12 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- PAGINATION -->
-      <div class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0">
+      <div
+        class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
+      >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
             ({{ filteredPayrolls.length }} {{ $t("payroll.filtered") }})
           </span>
@@ -488,20 +670,48 @@ onBeforeUnmount(() => {
             <span>{{ $t("pagination.previous") }}</span>
           </button>
 
-          <button v-if="pageNumbers[0] > 1" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goToPage(1)">1</button>
-          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          <button
+            v-if="pageNumbers[0] > 1"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(1)"
+          >
+            1
+          </button>
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
 
           <button
             v-for="pageNumber in pageNumbers"
             :key="pageNumber"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border transition"
-            :class="pageNumber === page ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white' : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'"
+            :class="
+              pageNumber === page
+                ? 'bg-bt-primary-500 border-bt-primary-500 text-bt-white'
+                : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
+            "
             @click="goToPage(pageNumber)"
-          >{{ pageNumber }}</button>
+          >
+            {{ pageNumber }}
+          </button>
 
-          <span v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1" class="px-bt-spacing-8 text-bt-grey-500">...</span>
-          <button v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE" type="button" class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100" @click="goToPage(MAX_PAGE)">{{ MAX_PAGE }}</button>
+          <span
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
+          <button
+            v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"
+            type="button"
+            class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
+            @click="goToPage(MAX_PAGE)"
+          >
+            {{ MAX_PAGE }}
+          </button>
 
           <button
             type="button"

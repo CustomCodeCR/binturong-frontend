@@ -8,6 +8,8 @@ import { useAuthStore } from "@/core/stores/authStore";
 
 import { SelectService } from "@/core/services/selectService";
 import { ContractsService } from "@/core/services/contractsService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 
 import type { SelectOption } from "@/core/interfaces/select";
 import type { ContractMilestoneCreateRequest } from "@/core/interfaces/contracts";
@@ -16,6 +18,7 @@ const { t } = useI18n();
 const drawerStore = useDrawerStore();
 const toastStore = useToastStore();
 const authStore = useAuthStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const loadingCatalogs = ref(false);
 const loading = ref(false);
@@ -105,6 +108,47 @@ async function loadCatalogs() {
   }
 }
 
+function validateForm(): boolean {
+  const codeLabel = t("contracts.fields.code");
+  const clientLabel = t("contracts.fields.client");
+  const startLabel = t("contracts.fields.startDate");
+  const endLabel = t("contracts.fields.endDate");
+  const statusLabel = t("contracts.fields.status");
+  const descriptionLabel = t("contracts.fields.description");
+  const notesLabel = t("contracts.fields.notes");
+
+  return validate(
+    {
+      code: code.value,
+      clientId: clientId.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
+      status: status.value,
+      description: description.value,
+      notes: notes.value,
+    },
+    {
+      code: [rules.required(codeLabel), rules.code(codeLabel, 3, 30)],
+      clientId: [rules.required(clientLabel)],
+      startDate: [rules.required(startLabel)],
+      endDate: [
+        rules.required(endLabel),
+        rules.dateNotBefore(() => startDate.value, endLabel),
+      ],
+      status: [rules.required(statusLabel)],
+      description: [
+        rules.required(descriptionLabel),
+        rules.meaningfulText(descriptionLabel, 5),
+        rules.maxLength(255, descriptionLabel),
+      ],
+      notes: [
+        rules.meaningfulText(notesLabel, 5),
+        rules.maxLength(255, notesLabel),
+      ],
+    },
+  );
+}
+
 async function submit() {
   const normalizedCode = code.value.trim();
   const normalizedClientId = clientId.value.trim();
@@ -115,28 +159,11 @@ async function submit() {
   const normalizedNotes = notes.value.trim();
   const responsibleUserId = authStore.userId?.trim() ?? "";
 
-  if (
-    !normalizedCode ||
-    !normalizedClientId ||
-    !startDate.value ||
-    !endDate.value ||
-    !normalizedStatus ||
-    !normalizedDescription ||
-    !responsibleUserId
-  ) {
+  if (!validateForm() || !responsibleUserId) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("contracts.validation.required"),
-    });
-    return;
-  }
-
-  if (normalizedDescription.length > 255 || normalizedNotes.length > 255) {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("contracts.validation.maxLength"),
+      message: firstError.value || t("contracts.validation.required"),
     });
     return;
   }
@@ -324,8 +351,10 @@ onMounted(async () => {
           <input
             v-model="code"
             type="text"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('code')"
           />
+          <BTFieldError :message="getError('code')" />
         </div>
 
         <div>
@@ -334,7 +363,8 @@ onMounted(async () => {
           </label>
           <select
             v-model="clientId"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('clientId')"
           >
             <option value="">
               {{ $t("contracts.placeholders.selectClient") }}
@@ -347,6 +377,7 @@ onMounted(async () => {
               {{ client.label }}
             </option>
           </select>
+          <BTFieldError :message="getError('clientId')" />
         </div>
 
         <div>
@@ -356,8 +387,10 @@ onMounted(async () => {
           <input
             v-model="status"
             type="text"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('status')"
           />
+          <BTFieldError :message="getError('status')" />
         </div>
 
         <div>
@@ -407,8 +440,10 @@ onMounted(async () => {
           <input
             v-model="startDate"
             type="date"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('startDate')"
           />
+          <BTFieldError :message="getError('startDate')" />
         </div>
 
         <div>
@@ -418,8 +453,10 @@ onMounted(async () => {
           <input
             v-model="endDate"
             type="date"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('endDate')"
           />
+          <BTFieldError :message="getError('endDate')" />
         </div>
 
         <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">
@@ -464,8 +501,10 @@ onMounted(async () => {
             v-model="description"
             rows="3"
             maxlength="255"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('description')"
           />
+          <BTFieldError :message="getError('description')" />
           <p class="text-xs text-bt-grey-500 mt-bt-spacing-4 text-right">
             {{ description.length }}/255
           </p>
@@ -479,8 +518,10 @@ onMounted(async () => {
             v-model="notes"
             rows="3"
             maxlength="255"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('notes')"
           />
+          <BTFieldError :message="getError('notes')" />
           <p class="text-xs text-bt-grey-500 mt-bt-spacing-4 text-right">
             {{ notes.length }}/255
           </p>

@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
 import { useModalStore } from "@/core/stores/modalStore";
 import { useAuthStore } from "@/core/stores/authStore";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 
 import { PurchasesRequestsService } from "@/core/services/purchasesRequestsService";
 import { SelectService } from "@/core/services/selectService";
 
 import type { SelectOption } from "@/core/interfaces/select";
 
+const { t } = useI18n();
 const modalStore = useModalStore();
 const authStore = useAuthStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const branches = ref<SelectOption[]>([]);
 const employees = ref<SelectOption[]>([]);
@@ -118,6 +124,34 @@ async function loadCatalogs() {
   }
 }
 
+function validateForm(): boolean {
+  const codeLabel = t("purchases.requests.fields.code");
+  const branchLabel = t("purchases.requests.fields.branch");
+  const requestedByLabel = t("purchases.requests.fields.requestedBy");
+  const dateLabel = t("purchases.requests.fields.date");
+  const notesLabel = t("purchases.requests.fields.notes");
+
+  return validate(
+    {
+      code: code.value,
+      branchId: branchId.value,
+      requestedById: requestedById.value,
+      requestDateUtc: requestDateUtc.value,
+      notes: notes.value,
+    },
+    {
+      code: [rules.required(codeLabel), rules.code(codeLabel, 3, 30)],
+      branchId: [rules.required(branchLabel)],
+      requestedById: [rules.required(requestedByLabel)],
+      requestDateUtc: [rules.required(dateLabel)],
+      notes: [
+        rules.meaningfulText(notesLabel, 5),
+        rules.maxLength(255, notesLabel),
+      ],
+    },
+  );
+}
+
 async function submit() {
   const normalizedCode = code.value.trim();
   const normalizedBranchId = branchId.value.trim();
@@ -125,18 +159,15 @@ async function submit() {
   const normalizedRequestDateUtc = toUtcIsoString(requestDateUtc.value);
   const normalizedNotes = notes.value.trim();
 
-  if (!normalizedCode || !normalizedBranchId || !normalizedRequestedById) {
-    modalStore.onError?.({
-      code: 400,
-      message: "Missing required fields",
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
   if (!canSelectEmployee.value && !authStore.employeeId) {
     modalStore.onError?.({
       code: 400,
-      message: "Current user does not have an employee assigned",
+      message: t("purchases.requests.validation.noEmployeeAssigned"),
     });
     return;
   }
@@ -199,26 +230,29 @@ onMounted(async () => {
       >
         <div>
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-            Code
+            {{ $t("purchases.requests.fields.code") }}
           </label>
 
           <input
             v-model="code"
             type="text"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('code')"
           />
+          <BTFieldError :message="getError('code')" />
         </div>
 
         <div>
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-            Branch
+            {{ $t("purchases.requests.fields.branch") }}
           </label>
 
           <select
             v-model="branchId"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('branchId')"
           >
-            <option value="">Select branch</option>
+            <option value="">{{ $t("common.selectOption") }}</option>
 
             <option
               v-for="branch in branches"
@@ -228,19 +262,21 @@ onMounted(async () => {
               {{ branch.label }}
             </option>
           </select>
+          <BTFieldError :message="getError('branchId')" />
         </div>
 
         <!-- employee select -->
         <div v-if="canSelectEmployee">
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-            Requested By
+            {{ $t("purchases.requests.fields.requestedBy") }}
           </label>
 
           <select
             v-model="requestedById"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('requestedById')"
           >
-            <option value="">Select employee</option>
+            <option value="">{{ $t("common.selectOption") }}</option>
 
             <option
               v-for="employee in employees"
@@ -250,12 +286,13 @@ onMounted(async () => {
               {{ employee.label }}
             </option>
           </select>
+          <BTFieldError :message="getError('requestedById')" />
         </div>
 
         <!-- employee fixed -->
         <div v-else>
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-            Requested By
+            {{ $t("purchases.requests.fields.requestedBy") }}
           </label>
 
           <input
@@ -268,28 +305,32 @@ onMounted(async () => {
 
         <div>
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-            Date
+            {{ $t("purchases.requests.fields.date") }}
           </label>
 
           <input
             v-model="requestDateUtc"
             type="datetime-local"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            :class="fieldClass('requestDateUtc')"
           />
+          <BTFieldError :message="getError('requestDateUtc')" />
         </div>
 
         <!-- notes -->
         <div class="md:col-span-2">
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
-            Notes
+            {{ $t("purchases.requests.fields.notes") }}
           </label>
 
           <textarea
             v-model="notesLimited"
             maxlength="255"
             rows="5"
-            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500 resize-none"
+            class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500 resize-none"
+            :class="fieldClass('notes')"
           />
+          <BTFieldError :message="getError('notes')" />
 
           <div class="text-xs text-bt-grey-500 mt-bt-spacing-4 text-right">
             {{ notes.length }}/255

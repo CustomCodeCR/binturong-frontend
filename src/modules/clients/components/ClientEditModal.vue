@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
 import { ClientsService } from "@/core/services/clientsService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildClientSchema } from "@/modules/clients/clientFormSchema";
 
 import type { Client } from "@/core/interfaces/clients";
 
@@ -13,17 +16,19 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
-const personTypeOptions = [
-  { value: "Juridico", label: "Jurídico" },
-  { value: "Fisico", label: "Físico" },
-];
+const personTypeLabels: Record<string, string> = {
+  Juridico: "Jurídico",
+  Fisico: "Físico",
+};
 
-const identificationTypeOptionsForPhysical = [
-  { value: "CedulaNacional", label: "Cédula nacional" },
-  { value: "CedulaResidencia", label: "Cédula de residencia" },
-  { value: "Pasaporte", label: "Pasaporte" },
-];
+const identificationTypeLabels: Record<string, string> = {
+  CedulaJuridica: "Cédula jurídica",
+  CedulaNacional: "Cédula nacional",
+  CedulaResidencia: "Cédula de residencia",
+  Pasaporte: "Pasaporte",
+};
 
 const loading = ref(false);
 const saving = ref(false);
@@ -43,20 +48,15 @@ const clientType = ref("");
 const score = ref<number | null>(0);
 const isActive = ref(true);
 
-watch(personType, (value) => {
-  if (value === "Juridico") {
-    identificationType.value = "CedulaJuridica";
-    return;
-  }
+const personTypeLabel = computed(
+  () => personTypeLabels[personType.value] ?? personType.value,
+);
 
-  if (
-    !["CedulaNacional", "CedulaResidencia", "Pasaporte"].includes(
-      identificationType.value,
-    )
-  ) {
-    identificationType.value = "CedulaNacional";
-  }
-});
+const identificationTypeLabel = computed(
+  () =>
+    identificationTypeLabels[identificationType.value] ??
+    identificationType.value,
+);
 
 function closeModal() {
   modalStore.close();
@@ -69,46 +69,62 @@ async function loadClient() {
     const response = await ClientsService.readById(props.clientId);
     client.value = response;
 
+    // Los campos opcionales llegan como `null` desde la API. Asignarlos tal
+    // cual hacía que `.trim()` reventara al guardar y ninguna edición se
+    // llegara a enviar.
+    const text = (value?: string | null) => value ?? "";
+
     personType.value = response.personType;
     identificationType.value = response.identificationType;
-    identification.value = response.identification;
-    tradeName.value = response.tradeName;
-    contactName.value = response.contactName;
-    email.value = response.email;
-    primaryPhone.value = response.primaryPhone;
-    secondaryPhone.value = response.secondaryPhone;
-    industry.value = response.industry;
-    clientType.value = response.clientType;
-    score.value = response.score;
+    identification.value = text(response.identification);
+    tradeName.value = text(response.tradeName);
+    contactName.value = text(response.contactName);
+    email.value = text(response.email);
+    primaryPhone.value = text(response.primaryPhone);
+    secondaryPhone.value = text(response.secondaryPhone);
+    industry.value = text(response.industry);
+    clientType.value = text(response.clientType);
+    score.value = response.score ?? 0;
     isActive.value = response.isActive;
   } finally {
     loading.value = false;
   }
 }
 
+function validateForm(): boolean {
+  // La identificación sí es editable: el backend la acepta en el update y la
+  // valida contra el tipo de identificación del cliente.
+  const schema = buildClientSchema(rules, t, identificationType.value);
+
+  return validate(
+    {
+      identification: identification.value,
+      tradeName: tradeName.value,
+      contactName: contactName.value,
+      email: email.value,
+      primaryPhone: primaryPhone.value,
+      secondaryPhone: secondaryPhone.value,
+      industry: industry.value,
+      clientType: clientType.value,
+      score: score.value,
+    },
+    schema,
+  );
+}
+
 async function submit() {
-  if (
-    !personType.value.trim() ||
-    !identificationType.value.trim() ||
-    !identification.value.trim() ||
-    !tradeName.value.trim() ||
-    !contactName.value.trim() ||
-    !email.value.trim() ||
-    !primaryPhone.value.trim()
-  ) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("clients.validation.requiredUpdate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
   saving.value = true;
 
   try {
+    // `personType` e `identificationType` no forman parte de
+    // ClientUpdateRequest y el backend los mantiene fijos; `identification` sí
+    // se envía y se persiste.
     await ClientsService.update(props.clientId, {
-      personType: personType.value.trim(),
-      identificationType: identificationType.value.trim(),
       identification: identification.value.trim(),
       tradeName: tradeName.value.trim(),
       contactName: contactName.value.trim(),
@@ -156,61 +172,46 @@ onMounted(async () => {
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
+      <!--
+        La identificación es la clave de negocio del cliente: el backend la
+        conserva y no la incluye en el comando de actualización. Se muestra en
+        solo lectura para que el usuario sepa por qué no puede editarla.
+      -->
       <div>
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
           {{ $t("clients.fields.personType") }}
         </label>
-        <select
-          v-model="personType"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-        >
-          <option
-            v-for="option in personTypeOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
+        <input
+          :value="personTypeLabel"
+          type="text"
+          disabled
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-600 cursor-not-allowed focus:outline-none"
+        />
       </div>
 
       <div>
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
           {{ $t("clients.fields.identificationType") }}
         </label>
-
         <input
-          v-if="personType === 'Juridico'"
-          :value="'CedulaJuridica'"
+          :value="identificationTypeLabel"
           type="text"
           disabled
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-grey-100 text-bt-grey-600 cursor-not-allowed focus:outline-none"
         />
-
-        <select
-          v-else
-          v-model="identificationType"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
-        >
-          <option
-            v-for="option in identificationTypeOptionsForPhysical"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
       </div>
 
-      <div>
+      <div class="md:col-span-2">
         <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
           {{ $t("clients.fields.identification") }}
         </label>
         <input
           v-model="identification"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('identification')"
         />
+        <BTFieldError :message="getError('identification')" />
       </div>
 
       <div>
@@ -220,8 +221,10 @@ onMounted(async () => {
         <input
           v-model="tradeName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('tradeName')"
         />
+        <BTFieldError :message="getError('tradeName')" />
       </div>
 
       <div>
@@ -231,8 +234,10 @@ onMounted(async () => {
         <input
           v-model="contactName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('contactName')"
         />
+        <BTFieldError :message="getError('contactName')" />
       </div>
 
       <div>
@@ -242,8 +247,10 @@ onMounted(async () => {
         <input
           v-model="email"
           type="email"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('email')"
         />
+        <BTFieldError :message="getError('email')" />
       </div>
 
       <div>
@@ -253,8 +260,10 @@ onMounted(async () => {
         <input
           v-model="primaryPhone"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('primaryPhone')"
         />
+        <BTFieldError :message="getError('primaryPhone')" />
       </div>
 
       <div>
@@ -264,8 +273,10 @@ onMounted(async () => {
         <input
           v-model="secondaryPhone"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('secondaryPhone')"
         />
+        <BTFieldError :message="getError('secondaryPhone')" />
       </div>
 
       <div>
@@ -275,8 +286,10 @@ onMounted(async () => {
         <input
           v-model="industry"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('industry')"
         />
+        <BTFieldError :message="getError('industry')" />
       </div>
 
       <div>
@@ -286,8 +299,10 @@ onMounted(async () => {
         <input
           v-model="clientType"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('clientType')"
         />
+        <BTFieldError :message="getError('clientType')" />
       </div>
 
       <div>
@@ -300,8 +315,10 @@ onMounted(async () => {
           min="0"
           max="100"
           step="1"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('score')"
         />
+        <BTFieldError :message="getError('score')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">

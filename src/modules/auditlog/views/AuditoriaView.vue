@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-vue-next";
 
 import { AuditService } from "@/core/services/auditService";
+import { describeDownloadError, downloadBlob } from "@/core/utils/download";
+import { isDateRangeValid } from "@/shared/validation/rules";
 import { useToastStore } from "@/core/stores/toastStore";
 
 import type { AuditLog, AuditBrowseQuery } from "@/core/interfaces/audit";
@@ -15,7 +17,10 @@ const logs = ref<AuditLog[]>([]);
 const loading = ref(false);
 
 const page = ref(1);
-const itemsPerPage = 10;
+// El resto de vistas permite elegir el tamaño de página; aquí estaba fijo en 10.
+const pageSize = ref(10);
+const search = ref("");
+const exporting = ref(false);
 
 const selectedLog = ref<AuditLog | null>(null);
 const showDetailModal = ref(false);
@@ -27,13 +32,29 @@ const filters = ref({
   action: "",
 });
 
+/** Búsqueda libre sobre las columnas visibles del registro. */
+const filteredLogs = computed(() => {
+  const term = search.value.trim().toLowerCase();
+  if (!term) return logs.value;
+
+  return logs.value.filter((log) =>
+    [log.module, log.action, log.entity, log.ip, log.userAgent]
+      .map((value) => String(value ?? "").toLowerCase())
+      .some((value) => value.includes(term)),
+  );
+});
+
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(logs.value.length / itemsPerPage)),
+  Math.max(1, Math.ceil(filteredLogs.value.length / pageSize.value)),
 );
 
 const paginatedLogs = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return logs.value.slice(start, start + itemsPerPage);
+  const start = (page.value - 1) * pageSize.value;
+  return filteredLogs.value.slice(start, start + pageSize.value);
+});
+
+watch([search, pageSize], () => {
+  page.value = 1;
 });
 
 const pageNumbers = computed(() => {
@@ -49,24 +70,29 @@ const pageNumbers = computed(() => {
 const canGoPrevious = computed(() => page.value > 1);
 const canGoNext = computed(() => page.value < totalPages.value);
 
-function formatToBackendDate(dateStr: string, isEndOfDay = false): string | undefined {
+function formatToBackendDate(
+  dateStr: string,
+  isEndOfDay = false,
+): string | undefined {
   if (!dateStr) return undefined;
   return isEndOfDay ? `${dateStr}T23:59:59Z` : `${dateStr}T00:00:00Z`;
 }
 
 async function fetchLogs() {
+  if (!isDateRangeValid(filters.value.from, filters.value.to)) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("validation.dateRange"),
+    });
+    return;
+  }
+
   loading.value = true;
   page.value = 1;
 
   try {
-    const query: AuditBrowseQuery = {
-      from: formatToBackendDate(filters.value.from),
-      to: formatToBackendDate(filters.value.to, true),
-      module: filters.value.module || undefined,
-      action: filters.value.action || undefined,
-    };
-
-    const response = await AuditService.browse(query);
+    const response = await AuditService.browse(buildQuery());
     logs.value = Array.isArray(response) ? response : [];
   } catch {
     toastStore.addToast({
@@ -110,6 +136,41 @@ function goToPage(targetPage: number) {
   page.value = targetPage;
 }
 
+function buildQuery(): AuditBrowseQuery {
+  return {
+    from: formatToBackendDate(filters.value.from),
+    to: formatToBackendDate(filters.value.to, true),
+    module: filters.value.module || undefined,
+    action: filters.value.action || undefined,
+  };
+}
+
+/** Los botones de exportar existían en la interfaz pero no hacían nada. */
+async function exportLogs(format: "pdf" | "excel") {
+  exporting.value = true;
+
+  try {
+    const query = buildQuery();
+    const blob =
+      format === "pdf"
+        ? await AuditService.exportPdf(query)
+        : await AuditService.exportExcel(query);
+
+    await downloadBlob(
+      blob,
+      format === "pdf" ? "audit-log.pdf" : "audit-log.xlsx",
+    );
+  } catch (error) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: describeDownloadError(error, t("audit.messages.exportError")),
+    });
+  } finally {
+    exporting.value = false;
+  }
+}
+
 onMounted(fetchLogs);
 </script>
 
@@ -133,16 +194,27 @@ onMounted(fetchLogs);
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
         <!-- Left: date range + module + action + Search + Refresh -->
-        <div class="flex flex-col sm:flex-row flex-wrap gap-bt-spacing-12 flex-1">
+        <div
+          class="flex min-w-0 flex-1 flex-col flex-wrap gap-bt-spacing-12 sm:flex-row"
+        >
+          <input
+            v-model="search"
+            type="text"
+            :placeholder="$t('audit.searchPlaceholder')"
+            class="min-w-0 flex-1 sm:min-w-[14rem] px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          />
+
           <input
             v-model="filters.from"
             type="date"
+            :max="filters.to || undefined"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           />
 
           <input
             v-model="filters.to"
             type="date"
+            :min="filters.from || undefined"
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           />
 
@@ -154,7 +226,9 @@ onMounted(fetchLogs);
             <option value="Taxes">{{ $t("audit.modules.taxes") }}</option>
             <option value="Products">{{ $t("audit.modules.products") }}</option>
             <option value="Auth">{{ $t("audit.modules.auth") }}</option>
-            <option value="Inventory">{{ $t("audit.modules.inventory") }}</option>
+            <option value="Inventory">
+              {{ $t("audit.modules.inventory") }}
+            </option>
             <option value="Usuarios">{{ $t("audit.modules.users") }}</option>
           </select>
 
@@ -188,17 +262,31 @@ onMounted(fetchLogs);
           </button>
         </div>
 
-        <!-- Right: Export PDF + Export Excel -->
-        <div class="flex items-center gap-bt-spacing-12 shrink-0">
+        <!-- Right: page size + Export PDF + Export Excel -->
+        <div class="flex shrink-0 flex-wrap items-center gap-bt-spacing-12">
+          <select
+            v-model.number="pageSize"
+            class="px-bt-spacing-12 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+
           <button
             type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition font-bt-semibold"
+            :disabled="exporting"
+            class="shrink-0 whitespace-nowrap px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-warning-500 text-bt-white hover:bg-bt-warning-700 transition font-bt-semibold disabled:bg-bt-disabled disabled:cursor-not-allowed"
+            @click="exportLogs('pdf')"
           >
             {{ $t("audit.actions.exportPdf") }}
           </button>
           <button
             type="button"
-            class="px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold"
+            :disabled="exporting"
+            class="shrink-0 whitespace-nowrap px-bt-spacing-16 py-bt-spacing-12 rounded-m bg-bt-success-500 text-bt-white hover:bg-bt-success-700 transition font-bt-semibold disabled:bg-bt-disabled disabled:cursor-not-allowed"
+            @click="exportLogs('excel')"
           >
             {{ $t("audit.actions.exportExcel") }}
           </button>
@@ -235,7 +323,9 @@ onMounted(fetchLogs);
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
                 {{ $t("audit.table.ip") }}
               </th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-24">
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-24"
+              >
                 {{ $t("common.actions") }}
               </th>
             </tr>
@@ -256,7 +346,9 @@ onMounted(fetchLogs);
               :key="log.auditId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm"
+              >
                 {{ formatDate(log.eventDate) }}
               </td>
 
@@ -273,7 +365,9 @@ onMounted(fetchLogs);
                 </div>
               </td>
 
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm"
+              >
                 {{ log.entity }}
                 <span v-if="log.entityId" class="text-bt-grey-400 text-xs ml-1">
                   #{{ log.entityId }}
@@ -289,11 +383,15 @@ onMounted(fetchLogs);
                 </span>
               </td>
 
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700 text-sm"
+              >
                 {{ log.userId || "-" }}
               </td>
 
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-500 text-sm font-mono">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-500 text-sm font-mono"
+              >
                 {{ log.ip || "-" }}
               </td>
 
@@ -301,7 +399,10 @@ onMounted(fetchLogs);
                 <button
                   type="button"
                   class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100 transition text-sm"
-                  @click="selectedLog = log; showDetailModal = true"
+                  @click="
+                    selectedLog = log;
+                    showDetailModal = true;
+                  "
                 >
                   {{ $t("common.viewDetails") }}
                 </button>
@@ -316,9 +417,10 @@ onMounted(fetchLogs);
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ totalPages }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ totalPages }}
           <span class="text-bt-grey-500">
-            ({{ logs.length }} {{ $t("audit.filtered") }})
+            ({{ filteredLogs.length }} {{ $t("audit.filtered") }})
           </span>
         </div>
 
@@ -338,8 +440,14 @@ onMounted(fetchLogs);
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(1)"
-          >1</button>
-          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          >
+            1
+          </button>
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -352,18 +460,23 @@ onMounted(fetchLogs);
                 : 'border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100'
             "
             @click="goToPage(pageNumber)"
-          >{{ pageNumber }}</button>
+          >
+            {{ pageNumber }}
+          </button>
 
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < totalPages - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >...</span>
+            >...</span
+          >
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < totalPages"
             type="button"
             class="px-bt-spacing-12 py-bt-spacing-8 rounded-m border border-bt-grey-300 text-bt-primary-700 hover:bg-bt-grey-100"
             @click="goToPage(totalPages)"
-          >{{ totalPages }}</button>
+          >
+            {{ totalPages }}
+          </button>
 
           <button
             type="button"
@@ -409,7 +522,9 @@ onMounted(fetchLogs);
             class="px-bt-spacing-24 py-bt-spacing-16 border-b border-bt-grey-200 shrink-0"
           >
             <div class="grid grid-cols-2 md:grid-cols-4 gap-bt-spacing-12">
-              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+              <div
+                class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50"
+              >
                 <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
                   {{ $t("audit.table.module") }}
                 </div>
@@ -417,18 +532,25 @@ onMounted(fetchLogs);
                   {{ selectedLog?.module || "-" }}
                 </div>
               </div>
-              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+              <div
+                class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50"
+              >
                 <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
                   {{ $t("audit.table.entity") }}
                 </div>
                 <div class="text-bt-primary-700 font-bt-semibold text-sm">
                   {{ selectedLog?.entity || "-" }}
-                  <span v-if="selectedLog?.entityId" class="text-bt-grey-400 text-xs ml-1">
+                  <span
+                    v-if="selectedLog?.entityId"
+                    class="text-bt-grey-400 text-xs ml-1"
+                  >
                     #{{ selectedLog.entityId }}
                   </span>
                 </div>
               </div>
-              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+              <div
+                class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50"
+              >
                 <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
                   {{ $t("audit.table.action") }}
                 </div>
@@ -439,7 +561,9 @@ onMounted(fetchLogs);
                   {{ selectedLog?.action }}
                 </span>
               </div>
-              <div class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50">
+              <div
+                class="p-bt-spacing-12 rounded-m border border-bt-grey-200 bg-bt-grey-50"
+              >
                 <div class="text-xs text-bt-grey-500 mb-bt-spacing-4">
                   {{ $t("audit.table.date") }}
                 </div>
@@ -454,20 +578,26 @@ onMounted(fetchLogs);
           <div class="flex-1 min-h-0 overflow-y-auto p-bt-spacing-24">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-bt-spacing-16">
               <div>
-                <div class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8">
+                <div
+                  class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8"
+                >
                   {{ $t("audit.modal.dataBefore") }}
                 </div>
                 <pre
                   class="text-xs bg-bt-grey-50 border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap min-h-[200px]"
-                >{{ parseJson(selectedLog?.dataBefore ?? null) }}</pre>
+                  >{{ parseJson(selectedLog?.dataBefore ?? null) }}</pre
+                >
               </div>
               <div>
-                <div class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8">
+                <div
+                  class="text-xs font-bt-semibold text-bt-grey-600 mb-bt-spacing-8"
+                >
                   {{ $t("audit.modal.dataAfter") }}
                 </div>
                 <pre
                   class="text-xs bg-bt-grey-50 border border-bt-grey-200 rounded-m p-bt-spacing-12 overflow-x-auto text-bt-primary-700 whitespace-pre-wrap min-h-[200px]"
-                >{{ parseJson(selectedLog?.dataAfter ?? null) }}</pre>
+                  >{{ parseJson(selectedLog?.dataAfter ?? null) }}</pre
+                >
               </div>
             </div>
           </div>

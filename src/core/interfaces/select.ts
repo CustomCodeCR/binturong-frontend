@@ -6,5 +6,6 @@ export interface SelectQuery {
 export interface SelectOption {
   id: string;
   label: string;
-  code: string;
+  /** Opcional: el backend lo declara como `string?` y puede venir nulo. */
+  code?: string;
 }

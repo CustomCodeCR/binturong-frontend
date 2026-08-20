@@ -18,6 +18,7 @@ import SupplierEvaluationCreateModal from "@/modules/purchases/components/Suppli
 import type { Supplier, SupplierContact } from "@/core/interfaces/suppliers";
 import type { PurchaseOrder } from "@/core/interfaces/purchasesOrders";
 import type { SupplierEvaluation } from "@/core/interfaces/supplierEvaluations";
+import { downloadBlob } from "@/core/utils/download";
 
 const props = defineProps<{
   supplierId: string;
@@ -537,12 +538,10 @@ async function exportPdf() {
       status: historyStatus.value || undefined,
     });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `supplier-purchase-history-${props.supplierId}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(
+      blob,
+      `supplier-purchase-history-${props.supplierId}.pdf`,
+    );
   } catch {
     toastStore.addToast({
       severity: "error",
@@ -560,12 +559,10 @@ async function exportExcel() {
       status: historyStatus.value || undefined,
     });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `supplier-purchase-history-${props.supplierId}.xlsx`;
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(
+      blob,
+      `supplier-purchase-history-${props.supplierId}.xlsx`,
+    );
   } catch {
     toastStore.addToast({
       severity: "error",

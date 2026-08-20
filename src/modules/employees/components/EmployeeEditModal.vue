@@ -5,6 +5,9 @@ import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { EmployeesService } from "@/core/services/employeesService";
 import { SelectService } from "@/core/services/selectService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildEmployeeSchema } from "@/modules/employees/employeeFormSchema";
 
 import type { Employee } from "@/core/interfaces/employees";
 import type { SelectOption } from "@/core/interfaces/select";
@@ -15,6 +18,8 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError, setError } =
+  useValidation();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -27,13 +32,24 @@ const users = ref<SelectOption[]>([]);
 const userId = ref("");
 const branchId = ref("");
 const fullName = ref("");
+const email = ref("");
 const jobTitle = ref("");
 const baseSalary = ref<number | null>(null);
+const hireDate = ref("");
 const terminationDate = ref("");
 const isActive = ref(true);
 
 function closeModal() {
   modalStore.close();
+}
+
+/**
+ * El backend devuelve `DateTime`/`DateTime?` en ISO y el input `type="date"`
+ * solo entiende `YYYY-MM-DD`.
+ */
+function toDateInput(value?: string | null): string {
+  if (!value) return "";
+  return String(value).slice(0, 10);
 }
 
 async function loadCatalogs() {
@@ -60,31 +76,52 @@ async function loadEmployee() {
     employee.value = response;
 
     userId.value = response.userId ?? "";
-    branchId.value = response.branchId;
+    branchId.value = response.branchId ?? "";
     fullName.value = response.fullName;
+    email.value = response.email ?? "";
     jobTitle.value = response.jobTitle;
     baseSalary.value = response.baseSalary;
-    terminationDate.value = response.terminationDate ?? "";
+    hireDate.value = toDateInput(response.hireDate);
+    terminationDate.value = toDateInput(response.terminationDate);
     isActive.value = response.isActive;
   } finally {
     loading.value = false;
   }
 }
 
+function validateForm(): boolean {
+  const valid = validate(
+    {
+      userId: userId.value,
+      branchId: branchId.value,
+      fullName: fullName.value,
+      email: email.value,
+      jobTitle: jobTitle.value,
+      baseSalary: baseSalary.value,
+    },
+    buildEmployeeSchema(rules, t, {
+      includeNationalId: false,
+      includeHireDate: false,
+    }),
+  );
+
+  if (
+    hireDate.value &&
+    terminationDate.value &&
+    terminationDate.value < hireDate.value
+  ) {
+    setError("terminationDate", t("employees.validation.invalidDateRange"));
+    return false;
+  }
+
+  return valid;
+}
+
 async function submit() {
   if (!employee.value) return;
 
-  if (
-    !userId.value.trim() ||
-    !branchId.value ||
-    !fullName.value.trim() ||
-    !jobTitle.value.trim() ||
-    baseSalary.value === null
-  ) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("employees.validation.requiredUpdate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -95,9 +132,13 @@ async function submit() {
       userId: userId.value.trim(),
       branchId: branchId.value,
       fullName: fullName.value.trim(),
+      // `Email` es obligatorio en UpdateEmployeeCommand (hace Email.Trim()):
+      // omitirlo hacía que la actualización fallara y los cambios se perdieran.
+      email: email.value.trim(),
       jobTitle: jobTitle.value.trim(),
       baseSalary: Number(baseSalary.value),
-      terminationDate: terminationDate.value || "",
+      // `DateOnly?`: "" rompe la deserialización y devuelve 400.
+      terminationDate: terminationDate.value || null,
       isActive: isActive.value,
     });
 
@@ -145,7 +186,8 @@ onMounted(async () => {
         </label>
         <select
           v-model="userId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('userId')"
         >
           <option value="">
             {{ $t("employees.placeholders.selectUser") }}
@@ -154,6 +196,7 @@ onMounted(async () => {
             {{ user.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('userId')" />
       </div>
 
       <div>
@@ -162,7 +205,8 @@ onMounted(async () => {
         </label>
         <select
           v-model="branchId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('branchId')"
         >
           <option value="">
             {{ $t("employees.placeholders.selectBranch") }}
@@ -175,6 +219,7 @@ onMounted(async () => {
             {{ branch.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('branchId')" />
       </div>
 
       <div>
@@ -184,8 +229,23 @@ onMounted(async () => {
         <input
           v-model="fullName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('fullName')"
         />
+        <BTFieldError :message="getError('fullName')" />
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("employees.fields.email") }}
+        </label>
+        <input
+          v-model="email"
+          type="email"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('email')"
+        />
+        <BTFieldError :message="getError('email')" />
       </div>
 
       <div>
@@ -195,8 +255,10 @@ onMounted(async () => {
         <input
           v-model="jobTitle"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('jobTitle')"
         />
+        <BTFieldError :message="getError('jobTitle')" />
       </div>
 
       <div>
@@ -208,8 +270,10 @@ onMounted(async () => {
           type="number"
           min="0"
           step="0.01"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('baseSalary')"
         />
+        <BTFieldError :message="getError('baseSalary')" />
       </div>
 
       <div>
@@ -219,8 +283,10 @@ onMounted(async () => {
         <input
           v-model="terminationDate"
           type="date"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('terminationDate')"
         />
+        <BTFieldError :message="getError('terminationDate')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">

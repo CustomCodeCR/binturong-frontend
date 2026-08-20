@@ -354,6 +354,8 @@ async function toggleClientStatus(client: Client) {
 
   try {
     await ClientsService.update(client.clientId, {
+      // Se reenvía sin cambios: este flujo solo alterna activo/inactivo.
+      identification: client.identification,
       tradeName: client.tradeName,
       contactName: client.contactName,
       email: client.email,

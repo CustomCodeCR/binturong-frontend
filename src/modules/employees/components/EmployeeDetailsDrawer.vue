@@ -10,6 +10,7 @@ import { EmployeesService } from "@/core/services/employeesService";
 import { EmployeeWorkHistoryService } from "@/core/services/employeeWorkHistoryService";
 
 import type { Employee } from "@/core/interfaces/employees";
+import { downloadBlob } from "@/core/utils/download";
 import type {
   EmployeeWorkHistory,
   EmployeeWorkHistoryEntry,
@@ -112,12 +113,7 @@ async function exportWorkHistory() {
       props.employeeId,
     );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `employee-work-history-${props.employeeId}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(blob, `employee-work-history-${props.employeeId}.pdf`);
   } catch {
     toastStore.addToast({
       severity: "error",

@@ -287,6 +287,7 @@ function rejectQuote(quote: Quote) {
     component: QuoteExpireModal,
     props: {
       quoteId: quote.quoteId,
+      mode: "reject",
     },
     onSuccess: async () => {
       patchQuoteInList(quote.quoteId, {
@@ -311,12 +312,12 @@ function rejectQuote(quote: Quote) {
   });
 }
 
-// ← CORREGIDO: Ahora usa el modal (igual que reject)
 function expireQuote(quote: Quote) {
   modalStore.open({
     component: QuoteExpireModal,
     props: {
       quoteId: quote.quoteId,
+      mode: "expire",
     },
     onSuccess: async () => {
       patchQuoteInList(quote.quoteId, {
@@ -482,7 +483,9 @@ onMounted(async () => {
             class="px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
           >
             <option value="all">{{ $t("quotes.filters.allStatus") }}</option>
-            <option value="accepted">{{ $t("quotes.filters.accepted") }}</option>
+            <option value="accepted">
+              {{ $t("quotes.filters.accepted") }}
+            </option>
             <option value="pending">{{ $t("quotes.filters.pending") }}</option>
           </select>
 

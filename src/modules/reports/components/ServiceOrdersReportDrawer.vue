@@ -8,6 +8,7 @@ import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useToastStore } from "@/core/stores/toastStore";
 
 import type { ServiceOrdersReport } from "@/core/interfaces/reports";
+import { downloadBlob } from "@/core/utils/download";
 
 const props = defineProps<{
   fromUtc: string;
@@ -65,12 +66,7 @@ async function exportExcel() {
       props.employeeId ?? null,
     );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "service-orders-report.xlsx";
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(blob, "service-orders-report.xlsx");
   } catch {
     toastStore.addToast({
       severity: "error",

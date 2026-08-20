@@ -58,7 +58,14 @@
     "delete": "Eliminar",
     "activate": "Activar",
     "deactivate": "Desactivar",
-    "viewDetails": "Ver detalles"
+    "viewDetails": "Ver detalles",
+    "clear": "Limpiar",
+    "selectAll": "Seleccionar todo",
+    "file": "Archivo",
+    "notAvailable": "No disponible",
+    "errors": {
+      "loadData": "No se pudieron cargar los datos."
+    }
   },
   "toast": {
     "success": "Éxito",
@@ -113,7 +120,9 @@
       "lockedUntil": "Bloqueado hasta",
       "createdAt": "Creado el",
       "updatedAt": "Actualizado el",
-      "scopes": "Permisos"
+      "scopes": "Permisos",
+      "confirmPassword": "Confirmar contraseña",
+      "noRole": "Sin rol"
     },
     "actions": {
       "search": "Buscar",
@@ -125,7 +134,9 @@
       "reactivate": "Reactivar",
       "close": "Cerrar",
       "save": "Guardar",
-      "saveChanges": "Guardar cambios"
+      "saveChanges": "Guardar cambios",
+      "show": "Mostrar",
+      "hide": "Ocultar"
     },
     "messages": {
       "loadError": "No se pudieron cargar los usuarios.",
@@ -136,13 +147,17 @@
       "deactivateSuccess": "Usuario desactivado correctamente.",
       "deactivateError": "No se pudo desactivar el usuario.",
       "reactivateSuccess": "Usuario reactivado correctamente.",
-      "reactivateError": "No se pudo reactivar el usuario."
+      "reactivateError": "No se pudo reactivar el usuario.",
+      "rolesLoadError": "No se pudieron cargar los roles.",
+      "readError": "No se pudo cargar el usuario."
     },
     "validation": {
       "requiredCreate": "El nombre de usuario, correo electrónico y contraseña son obligatorios.",
       "requiredUpdate": "El nombre de usuario y correo electrónico son obligatorios.",
       "rolesHint": "Solo se pueden asignar roles existentes.",
-      "loadingRoles": "Cargando roles..."
+      "loadingRoles": "Cargando roles...",
+      "passwordHint": "Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.",
+      "passwordMismatch": "Las contraseñas no coinciden."
     },
     "modal": {
       "createTitle": "Crear usuario",
@@ -225,13 +240,18 @@
       "deactivateSuccess": "Rol desactivado correctamente.",
       "deactivateError": "No se pudo desactivar el rol.",
       "reactivateSuccess": "Rol reactivado correctamente.",
-      "reactivateError": "No se pudo reactivar el rol."
+      "reactivateError": "No se pudo reactivar el rol.",
+      "readError": "No se pudo cargar el rol.",
+      "scopesLoadError": "No se pudieron cargar los permisos."
     },
     "validation": {
       "requiredCreate": "El nombre y la descripción son obligatorios.",
       "requiredUpdate": "El nombre y la descripción son obligatorios.",
       "scopesHint": "Selecciona uno o más permisos existentes.",
-      "loadingScopes": "Cargando permisos..."
+      "loadingScopes": "Cargando permisos...",
+      "noScopesSelected": "Este rol se creará sin permisos asignados. Podrá asignarlos después desde la edición del rol.",
+      "selectedCount": "{count} permisos seleccionados",
+      "noScopesAvailable": "No hay permisos disponibles"
     },
     "modal": {
       "createTitle": "Crear rol",
@@ -594,7 +614,8 @@
       "transferSuccess": "Traslado de inventario creado correctamente.",
       "transferError": "No se pudo crear el traslado de inventario.",
       "adjustmentSuccess": "Ajuste físico registrado correctamente.",
-      "adjustmentError": "No se pudo registrar el ajuste físico."
+      "adjustmentError": "No se pudo registrar el ajuste físico.",
+      "catalogsLoadError": "No se pudieron cargar los catálogos de productos."
     },
     "validation": {
       "requiredCreate": "Todos los campos del producto son obligatorios.",
@@ -704,7 +725,11 @@
       "transferApproved": "Traslado aprobado correctamente.",
       "transferApproveError": "No se pudo aprobar el traslado.",
       "transferRejected": "Traslado rechazado correctamente.",
-      "transferRejectError": "No se pudo rechazar el traslado."
+      "transferRejectError": "No se pudo rechazar el traslado.",
+      "loadBranchesError": "No se pudieron cargar las sucursales.",
+      "loadEmployeeError": "No se pudo cargar el empleado.",
+      "transferDeleteNotAllowed": "Solo se pueden eliminar los traslados que siguen pendientes.",
+      "transferNotAvailableForBranch": "Este traslado no pertenece a la sucursal seleccionada."
     },
     "modal": {
       "transferTitle": "Crear traslado de inventario",
@@ -739,8 +764,10 @@
         "productId": "ID de producto",
         "productName": "Nombre del producto",
         "stock": "Stock",
-        "alert": "Alerta"
-      }
+        "alert": "Alerta",
+        "productCode": "Código"
+      },
+      "emptyHint": "Solo se listan los productos con existencias en las bodegas de la sucursal. Si el producto existe pero no aparece, verifique que tenga stock registrado y que la sucursal tenga bodegas asociadas."
     },
     "alerts": {
       "threshold": "Umbral de stock bajo",
@@ -775,7 +802,8 @@
     "movements": {
       "validation": {
         "purchaseInRequired": "Todos los campos de la entrada por compra son obligatorios.",
-        "serviceOutRequired": "Todos los campos de la salida por servicio son obligatorios."
+        "serviceOutRequired": "Todos los campos de la salida por servicio son obligatorios.",
+        "userRequired": "Seleccione la persona responsable del movimiento."
       }
     },
     "adjustment": {
@@ -814,7 +842,11 @@
         "fromWarehouse": "Bodega origen",
         "toWarehouse": "Bodega destino",
         "empty": "No se encontraron líneas."
-      }
+      },
+      "defaultRejectReason": "Rechazado por la persona revisora."
+    },
+    "validation": {
+      "noWarehouses": "No hay bodegas disponibles. Registre al menos una bodega en Sucursales antes de crear movimientos de inventario."
     }
   },
   "branches": {
@@ -875,7 +907,8 @@
       "deleteError": "No se pudo eliminar la sucursal.",
       "transferSuccess": "Traslado creado correctamente.",
       "transferPending": "Traslado registrado como pendiente de aprobación.",
-      "transferError": "No se pudo crear el traslado."
+      "transferError": "No se pudo crear el traslado.",
+      "loadProductsError": "No se pudieron cargar los productos de la sucursal."
     },
     "validation": {
       "requiredCreate": "El código, nombre, dirección y teléfono son obligatorios.",
@@ -1069,7 +1102,8 @@
     },
     "validation": {
       "requiredCreate": "El ID de usuario, sucursal, nombre completo, cédula, correo, puesto, salario base y fecha de ingreso son obligatorios.",
-      "requiredUpdate": "El ID de usuario, sucursal, nombre completo, puesto y salario base son obligatorios."
+      "requiredUpdate": "El ID de usuario, sucursal, nombre completo, puesto y salario base son obligatorios.",
+      "invalidDateRange": "La fecha de salida no puede ser anterior a la fecha de ingreso."
     },
     "modal": {
       "createTitle": "Crear empleado",
@@ -1284,7 +1318,9 @@
         "uploadSuccess": "Adjunto subido correctamente.",
         "uploadError": "No se pudo subir el adjunto.",
         "deleteSuccess": "Adjunto eliminado correctamente.",
-        "deleteError": "No se pudo eliminar el adjunto."
+        "deleteError": "No se pudo eliminar el adjunto.",
+        "openError": "No se pudo abrir el adjunto.",
+        "previewNotAvailable": "Este archivo no tiene vista previa disponible."
       },
       "validation": {
         "required": "El tipo de documento y el archivo son obligatorios."
@@ -1386,7 +1422,17 @@
         "date": "Fecha",
         "notes": "Notas"
       },
-      "empty": "No se encontraron solicitudes."
+      "empty": "No se encontraron solicitudes.",
+      "fields": {
+        "code": "Código",
+        "branch": "Sucursal",
+        "requestedBy": "Solicitado por",
+        "date": "Fecha",
+        "notes": "Notas"
+      },
+      "validation": {
+        "noEmployeeAssigned": "El usuario actual no tiene un empleado asociado."
+      }
     },
     "orders": {
       "empty": "No se encontraron órdenes de compra.",
@@ -1551,10 +1597,12 @@
       },
       "messages": {
         "createSuccess": "Evaluación de proveedor creada correctamente.",
-        "createError": "No se pudo crear la evaluación del proveedor."
+        "createError": "No se pudo crear la evaluación del proveedor.",
+        "loadError": "No se pudieron cargar las evaluaciones de proveedores."
       },
       "validation": {
-        "required": "El proveedor, la puntuación y la fecha de evaluación son obligatorios."
+        "required": "El proveedor, la puntuación y la fecha de evaluación son obligatorios.",
+        "invalidScore": "La calificación debe estar entre 0 y 100."
       },
       "modal": {
         "createTitle": "Crear evaluación de proveedor",
@@ -1719,7 +1767,10 @@
         "deleteSuccess": "Dirección eliminada correctamente.",
         "deleteError": "No se pudo eliminar la dirección.",
         "setPrimarySuccess": "Dirección principal actualizada correctamente.",
-        "setPrimaryError": "No se pudo establecer la dirección principal."
+        "setPrimaryError": "No se pudo establecer la dirección principal.",
+        "loadProvincesError": "No se pudieron cargar las provincias.",
+        "loadCantonsError": "No se pudieron cargar los cantones.",
+        "loadDistrictsError": "No se pudieron cargar los distritos."
       },
       "validation": {
         "required": "El tipo de dirección, dirección, provincia, cantón y distrito son obligatorios."
@@ -1981,6 +2032,12 @@
         "title": "Convertir cotización a factura",
         "description": "Completa la información de la factura antes de la conversión."
       }
+    },
+    "reject": {
+      "modal": {
+        "title": "Rechazar cotización",
+        "description": "Indique el motivo del rechazo. Quedará registrado en el historial de la cotización."
+      }
     }
   },
   "contracts": {
@@ -2230,7 +2287,8 @@
       "confirmSuccess": "Orden de venta confirmada correctamente.",
       "confirmError": "No se pudo confirmar la orden de venta.",
       "inventoryUpdated": "La orden fue confirmada y el inventario fue actualizado.",
-      "inventoryMovementInfo": "Al confirmar esta orden, se creará automáticamente un movimiento de salida de inventario por cada línea."
+      "inventoryMovementInfo": "Al confirmar esta orden, se creará automáticamente un movimiento de salida de inventario por cada línea.",
+      "noInventoryMovementRequired": "Esta orden no tiene productos, por lo que no requiere movimiento de inventario."
     },
     "validation": {
       "clientRequired": "Debes seleccionar un cliente antes de continuar.",
@@ -2238,7 +2296,9 @@
       "headerRequired": "El cliente, sucursal, vendedor, moneda y tipo de cambio son obligatorios.",
       "linesRequired": "Se requiere al menos una línea.",
       "invalidLine": "Todas las líneas deben tener producto, cantidad, precio unitario, descuento e impuesto.",
-      "warehouseRequired": "Debes seleccionar una bodega."
+      "warehouseRequired": "Debes seleccionar una bodega.",
+      "insufficientStock": "La sucursal seleccionada no tiene existencias suficientes para esta orden.",
+      "noWarehouseAvailable": "La sucursal seleccionada no tiene bodegas disponibles para despachar la orden."
     },
     "drawer": {
       "createTitle": "Crear orden de venta",
@@ -2317,7 +2377,8 @@
           "discountApplied": "Descuento aplicado correctamente.",
           "discountApplyError": "No se pudo aplicar el descuento.",
           "discountRemoved": "Descuento eliminado correctamente.",
-          "discountRemoveError": "No se pudo eliminar el descuento."
+          "discountRemoveError": "No se pudo eliminar el descuento.",
+          "approvalRequested": "Aprobación del descuento solicitada correctamente."
         }
       },
       "modal": {
@@ -2448,7 +2509,8 @@
         "discountPerc": "Descuento %",
         "taxPerc": "Impuesto %",
         "total": "Total"
-      }
+      },
+      "selectProductFirst": "Seleccione un producto"
     }
   },
   "payments": {
@@ -2545,7 +2607,8 @@
       "invoiceRequired": "Se requiere una factura válida.",
       "amountRequired": "Se requiere un monto válido.",
       "cashInsufficient": "El monto entregado es menor al monto pendiente.",
-      "partialExceedsBalance": "El pago parcial supera el saldo restante."
+      "partialExceedsBalance": "El pago parcial supera el saldo restante.",
+      "invoiceAlreadyPaid": "Esta factura ya está pagada por completo."
     },
     "creditNotes": {
       "empty": "No se encontraron notas de crédito.",
@@ -2583,7 +2646,8 @@
       "messages": {
         "loadError": "No se pudieron cargar las notas de crédito.",
         "createSuccess": "Nota de crédito creada correctamente.",
-        "createError": "No se pudo crear la nota de crédito."
+        "createError": "No se pudo crear la nota de crédito.",
+        "loadInvoiceError": "No se pudo cargar la factura de la nota de crédito."
       },
       "validation": {
         "required": "La factura, motivo, monto total y fecha de emisión son obligatorios.",
@@ -2621,7 +2685,8 @@
       "messages": {
         "loadError": "No se pudieron cargar las notas de débito.",
         "createSuccess": "Nota de débito creada correctamente.",
-        "createError": "No se pudo crear la nota de débito."
+        "createError": "No se pudo crear la nota de débito.",
+        "loadInvoiceError": "No se pudo cargar la factura de la nota de débito."
       },
       "validation": {
         "required": "La factura, motivo, monto total y fecha de emisión son obligatorios.",
@@ -2643,7 +2708,9 @@
     },
     "filters": {
       "periodCode": "Buscar por código de período",
-      "status": "Buscar por estado"
+      "status": "Buscar por estado",
+      "fromDate": "Desde",
+      "toDate": "Hasta"
     },
     "actions": {
       "search": "Buscar",
@@ -2813,11 +2880,12 @@
     },
     "status": {
       "active": "Activo",
-      "inactive": "Inactivo"
+      "inactive": "Inactivo",
+      "availabilityMismatch": "Activo en el catálogo, pero no disponible actualmente"
     },
     "availability": {
-      "active": "Activo",
-      "inactive": "Inactivo",
+      "active": "Disponible",
+      "inactive": "No disponible",
       "maintenance": "En mantenimiento"
     },
     "fields": {
@@ -3580,7 +3648,38 @@
       "dataAfter": "Estado nuevo"
     },
     "messages": {
-      "loadError": "No se pudieron cargar los registros de auditoría."
-    }
+      "loadError": "No se pudieron cargar los registros de auditoría.",
+      "exportError": "No se pudo exportar el registro de auditoría."
+    },
+    "searchPlaceholder": "Buscar por módulo, entidad, acción o IP"
+  },
+  "validation": {
+    "required": "{field} es obligatorio",
+    "arrayRequired": "Debe seleccionar al menos una opción en {field}",
+    "email": "{field} debe tener un formato válido (ejemplo: nombre@dominio.com)",
+    "minLength": "{field} debe tener al menos {min} caracteres",
+    "maxLength": "{field} no debe superar los {max} caracteres",
+    "nameNoDigits": "{field} no puede contener números",
+    "nameInvalid": "{field} debe contener al menos {min} letras y solo caracteres de texto",
+    "textNotOnlyNumbers": "{field} no puede contener únicamente números; escriba una descripción válida",
+    "textTooShort": "{field} debe ser un texto descriptivo de al menos {min} caracteres",
+    "identification": "{field} solo admite números, sin separadores",
+    "identificationLength": "{field} debe tener entre {min} y {max} dígitos",
+    "phone": "{field} solo admite números y los símbolos + - ( )",
+    "phoneLength": "{field} debe tener entre {min} y {max} dígitos",
+    "numeric": "{field} debe contener únicamente números",
+    "code": "{field} solo admite letras, números y los símbolos - _ . (sin espacios)",
+    "codeLength": "{field} debe tener entre {min} y {max} caracteres",
+    "number": "{field} debe ser un número válido",
+    "numberMin": "{field} debe ser mayor o igual a {min}",
+    "numberMax": "{field} debe ser menor o igual a {max}",
+    "positive": "{field} debe ser mayor que 0",
+    "percentage": "{field} debe estar entre 0 y 100",
+    "password": "La contraseña debe tener entre {min} y {max} caracteres, sin espacios, e incluir mayúscula, minúscula, número y un carácter especial",
+    "sameAs": "{field} no coincide con {other}",
+    "dateRange": "La fecha de inicio no puede ser posterior a la fecha final",
+    "summary": "Revise los campos marcados en rojo antes de continuar",
+    "nameInvalidChars": "{field} contiene caracteres no permitidos; use letras, números y los símbolos ' . , & ( ) / -",
+    "passport": "{field} debe tener entre 5 y 20 caracteres y solo admite letras, números y los símbolos . -"
   }
 }

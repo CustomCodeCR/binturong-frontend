@@ -271,7 +271,8 @@ async function confirmTransferReceived() {
     await InventoryTransfersService.confirmInventoryTransfer(
       transfer.value.transferId,
       {
-        receivedByUserId: authStore.userId,
+        // Recibir un traslado ya aprobado no vuelve a exigir aprobación.
+        requireApproval: false,
       },
     );
 

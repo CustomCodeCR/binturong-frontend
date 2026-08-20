@@ -62,7 +62,6 @@ export const AccountingService = {
     return callEndpoint<Blob>({
       ...Endpoints.exportIncomeStatementPdf,
       path,
-      responseType: "blob",
     });
   },
 
@@ -82,7 +81,6 @@ export const AccountingService = {
     return callEndpoint<Blob>({
       ...Endpoints.exportCashFlowExcel,
       path,
-      responseType: "blob",
     });
   },
 

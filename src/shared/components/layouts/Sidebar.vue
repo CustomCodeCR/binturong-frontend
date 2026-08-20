@@ -62,7 +62,7 @@ function isOpen(name?: string) {
 
         <template v-for="item in section.items" :key="item.name">
           <RouterLink
-            v-if="!item.children"
+            v-if="!item.children && item.to"
             :to="item.to"
             class="flex items-center gap-3 px-bt-spacing-16 py-bt-spacing-12 rounded-m text-bt-white hover:bg-bt-primary-600 transition"
             active-class="bg-bt-primary-500"
@@ -95,9 +95,11 @@ function isOpen(name?: string) {
               class="ml-bt-spacing-24 mt-bt-spacing-4 space-y-1"
             >
               <RouterLink
-                v-for="child in item.children"
+                v-for="child in (item.children ?? []).filter(
+                  (entry) => entry.to,
+                )"
                 :key="child.name"
-                :to="child.to"
+                :to="child.to!"
                 class="flex items-center gap-3 px-bt-spacing-16 py-bt-spacing-10 rounded-m text-bt-grey-100 hover:bg-bt-primary-600 transition"
                 active-class="bg-bt-primary-500"
               >

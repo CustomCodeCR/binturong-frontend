@@ -57,14 +57,22 @@ export const QuotesService = {
     return callEndpoint<NoContent>(Endpoints.acceptQuote, { params: { id } });
   },
 
-  reject(id: string, p0: { reason: string; }): Promise<NoContent> {
-    return callEndpoint<NoContent>(Endpoints.expireQuote, { params: { id } });
-  },
-
-  expire(id: string, payload: QuoteRejectRequest): Promise<NoContent> {
+  /**
+   * `POST /api/quotes/{id}/reject` — requiere el motivo en el cuerpo.
+   *
+   * `reject` y `expire` tenían los endpoints intercambiados: rechazar una
+   * cotización marcaba "expirada" y descartaba el motivo, y expirar llamaba a
+   * `/reject` sin cuerpo (lo que el backend rechaza).
+   */
+  reject(id: string, payload: QuoteRejectRequest): Promise<NoContent> {
     return callEndpoint<NoContent, QuoteRejectRequest>(Endpoints.rejectQuote, {
       params: { id },
       body: payload,
     });
+  },
+
+  /** `POST /api/quotes/{id}/expire` — no lleva cuerpo. */
+  expire(id: string): Promise<NoContent> {
+    return callEndpoint<NoContent>(Endpoints.expireQuote, { params: { id } });
   },
 };

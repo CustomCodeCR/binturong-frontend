@@ -4,6 +4,9 @@ import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
 import { WarehousesService } from "@/core/services/warehousesService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildWarehouseSchema } from "@/modules/branches/branchFormSchema";
 
 const props = defineProps<{
   branchId: string;
@@ -11,6 +14,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const code = ref("");
 const name = ref("");
@@ -23,12 +27,20 @@ function closeModal() {
   modalStore.close();
 }
 
+function validateForm(): boolean {
+  return validate(
+    {
+      code: code.value,
+      name: name.value,
+      description: description.value,
+    },
+    buildWarehouseSchema(rules, t),
+  );
+}
+
 async function submit() {
-  if (!code.value.trim() || !name.value.trim() || !description.value.trim()) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("branches.warehouses.validation.requiredCreate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -77,8 +89,10 @@ async function submit() {
         <input
           v-model="code"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('code')"
         />
+        <BTFieldError :message="getError('code')" />
       </div>
 
       <div>
@@ -88,8 +102,10 @@ async function submit() {
         <input
           v-model="name"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('name')"
         />
+        <BTFieldError :message="getError('name')" />
       </div>
 
       <div class="md:col-span-2">
@@ -99,8 +115,10 @@ async function submit() {
         <textarea
           v-model="description"
           rows="3"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('description')"
         />
+        <BTFieldError :message="getError('description')" />
       </div>
 
       <div class="md:col-span-2 flex items-center gap-bt-spacing-8">

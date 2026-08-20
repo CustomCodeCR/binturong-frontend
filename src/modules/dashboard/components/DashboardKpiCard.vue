@@ -50,24 +50,33 @@ function getToneClasses(tone?: string) {
 <template>
   <div
     :class="[
-      'rounded-l border p-bt-spacing-16 shadow-bt-elevation-100 transition',
+      'min-w-0 overflow-hidden rounded-l border p-bt-spacing-16 shadow-bt-elevation-100 transition',
       getToneClasses(tone).wrapper,
     ]"
   >
-    <div class="text-sm font-bt-medium" :class="getToneClasses(tone).title">
+    <div
+      class="text-sm font-bt-medium break-words"
+      :class="getToneClasses(tone).title"
+    >
       {{ title }}
     </div>
 
+    <!--
+      El monto se salía de la tarjeta con cifras de miles o con el zoom del
+      navegador reducido: el tamaño era fijo (`text-3xl`) y el número no
+      rompía línea. Ahora escala por breakpoint y siempre puede envolver.
+    -->
     <div
-      class="mt-bt-spacing-8 text-3xl font-bt-bold"
+      class="mt-bt-spacing-8 text-xl font-bt-bold leading-tight tabular-nums break-words md:text-2xl xl:text-3xl"
       :class="getToneClasses(tone).value"
+      :title="String(value)"
     >
       {{ value }}
     </div>
 
     <div
       v-if="subtitle"
-      class="mt-bt-spacing-8 text-sm"
+      class="mt-bt-spacing-8 text-sm break-words"
       :class="getToneClasses(tone).subtitle"
     >
       {{ subtitle }}

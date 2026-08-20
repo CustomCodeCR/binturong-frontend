@@ -222,7 +222,8 @@ async function submit() {
   const normalizedContractId = contractId.value.trim() || null;
   const normalizedScheduledDate = toIsoString(scheduledDate.value);
   const normalizedAddress = serviceAddress.value.trim();
-  const normalizedNotes = notes.value.trim() || null;
+  // El backend declara `string Notes` (no nulable): se envía cadena vacía.
+  const normalizedNotes = notes.value.trim();
 
   if (
     !normalizedCode ||
@@ -261,6 +262,9 @@ async function submit() {
       services: normalizedServices.value,
       materials: normalizedMaterials.value,
       checklists: normalizedChecklists.value,
+      // El backend espera la lista siempre presente; omitirla la deserializa
+      // como null y rompe el handler.
+      photos: [],
     });
 
     toastStore.addToast({

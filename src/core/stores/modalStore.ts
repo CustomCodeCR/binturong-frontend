@@ -7,7 +7,8 @@ export interface ModalOpenOptions<
 > {
   component: Component;
   props?: Record<string, any>;
-  onSuccess?: (payload: TSuccess) => void;
+  /** El payload es opcional: muchos modales solo señalan que terminaron bien. */
+  onSuccess?: (payload?: TSuccess) => void;
   onError?: (error: TError) => void;
   blockScroll?: boolean;
 }
@@ -17,7 +18,7 @@ export const useModalStore = defineStore("modal", {
     isOpen: false,
     component: null as Component | null,
     props: {} as Record<string, any>,
-    onSuccess: undefined as ((p: any) => void) | undefined,
+    onSuccess: undefined as ((p?: any) => void) | undefined,
     onError: undefined as ((e: any) => void) | undefined,
     blockScroll: true as boolean,
   }),

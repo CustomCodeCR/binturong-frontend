@@ -60,8 +60,10 @@ export interface PayrollCommissionRequest {
 // BROWSE / READ MODELS
 // -------------------------
 export interface PayrollsBrowseQuery {
+  /** Búsqueda parcial sobre el código y el tipo de planilla. */
   periodCode?: string;
-  fromtUtc?: string; // datetime (sí, el spec dice fromtUtc)
+  /** Nombre real del parámetro en la API (el spec tenía la errata `fromtUtc`). */
+  fromUtc?: string; // datetime
   toUtc?: string; // datetime
   status?: string;
   page?: number;

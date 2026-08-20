@@ -5,11 +5,16 @@ import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { EmployeesService } from "@/core/services/employeesService";
 import { SelectService } from "@/core/services/selectService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildEmployeeSchema } from "@/modules/employees/employeeFormSchema";
 
 import type { SelectOption } from "@/core/interfaces/select";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError, setError } =
+  useValidation();
 
 const branches = ref<SelectOption[]>([]);
 const users = ref<SelectOption[]>([]);
@@ -48,21 +53,40 @@ async function loadCatalogs() {
   }
 }
 
-async function submit() {
+function validateForm(): boolean {
+  const valid = validate(
+    {
+      userId: userId.value,
+      branchId: branchId.value,
+      fullName: fullName.value,
+      nationalId: nationalId.value,
+      email: email.value,
+      jobTitle: jobTitle.value,
+      baseSalary: baseSalary.value,
+      hireDate: hireDate.value,
+    },
+    buildEmployeeSchema(rules, t, {
+      includeNationalId: true,
+      includeHireDate: true,
+    }),
+  );
+
+  // La salida no puede ser anterior al ingreso.
   if (
-    !userId.value.trim() ||
-    !branchId.value ||
-    !fullName.value.trim() ||
-    !nationalId.value.trim() ||
-    !jobTitle.value.trim() ||
-    !email.value.trim() ||
-    baseSalary.value === null ||
-    !hireDate.value
+    hireDate.value &&
+    terminationDate.value &&
+    terminationDate.value < hireDate.value
   ) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("employees.validation.requiredCreate"),
-    });
+    setError("terminationDate", t("employees.validation.invalidDateRange"));
+    return false;
+  }
+
+  return valid;
+}
+
+async function submit() {
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -78,7 +102,9 @@ async function submit() {
       email: email.value.trim(),
       baseSalary: Number(baseSalary.value),
       hireDate: hireDate.value,
-      terminationDate: terminationDate.value || "",
+      // El backend espera `DateOnly?`: una cadena vacía rompe la
+      // deserialización y devuelve 400. Sin fecha de salida se envía null.
+      terminationDate: terminationDate.value || null,
       isActive: isActive.value,
     });
 
@@ -126,7 +152,8 @@ onMounted(async () => {
         </label>
         <select
           v-model="userId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('userId')"
         >
           <option value="">
             {{ $t("employees.placeholders.selectUser") }}
@@ -135,6 +162,7 @@ onMounted(async () => {
             {{ user.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('userId')" />
       </div>
 
       <div>
@@ -143,7 +171,8 @@ onMounted(async () => {
         </label>
         <select
           v-model="branchId"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('branchId')"
         >
           <option value="">
             {{ $t("employees.placeholders.selectBranch") }}
@@ -156,6 +185,7 @@ onMounted(async () => {
             {{ branch.label }}
           </option>
         </select>
+        <BTFieldError :message="getError('branchId')" />
       </div>
 
       <div>
@@ -165,8 +195,10 @@ onMounted(async () => {
         <input
           v-model="fullName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('fullName')"
         />
+        <BTFieldError :message="getError('fullName')" />
       </div>
 
       <div>
@@ -176,8 +208,10 @@ onMounted(async () => {
         <input
           v-model="nationalId"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('nationalId')"
         />
+        <BTFieldError :message="getError('nationalId')" />
       </div>
 
       <div>
@@ -187,8 +221,10 @@ onMounted(async () => {
         <input
           v-model="email"
           type="email"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('email')"
         />
+        <BTFieldError :message="getError('email')" />
       </div>
 
       <div>
@@ -198,8 +234,10 @@ onMounted(async () => {
         <input
           v-model="jobTitle"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('jobTitle')"
         />
+        <BTFieldError :message="getError('jobTitle')" />
       </div>
 
       <div>
@@ -211,8 +249,10 @@ onMounted(async () => {
           type="number"
           min="0"
           step="0.01"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('baseSalary')"
         />
+        <BTFieldError :message="getError('baseSalary')" />
       </div>
 
       <div>
@@ -222,8 +262,10 @@ onMounted(async () => {
         <input
           v-model="hireDate"
           type="date"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('hireDate')"
         />
+        <BTFieldError :message="getError('hireDate')" />
       </div>
 
       <div>
@@ -233,8 +275,10 @@ onMounted(async () => {
         <input
           v-model="terminationDate"
           type="date"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('terminationDate')"
         />
+        <BTFieldError :message="getError('terminationDate')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">

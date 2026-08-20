@@ -8,6 +8,7 @@ import { AuditService } from "@/core/services/auditService";
 
 import type { Role } from "@/core/interfaces/roles";
 import type { AuditLog } from "@/core/interfaces/audit";
+import { downloadBlob } from "@/core/utils/download";
 
 const props = defineProps<{
   roleId: string;
@@ -54,12 +55,7 @@ async function exportPdf() {
     module: "Roles",
   });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `roles-audit-${props.roleId}.pdf`;
-  link.click();
-  URL.revokeObjectURL(url);
+  await downloadBlob(blob, `roles-audit-${props.roleId}.pdf`);
 }
 
 async function exportExcel() {
@@ -67,12 +63,7 @@ async function exportExcel() {
     module: "Roles",
   });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `roles-audit-${props.roleId}.xlsx`;
-  link.click();
-  URL.revokeObjectURL(url);
+  await downloadBlob(blob, `roles-audit-${props.roleId}.xlsx`);
 }
 
 function closeDrawer() {

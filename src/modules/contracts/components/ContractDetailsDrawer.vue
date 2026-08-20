@@ -394,9 +394,11 @@ async function openAttachment(attachment: ContractAttachment) {
       !viewerMimeType.value ||
       viewerMimeType.value === "application/octet-stream"
     ) {
+      // `DownloadAttachmentResponse` solo trae `fileName` y `url`; el
+      // `contentType` viene en el adjunto del listado, no en la descarga.
       viewerMimeType.value =
         blob.type ||
-        result.contentType ||
+        attachment.contentType ||
         guessMimeType(result.fileName || attachment.fileName);
     }
 

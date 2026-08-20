@@ -16,7 +16,6 @@ export const EmployeeWorkHistoryService = {
   exportByEmployeeId(id: string): Promise<Blob> {
     return callEndpoint<Blob>(Endpoints.exportEmployeeWorkHistory, {
       params: { id },
-      responseType: "blob",
     });
   },
 };

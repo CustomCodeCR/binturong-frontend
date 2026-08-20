@@ -3,6 +3,8 @@ import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { DiscountsService } from "@/core/services/discountsService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 import { useModalStore } from "@/core/stores/modalStore";
 import { useToastStore } from "@/core/stores/toastStore";
 
@@ -19,6 +21,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const modalStore = useModalStore();
 const toastStore = useToastStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const saving = ref(false);
 
@@ -45,28 +48,38 @@ function closeModal() {
   modalStore.close();
 }
 
+function validateForm(): boolean {
+  const nameLabel = t("discounts.policies.fields.name");
+  const maxLabel = t("discounts.policies.fields.maxDiscountPercentage");
+
+  return validate(
+    {
+      name: name.value,
+      maxDiscountPercentage: maxDiscountPercentage.value,
+    },
+    {
+      name: [
+        rules.required(nameLabel),
+        rules.meaningfulText(nameLabel, 3),
+        rules.maxLength(80, nameLabel),
+      ],
+      maxDiscountPercentage: [
+        rules.required(maxLabel),
+        rules.percentage(maxLabel),
+      ],
+    },
+  );
+}
+
 async function submit() {
   const normalizedName = name.value.trim();
   const normalizedMaxDiscountPercentage = Number(maxDiscountPercentage.value);
 
-  if (!normalizedName) {
+  if (!validateForm()) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("discounts.policies.validation.nameRequired"),
-    });
-    return;
-  }
-
-  if (
-    Number.isNaN(normalizedMaxDiscountPercentage) ||
-    normalizedMaxDiscountPercentage < 0 ||
-    normalizedMaxDiscountPercentage > 100
-  ) {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("discounts.policies.validation.maxDiscountInvalid"),
+      message: firstError.value,
     });
     return;
   }
@@ -145,8 +158,10 @@ async function submit() {
         <input
           v-model="name"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('name')"
         />
+        <BTFieldError :message="getError('name')" />
       </div>
 
       <div>
@@ -159,8 +174,10 @@ async function submit() {
           min="0"
           max="100"
           step="0.01"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('maxDiscountPercentage')"
         />
+        <BTFieldError :message="getError('maxDiscountPercentage')" />
       </div>
 
       <label class="flex items-center gap-bt-spacing-12">

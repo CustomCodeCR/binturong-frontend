@@ -4,6 +4,8 @@ import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { UsersService } from "@/core/services/usersService";
 import { SelectService } from "@/core/services/selectService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 import type { User } from "@/core/interfaces/users";
 
 interface RoleOption {
@@ -17,6 +19,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -117,16 +120,36 @@ async function syncRole() {
   }
 }
 
+function validateForm(): boolean {
+  const usernameLabel = t("users.fields.username");
+  const emailLabel = t("users.fields.email");
+  const attemptsLabel = t("users.fields.failedAttempts");
+
+  return validate(
+    {
+      username: username.value,
+      email: email.value,
+      failedAttempts: failedAttempts.value,
+    },
+    {
+      username: [
+        rules.required(usernameLabel),
+        rules.minLength(3, usernameLabel),
+        rules.maxLength(50, usernameLabel),
+      ],
+      email: [rules.required(emailLabel), rules.email(emailLabel)],
+      failedAttempts: [rules.min(0, attemptsLabel)],
+    },
+  );
+}
+
 async function submit() {
   if (!user.value) {
     return;
   }
 
-  if (!username.value.trim() || !email.value.trim()) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("users.validation.requiredUpdate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -204,8 +227,10 @@ onMounted(async () => {
         <input
           v-model="username"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('username')"
         />
+        <BTFieldError :message="getError('username')" />
       </div>
 
       <div>
@@ -215,8 +240,10 @@ onMounted(async () => {
         <input
           v-model="email"
           type="email"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('email')"
         />
+        <BTFieldError :message="getError('email')" />
       </div>
 
       <div class="md:col-span-2">
@@ -229,7 +256,7 @@ onMounted(async () => {
           :disabled="loadingRoles"
           class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500 disabled:bg-bt-grey-100"
         >
-          <option value="">No role</option>
+          <option value="">{{ $t("users.fields.noRole") }}</option>
           <option
             v-for="role in roleOptions"
             :key="role.roleId"
@@ -266,8 +293,10 @@ onMounted(async () => {
           v-model.number="failedAttempts"
           type="number"
           min="0"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('failedAttempts')"
         />
+        <BTFieldError :message="getError('failedAttempts')" />
       </div>
 
       <div>
@@ -303,4 +332,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-

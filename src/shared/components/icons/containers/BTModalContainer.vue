@@ -41,23 +41,36 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
           />
         </Transition>
 
-        <!-- Panel wrapper -->
+        <!--
+          El contenedor externo es `fixed inset-0` (alto = viewport). Antes el
+          panel usaba `min-h-screen` sin scroll propio, así que un formulario
+          más alto que la pantalla quedaba recortado y el botón de guardar no
+          se podía alcanzar. Ahora el wrapper hace scroll y el panel se centra
+          solo cuando cabe.
+        -->
         <Transition name="scale-fade">
           <div
-            class="relative inset-0 min-h-screen flex items-center justify-center p-4"
+            class="absolute inset-0 overflow-y-auto overscroll-contain p-4"
             role="dialog"
             aria-modal="true"
             aria-label="Modal"
           >
-            <div class="relative w-full max-w-2xl" @click.stop>
-              <component
-                :is="store.component"
-                v-bind="store.props"
-                v-model:open="store.isOpen"
-                @success="handleSuccess"
-                @error="handleError"
-                @update:open="store.setOpen"
-              />
+            <div class="flex min-h-full items-center justify-center">
+              <!--
+                Cada modal declara su propio `max-w-*`; el contenedor ya no lo
+                limita a `max-w-2xl` para que los formularios anchos no queden
+                comprimidos en pantallas grandes.
+              -->
+              <div class="relative flex w-full justify-center" @click.stop>
+                <component
+                  :is="store.component"
+                  v-bind="store.props"
+                  v-model:open="store.isOpen"
+                  @success="handleSuccess"
+                  @error="handleError"
+                  @update:open="store.setOpen"
+                />
+              </div>
             </div>
           </div>
         </Transition>

@@ -220,6 +220,7 @@ function rejectQuote() {
     component: QuoteExpireModal,
     props: {
       quoteId: quote.value.quoteId,
+      mode: "reject",
     },
     onSuccess: async () => {
       toastStore.addToast({
@@ -240,26 +241,33 @@ function rejectQuote() {
   });
 }
 
-async function expireQuote() {
+function expireQuote() {
   if (!quote.value) return;
 
-  try {
-    await QuotesService.expire(quote.value.quoteId);
+  // Expirar es irreversible: se confirma en el modal antes de llamar a la API.
+  modalStore.open({
+    component: QuoteExpireModal,
+    props: {
+      quoteId: quote.value.quoteId,
+      mode: "expire",
+    },
+    onSuccess: async () => {
+      toastStore.addToast({
+        severity: "success",
+        title: t("toast.success"),
+        message: t("quotes.messages.expireSuccess"),
+      });
 
-    toastStore.addToast({
-      severity: "success",
-      title: t("toast.success"),
-      message: t("quotes.messages.expireSuccess"),
-    });
-
-    await loadQuote();
-  } catch {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("quotes.messages.expireError"),
-    });
-  }
+      await loadQuote();
+    },
+    onError: (error) => {
+      toastStore.addToast({
+        severity: "error",
+        title: t("toast.error"),
+        message: error?.message ?? t("quotes.messages.expireError"),
+      });
+    },
+  });
 }
 
 function openConvertContractModal() {

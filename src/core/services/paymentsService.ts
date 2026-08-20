@@ -94,12 +94,10 @@ export const PaymentsService = {
       Endpoints.reportPaymentPdf.path +
       (query ? toQueryString(query as Record<string, unknown>) : "");
 
-    // ⚠️ Requiere que fetchClient soporte responseType "blob" (ver fix mínimo abajo)
+    // fetchClient devuelve un Blob al detectar un Content-Type binario.
     return callEndpoint<Blob>({
       ...Endpoints.reportPaymentPdf,
       path: endpointWithQuery,
-      // extraHeaders opcional si querés forzar accept
-      // extraHeaders: { Accept: "application/pdf" },
     });
   },
 
@@ -111,7 +109,6 @@ export const PaymentsService = {
       Endpoints.reportPaymentExcel.path +
       (query ? toQueryString(query as Record<string, unknown>) : "");
 
-    // ⚠️ Requiere que fetchClient soporte responseType "blob" (ver fix mínimo abajo)
     return callEndpoint<Blob>({
       ...Endpoints.reportPaymentExcel,
       path: endpointWithQuery,

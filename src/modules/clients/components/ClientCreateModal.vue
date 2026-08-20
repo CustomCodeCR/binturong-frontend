@@ -4,9 +4,13 @@ import { useI18n } from "vue-i18n";
 
 import { useModalStore } from "@/core/stores/modalStore";
 import { ClientsService } from "@/core/services/clientsService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildClientSchema } from "@/modules/clients/clientFormSchema";
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const personTypeOptions = [
   { value: "Juridico", label: "Jurídico" },
@@ -57,20 +61,26 @@ function closeModal() {
   modalStore.close();
 }
 
+function validateForm(): boolean {
+  return validate(
+    {
+      identification: identification.value,
+      tradeName: tradeName.value,
+      contactName: contactName.value,
+      email: email.value,
+      primaryPhone: primaryPhone.value,
+      secondaryPhone: secondaryPhone.value,
+      industry: industry.value,
+      clientType: clientType.value,
+      score: score.value,
+    },
+    buildClientSchema(rules, t, identificationType.value),
+  );
+}
+
 async function submit() {
-  if (
-    !personType.value.trim() ||
-    !identificationType.value.trim() ||
-    !identification.value.trim() ||
-    !tradeName.value.trim() ||
-    !contactName.value.trim() ||
-    !email.value.trim() ||
-    !primaryPhone.value.trim()
-  ) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("clients.validation.requiredCreate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -172,8 +182,10 @@ async function submit() {
         <input
           v-model="identification"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('identification')"
         />
+        <BTFieldError :message="getError('identification')" />
       </div>
 
       <div>
@@ -183,8 +195,10 @@ async function submit() {
         <input
           v-model="tradeName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('tradeName')"
         />
+        <BTFieldError :message="getError('tradeName')" />
       </div>
 
       <div>
@@ -194,8 +208,10 @@ async function submit() {
         <input
           v-model="contactName"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('contactName')"
         />
+        <BTFieldError :message="getError('contactName')" />
       </div>
 
       <div>
@@ -205,8 +221,10 @@ async function submit() {
         <input
           v-model="email"
           type="email"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('email')"
         />
+        <BTFieldError :message="getError('email')" />
       </div>
 
       <div>
@@ -216,8 +234,10 @@ async function submit() {
         <input
           v-model="primaryPhone"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('primaryPhone')"
         />
+        <BTFieldError :message="getError('primaryPhone')" />
       </div>
 
       <div>
@@ -227,8 +247,10 @@ async function submit() {
         <input
           v-model="secondaryPhone"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('secondaryPhone')"
         />
+        <BTFieldError :message="getError('secondaryPhone')" />
       </div>
 
       <div>
@@ -238,8 +260,10 @@ async function submit() {
         <input
           v-model="industry"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('industry')"
         />
+        <BTFieldError :message="getError('industry')" />
       </div>
 
       <div>
@@ -249,8 +273,10 @@ async function submit() {
         <input
           v-model="clientType"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('clientType')"
         />
+        <BTFieldError :message="getError('clientType')" />
       </div>
 
       <div>
@@ -263,8 +289,10 @@ async function submit() {
           min="0"
           max="100"
           step="1"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('score')"
         />
+        <BTFieldError :message="getError('score')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8 pt-bt-spacing-32">

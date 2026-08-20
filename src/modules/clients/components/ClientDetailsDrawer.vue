@@ -8,6 +8,7 @@ import { useToastStore } from "@/core/stores/toastStore";
 
 import { ClientsService } from "@/core/services/clientsService";
 import { AttachmentsService } from "@/core/services/attachmentsService";
+import { downloadBlob } from "@/core/utils/download";
 
 import ClientContactModal from "@/modules/clients/components/ClientContactModal.vue";
 import ClientAddressModal from "@/modules/clients/components/ClientAddressModal.vue";
@@ -455,12 +456,7 @@ async function exportPdf() {
       status: historyStatus.value || undefined,
     });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `client-history-${props.clientId}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(blob, `client-history-${props.clientId}.pdf`);
   } catch {
     toastStore.addToast({
       severity: "error",

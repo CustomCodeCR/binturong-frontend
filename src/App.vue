@@ -6,9 +6,14 @@ import { RouterView } from "vue-router";
 </script>
 
 <template>
-  <BTToastContainer />
   <BTModalContainer />
   <BTDrawerContainer />
+  <!--
+    El contenedor de notificaciones va de último y con el z-index más alto:
+    antes se renderizaba antes que el modal y, al compartir `z-[9999]`, los
+    mensajes de validación quedaban tapados por el modal abierto.
+  -->
+  <BTToastContainer />
 
   <RouterView />
 </template>

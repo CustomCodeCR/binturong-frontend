@@ -186,7 +186,6 @@ export const DiscountsService = {
     return callEndpoint<Blob>({
       ...Endpoints.exportDiscountHistory,
       path,
-      responseType: "blob",
     });
   },
 };

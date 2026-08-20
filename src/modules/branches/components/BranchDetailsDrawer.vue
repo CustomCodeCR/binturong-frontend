@@ -22,6 +22,7 @@ import type {
   BranchSalesReport,
 } from "@/core/interfaces/branches";
 import type { SelectOption } from "@/core/interfaces/select";
+import { downloadBlob } from "@/core/utils/download";
 
 interface WarehouseSuccessPayload {
   warehouseId: string;
@@ -222,12 +223,7 @@ async function exportPdf() {
       to: reportTo.value || undefined,
     });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `branch-report-${props.branchId}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(blob, `branch-report-${props.branchId}.pdf`);
   } catch {
     toastStore.addToast({
       severity: "error",
@@ -247,12 +243,7 @@ async function exportExcel() {
       },
     );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `branch-report-${props.branchId}.xlsx`;
-    link.click();
-    URL.revokeObjectURL(url);
+    await downloadBlob(blob, `branch-report-${props.branchId}.xlsx`);
   } catch {
     toastStore.addToast({
       severity: "error",

@@ -23,6 +23,15 @@ const authStore = useAuthStore();
 const branches = ref<Branch[]>([]);
 const products = ref<SelectOption[]>([]);
 
+/**
+ * Respaldo del catálogo de bodegas.
+ *
+ * El desplegable dependía únicamente de `branch.warehouses`; cuando la sucursal
+ * llega sin bodegas embebidas la lista quedaba vacía y no se podía registrar
+ * ningún movimiento. Con este respaldo se ofrecen las bodegas del catálogo.
+ */
+const allWarehouses = ref<SelectOption[]>([]);
+
 const branchId = ref("");
 const warehouseId = ref("");
 const productId = ref("");
@@ -40,6 +49,26 @@ const selectedBranch = computed(
   () =>
     branches.value.find((branch) => branch.branchId === branchId.value) ?? null,
 );
+
+const warehouseOptions = computed(() => {
+  const branchWarehouses = selectedBranch.value?.warehouses ?? [];
+
+  if (branchWarehouses.length > 0) {
+    return branchWarehouses.map((warehouse) => ({
+      id: warehouse.warehouseId,
+      label: `${warehouse.code} - ${warehouse.name}`,
+    }));
+  }
+
+  return allWarehouses.value.map((warehouse) => ({
+    id: warehouse.id,
+    label: warehouse.code
+      ? `${warehouse.code} - ${warehouse.label}`
+      : warehouse.label,
+  }));
+});
+
+const hasWarehouseOptions = computed(() => warehouseOptions.value.length > 0);
 
 const title = computed(() => {
   if (props.mode === "purchase-in") return t("inventory.modal.purchaseInTitle");
@@ -67,13 +96,22 @@ async function loadCatalogs() {
   loadingCatalogs.value = true;
 
   try {
-    const [branchesResponse, productsResponse] = await Promise.all([
-      BranchesService.browse({ page: 1, pageSize: 100 }),
-      SelectService.selectProducts({ onlyActive: true }),
-    ]);
+    const [branchesResponse, productsResponse, warehousesResponse] =
+      await Promise.all([
+        BranchesService.browse({ page: 1, pageSize: 100 }),
+        SelectService.selectProducts({ onlyActive: true }),
+        SelectService.selectWarehouses({ onlyActive: true }),
+      ]);
 
     branches.value = branchesResponse ?? [];
     products.value = productsResponse ?? [];
+    allWarehouses.value = warehousesResponse ?? [];
+
+    // Con una sola sucursal disponible se preselecciona para que el
+    // desplegable de bodegas quede utilizable de inmediato.
+    if (!branchId.value && branches.value.length === 1) {
+      branchId.value = branches.value[0].branchId;
+    }
   } catch (error: any) {
     modalStore.onError?.({
       code: error?.status ?? 500,
@@ -243,13 +281,20 @@ onMounted(async () => {
             {{ $t("inventory.placeholders.selectWarehouse") }}
           </option>
           <option
-            v-for="warehouse in selectedBranch?.warehouses ?? []"
-            :key="warehouse.warehouseId"
-            :value="warehouse.warehouseId"
+            v-for="warehouse in warehouseOptions"
+            :key="warehouse.id"
+            :value="warehouse.id"
           >
-            {{ warehouse.code }} - {{ warehouse.name }}
+            {{ warehouse.label }}
           </option>
         </select>
+
+        <p
+          v-if="!hasWarehouseOptions"
+          class="mt-bt-spacing-8 text-sm text-bt-warning-700"
+        >
+          {{ $t("inventory.validation.noWarehouses") }}
+        </p>
       </div>
 
       <div class="md:col-span-2">

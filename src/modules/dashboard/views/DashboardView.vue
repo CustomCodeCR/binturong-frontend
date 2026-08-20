@@ -14,6 +14,7 @@ import {
 import { DashboardService } from "@/core/services/dashboardService";
 import { SelectService } from "@/core/services/selectService";
 
+import { usePreferencesStore } from "@/core/stores/preferencesStore";
 import { useToastStore } from "@/core/stores/toastStore";
 
 import DashboardKpiCard from "@/modules/dashboard/components/DashboardKpiCard.vue";
@@ -23,14 +24,19 @@ import type { SelectOption } from "@/core/interfaces/select";
 
 const { t } = useI18n();
 const toastStore = useToastStore();
+const preferencesStore = usePreferencesStore();
+
+// La preferencia de actualización automática se persiste por usuario: antes
+// vivía solo en memoria y se reactivaba al refrescar o cambiar de módulo.
+preferencesStore.load();
 
 const loading = ref(false);
 const refreshing = ref(false);
 const dashboard = ref<Dashboard | null>(null);
 const branches = ref<SelectOption[]>([]);
 const selectedBranchId = ref<string>("");
-const autoRefreshEnabled = ref(true);
-const autoRefreshSeconds = ref(60);
+const autoRefreshEnabled = ref(preferencesStore.dashboard.autoRefreshEnabled);
+const autoRefreshSeconds = ref(preferencesStore.dashboard.autoRefreshSeconds);
 const permissionDenied = ref(false);
 const hasLoadedOnce = ref(false);
 
@@ -236,11 +242,13 @@ watch(selectedBranchId, async () => {
   await loadDashboard();
 });
 
-watch(autoRefreshEnabled, () => {
+watch(autoRefreshEnabled, (value) => {
+  preferencesStore.setDashboardPreferences({ autoRefreshEnabled: value });
   configureAutoRefresh();
 });
 
-watch(autoRefreshSeconds, () => {
+watch(autoRefreshSeconds, (value) => {
+  preferencesStore.setDashboardPreferences({ autoRefreshSeconds: value });
   configureAutoRefresh();
 });
 
@@ -443,7 +451,7 @@ onBeforeUnmount(() => {
           class="grid grid-cols-1 gap-bt-spacing-16 md:grid-cols-2 xl:grid-cols-3"
         >
           <div
-            class="rounded-[22px] border border-bt-primary-100 bg-gradient-to-br from-bt-white to-bt-primary-50 p-bt-spacing-16 shadow-bt-elevation-200"
+            class="min-w-0 rounded-[22px] border border-bt-primary-100 bg-gradient-to-br from-bt-white to-bt-primary-50 p-bt-spacing-16 shadow-bt-elevation-200"
           >
             <div class="mb-bt-spacing-12 flex items-center justify-between">
               <div
@@ -463,7 +471,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div
-            class="rounded-[22px] border border-bt-success-100 bg-gradient-to-br from-bt-white to-bt-success-50 p-bt-spacing-16 shadow-bt-elevation-200"
+            class="min-w-0 rounded-[22px] border border-bt-success-100 bg-gradient-to-br from-bt-white to-bt-success-50 p-bt-spacing-16 shadow-bt-elevation-200"
           >
             <div class="mb-bt-spacing-12 flex items-center justify-between">
               <div
@@ -485,7 +493,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div
-            class="rounded-[22px] border p-bt-spacing-16 shadow-bt-elevation-200"
+            class="min-w-0 rounded-[22px] border p-bt-spacing-16 shadow-bt-elevation-200"
             :class="
               dashboard.mainIndicators.criticalInventoryCount > 0
                 ? 'border-bt-error-100 bg-gradient-to-br from-bt-white to-bt-error-50'

@@ -268,7 +268,7 @@ watch(
           <tbody>
             <tr
               v-for="(line, index) in serviceOrder.services"
-              :key="line.serviceOrderDetailId ?? index"
+              :key="line.serviceOrderServiceId ?? index"
               class="border-t border-bt-grey-200"
             >
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
@@ -368,7 +368,7 @@ watch(
           <tbody>
             <tr
               v-for="(line, index) in serviceOrder.checklists"
-              :key="line.serviceOrderChecklistId ?? index"
+              :key="line.checklistId ?? index"
               class="border-t border-bt-grey-200"
             >
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">

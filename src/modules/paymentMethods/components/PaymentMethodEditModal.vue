@@ -3,6 +3,9 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useModalStore } from "@/core/stores/modalStore";
 import { PaymentMethodsService } from "@/core/services/paymentMethodsService";
+import { useValidation } from "@/shared/composables/useValidation";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
+import { buildPaymentMethodSchema } from "@/modules/paymentMethods/paymentMethodFormSchema";
 import type { PaymentMethod } from "@/core/interfaces/paymentMethods";
 
 const props = defineProps<{
@@ -11,6 +14,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const modalStore = useModalStore();
+const { rules, validate, getError, fieldClass, firstError } = useValidation();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -41,14 +45,18 @@ async function loadPaymentMethod() {
   }
 }
 
+function validateForm(): boolean {
+  return validate(
+    { code: code.value, description: description.value },
+    buildPaymentMethodSchema(rules, t),
+  );
+}
+
 async function submit() {
   if (!paymentMethod.value) return;
 
-  if (!code.value.trim() || !description.value.trim()) {
-    modalStore.onError?.({
-      code: 400,
-      message: t("paymentMethods.validation.requiredUpdate"),
-    });
+  if (!validateForm()) {
+    modalStore.onError?.({ code: 400, message: firstError.value });
     return;
   }
 
@@ -103,8 +111,10 @@ onMounted(async () => {
         <input
           v-model="code"
           type="text"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('code')"
         />
+        <BTFieldError :message="getError('code')" />
       </div>
 
       <div>
@@ -114,8 +124,10 @@ onMounted(async () => {
         <textarea
           v-model="description"
           rows="4"
-          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+          :class="fieldClass('description')"
         />
+        <BTFieldError :message="getError('description')" />
       </div>
 
       <div class="flex items-center gap-bt-spacing-8">

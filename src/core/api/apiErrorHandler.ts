@@ -57,8 +57,13 @@ export class ClientError extends ApiError {
  * Error thrown for HTTP 5xx server errors
  */
 export class ServerError extends ApiError {
-  constructor(endpoint: string, method: string, status: number) {
-    super(`Server error (${status}) while accessing ${endpoint}`, endpoint, method, status);
+  constructor(endpoint: string, method: string, status: number, detail?: string | null) {
+    super(
+      detail ? `Server error (${status}): ${detail}` : `Server error (${status})`,
+      endpoint,
+      method,
+      status,
+    );
     this.name = 'ServerError';
 
     Object.setPrototypeOf(this, ServerError.prototype);
@@ -78,6 +83,50 @@ export class MissingParameterError extends Error {
 
     Object.setPrototypeOf(this, MissingParameterError.prototype);
   }
+}
+
+/**
+ * `true` para `application/json` y para los sufijos `+json`
+ * (`application/problem+json`, que es lo que devuelve ASP.NET en los 5xx).
+ */
+function isJsonPayload(contentType: string | null): boolean {
+  const value = (contentType ?? '').toLowerCase();
+  return value.includes('application/json') || value.includes('+json');
+}
+
+/**
+ * Extrae el mensaje real que envió la API.
+ *
+ * El backend responde con tres formas distintas y ninguna usa `message`:
+ *   - validación:  { errors: [{ description }], code, description }
+ *   - negocio:     { code: "Taxes.CodeNotUnique", description: "..." }
+ *   - ProblemDetails: { title, detail, status }
+ * Sin esto, todos los 400 se mostraban como un genérico "Bad request".
+ */
+export function extractServerMessage(errorData: unknown): string | null {
+  if (!errorData || typeof errorData !== 'object') return null;
+
+  const data = errorData as Record<string, any>;
+
+  // Errores de validación: se muestran todos, que es lo que necesita el usuario
+  // para saber qué campos corregir.
+  if (Array.isArray(data.errors) && data.errors.length > 0) {
+    const details = data.errors
+      .map((item: any) =>
+        typeof item === 'string' ? item : item?.description ?? item?.message,
+      )
+      .filter((text: unknown): text is string => typeof text === 'string' && text.trim() !== '');
+
+    if (details.length > 0) return [...new Set(details)].join(' · ');
+  }
+
+  const candidates = [data.description, data.detail, data.message, data.title, data.error];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim() !== '') return candidate;
+  }
+
+  return null;
 }
 
 /**
@@ -101,7 +150,7 @@ export async function handleApiResponse(response: Response, endpoint: string, me
   try {
     // Only try to parse JSON if there's content
     if (response.headers.get('Content-Length') !== '0' &&
-        response.headers.get('Content-Type')?.includes('application/json')) {
+        isJsonPayload(response.headers.get('Content-Type'))) {
       errorData = await response.json();
     }
   } catch (e) {
@@ -111,52 +160,34 @@ export async function handleApiResponse(response: Response, endpoint: string, me
 
   // Client errors (4xx)
   if (status >= 400 && status < 500) {
-    let message = `Client error (${status})`;
+    // El mensaje del servidor siempre gana: dice *qué* falló ("The provided tax
+    // code is not unique"), mientras que el genérico por código de estado solo
+    // dice que algo falló.
+    const serverMessage = extractServerMessage(errorData);
 
-    // Extract error message from response if available
-    if (errorData && typeof errorData === 'object') {
-      if (errorData.message) {
-        message = errorData.message;
-      } else if (errorData.error) {
-        message = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
-      }
-    }
+    const fallbackByStatus: Record<number, string> = {
+      400: 'Bad request',
+      401: 'Authentication required',
+      403: 'Access forbidden',
+      404: 'Resource not found',
+      409: 'The record conflicts with existing data',
+      422: 'Validation failed',
+      429: 'Too many requests',
+    };
 
-    // Override with more specific messages for common status codes
-    switch (status) {
-      case 400:
-        message = errorData?.message || 'Bad request';
-        break;
-      case 401:
-        message = 'Authentication required';
-        break;
-      case 403:
-        message = 'Access forbidden';
-        break;
-      case 404:
-        message = 'Resource not found';
-        break;
-      case 422:
-        message = errorData?.message || 'Validation failed';
-        break;
-      case 429:
-        message = 'Too many requests';
-        break;
-    }
+    // En 401/403 el detalle del servidor no aporta y puede filtrar información,
+    // así que ahí se mantiene el mensaje fijo.
+    const message =
+      status === 401 || status === 403
+        ? fallbackByStatus[status]
+        : serverMessage ?? fallbackByStatus[status] ?? `Client error (${status})`;
 
     throw new ClientError(endpoint, method, status, message, errorData);
   }
 
   // Server errors (5xx)
   if (status >= 500) {
-    let message = `Server error (${status}) while accessing ${endpoint}`;
-
-    // Add more context if available
-    if (errorData && typeof errorData === 'object' && errorData.message) {
-      message = `Server error: ${errorData.message}`;
-    }
-
-    throw new ServerError(endpoint, method, status);
+    throw new ServerError(endpoint, method, status, extractServerMessage(errorData));
   }
 
   // Fallback for unexpected status codes

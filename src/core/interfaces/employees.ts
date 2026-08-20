@@ -40,7 +40,8 @@ export interface EmployeeCreateRequest {
   jobTitle: string;
   baseSalary: number;
   hireDate: string;
-  terminationDate: string;
+  /** `DateOnly?` en el backend: usar `null` cuando no aplica, nunca "". */
+  terminationDate: string | null;
   isActive: boolean;
 }
 
@@ -61,9 +62,11 @@ export interface EmployeeUpdateRequest {
   userId: string;
   branchId: string;
   fullName: string;
+  /** Obligatorio: el backend hace `Email.Trim()` y falla si no viene. */
   email: string;
   jobTitle: string;
   baseSalary: number;
-  terminationDate: string;
+  /** `DateOnly?` en el backend: usar `null` cuando no aplica, nunca "". */
+  terminationDate: string | null;
   isActive: boolean;
 }

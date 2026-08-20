@@ -58,7 +58,14 @@
     "delete": "Delete",
     "activate": "Activate",
     "deactivate": "Deactivate",
-    "viewDetails": "View details"
+    "viewDetails": "View details",
+    "clear": "Clear",
+    "selectAll": "Select all",
+    "file": "File",
+    "notAvailable": "Not available",
+    "errors": {
+      "loadData": "Could not load the data."
+    }
   },
   "toast": {
     "success": "Success",
@@ -113,7 +120,9 @@
       "lockedUntil": "Locked Until",
       "createdAt": "Created At",
       "updatedAt": "Updated At",
-      "scopes": "Scopes"
+      "scopes": "Scopes",
+      "confirmPassword": "Confirm password",
+      "noRole": "No role"
     },
     "actions": {
       "search": "Search",
@@ -125,7 +134,9 @@
       "reactivate": "Reactivate",
       "close": "Close",
       "save": "Save",
-      "saveChanges": "Save Changes"
+      "saveChanges": "Save Changes",
+      "show": "Show",
+      "hide": "Hide"
     },
     "messages": {
       "loadError": "Could not load users.",
@@ -136,13 +147,17 @@
       "deactivateSuccess": "User deactivated successfully.",
       "deactivateError": "Could not deactivate user.",
       "reactivateSuccess": "User reactivated successfully.",
-      "reactivateError": "Could not reactivate user."
+      "reactivateError": "Could not reactivate user.",
+      "rolesLoadError": "Roles could not be loaded.",
+      "readError": "The user could not be loaded."
     },
     "validation": {
       "requiredCreate": "Username, email, and password are required.",
       "requiredUpdate": "Username and email are required.",
       "rolesHint": "Only existing roles can be assigned.",
-      "loadingRoles": "Loading roles..."
+      "loadingRoles": "Loading roles...",
+      "passwordHint": "At least 8 characters, including an uppercase letter, a lowercase letter and a digit.",
+      "passwordMismatch": "Passwords do not match."
     },
     "modal": {
       "createTitle": "Create User",
@@ -225,13 +240,18 @@
       "deactivateSuccess": "Role deactivated successfully.",
       "deactivateError": "Could not deactivate role.",
       "reactivateSuccess": "Role reactivated successfully.",
-      "reactivateError": "Could not reactivate role."
+      "reactivateError": "Could not reactivate role.",
+      "readError": "Could not load the role.",
+      "scopesLoadError": "Could not load the permissions."
     },
     "validation": {
       "requiredCreate": "Name and description are required.",
       "requiredUpdate": "Name and description are required.",
       "scopesHint": "Select one or more existing permissions.",
-      "loadingScopes": "Loading permissions..."
+      "loadingScopes": "Loading permissions...",
+      "noScopesSelected": "This role will be created without permissions. You can assign them later by editing the role.",
+      "selectedCount": "{count} permissions selected",
+      "noScopesAvailable": "No permissions available"
     },
     "modal": {
       "createTitle": "Create Role",
@@ -269,7 +289,6 @@
       "active": "Active",
       "inactive": "Inactive"
     },
-  
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -334,13 +353,13 @@
     "subtitle": "Manage unit of measure catalog and status.",
     "searchPlaceholder": "Search by code or name",
     "empty": "No units of measure found.",
-     "filtered": "results",          
-  "filters": {                    
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
-   "status": {
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "status": {
       "active": "Active",
       "inactive": "Inactive"
     },
@@ -468,12 +487,12 @@
     "subtitle": "Manage payment method catalog and status.",
     "searchPlaceholder": "Search by code or description",
     "empty": "No payment methods found.",
-      "filtered": "results",
-  "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -595,7 +614,8 @@
       "transferSuccess": "Inventory transfer created successfully.",
       "transferError": "Could not create inventory transfer.",
       "adjustmentSuccess": "Physical adjustment registered successfully.",
-      "adjustmentError": "Could not register physical adjustment."
+      "adjustmentError": "Could not register physical adjustment.",
+      "catalogsLoadError": "Could not load the product catalogs."
     },
     "validation": {
       "requiredCreate": "All product fields are required.",
@@ -663,7 +683,7 @@
   "inventory": {
     "title": "Inventory",
     "subtitle": "Manage stock movements, transfers, and low stock alerts.",
-    "filtered":"results",
+    "filtered": "results",
     "tabs": {
       "stock": "Stock",
       "transfers": "Transfers",
@@ -705,7 +725,11 @@
       "transferApproved": "Transfer approved successfully.",
       "transferApproveError": "Could not approve transfer.",
       "transferRejected": "Transfer rejected successfully.",
-      "transferRejectError": "Could not reject transfer."
+      "transferRejectError": "Could not reject transfer.",
+      "loadBranchesError": "Could not load branches.",
+      "loadEmployeeError": "Could not load the employee.",
+      "transferDeleteNotAllowed": "Only transfers that are still pending can be deleted.",
+      "transferNotAvailableForBranch": "This transfer does not belong to the selected branch."
     },
     "modal": {
       "transferTitle": "Create Inventory Transfer",
@@ -740,8 +764,10 @@
         "productId": "Product Id",
         "productName": "Product Name",
         "stock": "Stock",
-        "alert": "Alert"
-      }
+        "alert": "Alert",
+        "productCode": "Code"
+      },
+      "emptyHint": "Only products with stock in the branch warehouses are listed. If the product exists but is missing here, check that it has registered stock and that the branch has warehouses assigned."
     },
     "alerts": {
       "threshold": "Low stock threshold",
@@ -776,7 +802,8 @@
     "movements": {
       "validation": {
         "purchaseInRequired": "All purchase entry fields are required.",
-        "serviceOutRequired": "All service output fields are required."
+        "serviceOutRequired": "All service output fields are required.",
+        "userRequired": "Select the user responsible for the movement."
       }
     },
     "adjustment": {
@@ -815,7 +842,11 @@
         "fromWarehouse": "From warehouse",
         "toWarehouse": "To warehouse",
         "empty": "No lines found."
-      }
+      },
+      "defaultRejectReason": "Rejected by the reviewer."
+    },
+    "validation": {
+      "noWarehouses": "No warehouses available. Register at least one warehouse under Branches before creating inventory movements."
     }
   },
   "branches": {
@@ -824,11 +855,11 @@
     "searchPlaceholder": "Search by code, name, address, or phone",
     "empty": ";No branches found.",
     "filtered": "results",
-     "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "status": {
       "all": "All statuses",
       "active": "Active",
@@ -876,7 +907,8 @@
       "deleteError": "Could not delete branch.",
       "transferSuccess": "Transfer created successfully.",
       "transferPending": "Transfer registered as pending approval.",
-      "transferError": "Could not create transfer."
+      "transferError": "Could not create transfer.",
+      "loadProductsError": "Could not load the branch products."
     },
     "validation": {
       "requiredCreate": "Code, name, address, and phone are required.",
@@ -1012,11 +1044,11 @@
     "searchPlaceholder": "Search by name, national id, email, or job title",
     "empty": "No employees found.",
     "filtered": "results",
-     "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -1070,7 +1102,8 @@
     },
     "validation": {
       "requiredCreate": "User id, branch, full name, national id, email, job title, base salary, and hire date are required.",
-      "requiredUpdate": "User id, branch, full name, job title, and base salary are required."
+      "requiredUpdate": "User id, branch, full name, job title, and base salary are required.",
+      "invalidDateRange": "The termination date cannot be earlier than the hire date."
     },
     "modal": {
       "createTitle": "Create Employee",
@@ -1142,13 +1175,13 @@
     "searchPlaceholder": "Search by identification, legal name, trade name, email, or phone",
     "empty": "No suppliers found.",
     "filtered": "results",
-  "filters": {
-    "allStatus": "All statuses",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
+    "filters": {
+      "allStatus": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "status": {
-      "all":"All statuses",
+      "all": "All statuses",
       "active": "Active",
       "inactive": "Inactive"
     },
@@ -1285,7 +1318,9 @@
         "uploadSuccess": "Attachment uploaded successfully.",
         "uploadError": "Could not upload attachment.",
         "deleteSuccess": "Attachment removed successfully.",
-        "deleteError": "Could not remove attachment."
+        "deleteError": "Could not remove attachment.",
+        "openError": "Could not open the attachment.",
+        "previewNotAvailable": "No preview is available for this file."
       },
       "validation": {
         "required": "Document type and file are required."
@@ -1344,9 +1379,9 @@
   "purchases": {
     "title": "Purchases",
     "subtitle": "Manage purchase orders, receipts, supplier quotes, and supplier evaluations.",
-    "filtered":"results",
+    "filtered": "results",
     "searchPlaceholder": "Search current tab",
-      "actions": {
+    "actions": {
       "search": "Search",
       "refresh": "Refresh"
     },
@@ -1387,7 +1422,17 @@
         "date": "Date",
         "notes": "Notes"
       },
-      "empty": "No requests found"
+      "empty": "No requests found",
+      "fields": {
+        "code": "Code",
+        "branch": "Branch",
+        "requestedBy": "Requested by",
+        "date": "Date",
+        "notes": "Notes"
+      },
+      "validation": {
+        "noEmployeeAssigned": "The current user has no employee assigned."
+      }
     },
     "orders": {
       "empty": "No purchase orders found.",
@@ -1552,10 +1597,12 @@
       },
       "messages": {
         "createSuccess": "Supplier evaluation created successfully.",
-        "createError": "Could not create supplier evaluation."
+        "createError": "Could not create supplier evaluation.",
+        "loadError": "Could not load the supplier evaluations."
       },
       "validation": {
-        "required": "Supplier, score, and evaluation date are required."
+        "required": "Supplier, score, and evaluation date are required.",
+        "invalidScore": "The score must be between 0 and 100."
       },
       "modal": {
         "createTitle": "Create Supplier Evaluation",
@@ -1720,7 +1767,10 @@
         "deleteSuccess": "Address deleted successfully.",
         "deleteError": "Could not delete address.",
         "setPrimarySuccess": "Primary address updated successfully.",
-        "setPrimaryError": "Could not set primary address."
+        "setPrimaryError": "Could not set primary address.",
+        "loadProvincesError": "Could not load provinces.",
+        "loadCantonsError": "Could not load cantons.",
+        "loadDistrictsError": "Could not load districts."
       },
       "validation": {
         "required": "Address type, address line, province, canton, and district are required."
@@ -1790,12 +1840,12 @@
     "subtitle": "Manage client quotes, send them, update their status, and convert them into contracts or invoices.",
     "searchPlaceholder": "Search by code, client, branch, status, or currency",
     "empty": "No quotes found.",
-      "filtered": "results",
-      "filters": {
-        "allStatus": "All statuses",
-        "accepted": "Accepted",
-        "pending": "Pending"
-      },
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "accepted": "Accepted",
+      "pending": "Pending"
+    },
     "accepted": {
       "yes": "Accepted",
       "no": "Pending"
@@ -1981,6 +2031,12 @@
       "modal": {
         "title": "Convert Quote to Invoice",
         "description": "Complete invoice information before conversion."
+      }
+    },
+    "reject": {
+      "modal": {
+        "title": "Reject quote",
+        "description": "State the reason for the rejection. It will be recorded in the quote history."
       }
     }
   },
@@ -2231,7 +2287,8 @@
       "confirmSuccess": "Sales order confirmed successfully.",
       "confirmError": "Could not confirm sales order.",
       "inventoryUpdated": "The order was confirmed and inventory was updated.",
-      "inventoryMovementInfo": "When this order is confirmed, an inventory output movement will be created automatically for each line."
+      "inventoryMovementInfo": "When this order is confirmed, an inventory output movement will be created automatically for each line.",
+      "noInventoryMovementRequired": "This order has no products, so no inventory movement is required."
     },
     "validation": {
       "clientRequired": "You must select a client before continuing.",
@@ -2239,7 +2296,9 @@
       "headerRequired": "Client, branch, seller, currency, and exchange rate are required.",
       "linesRequired": "At least one line is required.",
       "invalidLine": "All lines must have product, quantity, unit price, discount, and tax values.",
-      "warehouseRequired": "You must select a warehouse."
+      "warehouseRequired": "You must select a warehouse.",
+      "insufficientStock": "The selected branch does not have enough stock for this order.",
+      "noWarehouseAvailable": "The selected branch has no warehouse available to dispatch the order."
     },
     "drawer": {
       "createTitle": "Create Sales Order",
@@ -2318,7 +2377,8 @@
           "discountApplied": "Discount applied successfully.",
           "discountApplyError": "Discount could not be applied.",
           "discountRemoved": "Discount removed successfully.",
-          "discountRemoveError": "Discount could not be removed."
+          "discountRemoveError": "Discount could not be removed.",
+          "approvalRequested": "Discount approval requested successfully."
         }
       },
       "modal": {
@@ -2329,129 +2389,130 @@
       }
     }
   },
- "billing": {
-  "title": "Billing",
-  "subtitle": "Create, review, and issue electronic invoices.",
-  "searchPlaceholder": "Search by client, branch, consecutive, tax key, status, or notes",
-  "empty": "No invoices found.",
-  "filtered": "results",
-  "filters": {
-    "allStatus": "All statuses",
-    "emitted": "Emitted",
-    "pending": "Pending"
-  },
-  "status": {
-    "active": "Active",
-    "inactive": "Inactive"
-  },
-  "summary": {
-    "totalInvoices": "Total Invoices",
-    "pendingInvoices": "Pending Invoices",
-    "totalAmount": "Total Amount",
-    "pendingAmount": "Pending Amount"
-  },
-  "sections": {
-    "sourceData": "Source and Invoice Data",
-    "summary": "Billing Summary"
-  },
-  "table": {
-    "reference": "Reference",
-    "client": "Client",
-    "branch": "Branch",
-    "issueDate": "Issue Date",
-    "taxStatus": "Tax Status",
-    "internalStatus": "Internal Status",
-    "total": "Total",
-    "pendingAmount": "Pending Amount",
-    "options": "Options"
-  },
-  "fields": {
-    "salesOrder": "Sales Order",
-    "client": "Client",
-    "branch": "Branch",
-    "issueDate": "Issue Date",
-    "documentType": "Document Type",
-    "currency": "Currency",
-    "exchangeRate": "Exchange Rate",
-    "notes": "Notes",
-    "subtotal": "Subtotal",
-    "discounts": "Discounts",
-    "taxes": "Taxes",
-    "total": "Total",
-    "lineTotal": "Line Total",
-    "consecutive": "Consecutive",
-    "taxKey": "Tax Key",
-    "taxStatus": "Tax Status",
-    "internalStatus": "Internal Status",
-    "paidAmount": "Paid Amount",
-    "pendingAmount": "Pending Amount"
-  },
-  "actions": {
-    "search": "Search",
-    "refresh": "Refresh",
-    "newInvoice": "New Invoice",
-    "viewDetails": "View Details",
-    "emit": "Issue Invoice"
-  },
-  "placeholders": {
-    "selectSalesOrder": "Select a sales order",
-    "selectClient": "Select a client",
-    "selectBranch": "Select a branch",
-    "selectProduct": "Select a product"
-  },
-  "messages": {
-    "loadError": "Could not load invoices.",
-    "loadDetailError": "Could not load invoice details.",
-    "loadCatalogsError": "Could not load catalogs.",
-    "loadSalesOrderError": "Could not load sales order data.",
-    "preloadingFromSalesOrder": "Loading data from selected sales order...",
-    "createSuccess": "Invoice created successfully.",
-    "createError": "Could not create invoice.",
-    "emitSuccess": "Invoice issued successfully.",
-    "emitError": "Could not issue invoice."
-  },
-  "validation": {
-    "requiredHeader": "Client, branch, issue date, currency, and document type are required.",
-    "requiredLines": "At least one invoice line is required.",
-    "invalidLine": "All lines must have product, description, quantity, unit price, discount, and tax values."
-  },
-  "drawer": {
-    "createTitle": "Create Invoice",
-    "createDescription": "Create the invoice first, then issue it to Hacienda.",
-    "detailsTitle": "Invoice Details",
-    "detailsDescription": "Review invoice {code}."
-  },
-  "emitModal": {
-    "title": "Issue Electronic Invoice",
-    "description": "Issue invoice {code} and send it through the tax process.",
-    "currentStatus": "Current tax status",
-    "mode": "Issue mode",
-    "helpText": "Use normal mode for standard issuance, or contingency mode if the external service is unavailable.",
-    "modes": {
-      "normal": "Normal",
-      "contingency": "Contingency"
-    }
-  },
-  "lines": {
-    "title": "Invoice Lines",
-    "addLine": "Add Line",
-    "product": "Product",
-    "description": "Description",
-    "quantity": "Quantity",
-    "unitPrice": "Unit Price",
-    "discountPerc": "Discount %",
-    "taxPerc": "Tax %",
-    "empty": "No lines found.",
+  "billing": {
+    "title": "Billing",
+    "subtitle": "Create, review, and issue electronic invoices.",
+    "searchPlaceholder": "Search by client, branch, consecutive, tax key, status, or notes",
+    "empty": "No invoices found.",
+    "filtered": "results",
+    "filters": {
+      "allStatus": "All statuses",
+      "emitted": "Emitted",
+      "pending": "Pending"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "summary": {
+      "totalInvoices": "Total Invoices",
+      "pendingInvoices": "Pending Invoices",
+      "totalAmount": "Total Amount",
+      "pendingAmount": "Pending Amount"
+    },
+    "sections": {
+      "sourceData": "Source and Invoice Data",
+      "summary": "Billing Summary"
+    },
     "table": {
+      "reference": "Reference",
+      "client": "Client",
+      "branch": "Branch",
+      "issueDate": "Issue Date",
+      "taxStatus": "Tax Status",
+      "internalStatus": "Internal Status",
+      "total": "Total",
+      "pendingAmount": "Pending Amount",
+      "options": "Options"
+    },
+    "fields": {
+      "salesOrder": "Sales Order",
+      "client": "Client",
+      "branch": "Branch",
+      "issueDate": "Issue Date",
+      "documentType": "Document Type",
+      "currency": "Currency",
+      "exchangeRate": "Exchange Rate",
+      "notes": "Notes",
+      "subtotal": "Subtotal",
+      "discounts": "Discounts",
+      "taxes": "Taxes",
+      "total": "Total",
+      "lineTotal": "Line Total",
+      "consecutive": "Consecutive",
+      "taxKey": "Tax Key",
+      "taxStatus": "Tax Status",
+      "internalStatus": "Internal Status",
+      "paidAmount": "Paid Amount",
+      "pendingAmount": "Pending Amount"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "newInvoice": "New Invoice",
+      "viewDetails": "View Details",
+      "emit": "Issue Invoice"
+    },
+    "placeholders": {
+      "selectSalesOrder": "Select a sales order",
+      "selectClient": "Select a client",
+      "selectBranch": "Select a branch",
+      "selectProduct": "Select a product"
+    },
+    "messages": {
+      "loadError": "Could not load invoices.",
+      "loadDetailError": "Could not load invoice details.",
+      "loadCatalogsError": "Could not load catalogs.",
+      "loadSalesOrderError": "Could not load sales order data.",
+      "preloadingFromSalesOrder": "Loading data from selected sales order...",
+      "createSuccess": "Invoice created successfully.",
+      "createError": "Could not create invoice.",
+      "emitSuccess": "Invoice issued successfully.",
+      "emitError": "Could not issue invoice."
+    },
+    "validation": {
+      "requiredHeader": "Client, branch, issue date, currency, and document type are required.",
+      "requiredLines": "At least one invoice line is required.",
+      "invalidLine": "All lines must have product, description, quantity, unit price, discount, and tax values."
+    },
+    "drawer": {
+      "createTitle": "Create Invoice",
+      "createDescription": "Create the invoice first, then issue it to Hacienda.",
+      "detailsTitle": "Invoice Details",
+      "detailsDescription": "Review invoice {code}."
+    },
+    "emitModal": {
+      "title": "Issue Electronic Invoice",
+      "description": "Issue invoice {code} and send it through the tax process.",
+      "currentStatus": "Current tax status",
+      "mode": "Issue mode",
+      "helpText": "Use normal mode for standard issuance, or contingency mode if the external service is unavailable.",
+      "modes": {
+        "normal": "Normal",
+        "contingency": "Contingency"
+      }
+    },
+    "lines": {
+      "title": "Invoice Lines",
+      "addLine": "Add Line",
+      "product": "Product",
       "description": "Description",
       "quantity": "Quantity",
       "unitPrice": "Unit Price",
       "discountPerc": "Discount %",
       "taxPerc": "Tax %",
-      "total": "Total"
+      "empty": "No lines found.",
+      "table": {
+        "description": "Description",
+        "quantity": "Quantity",
+        "unitPrice": "Unit Price",
+        "discountPerc": "Discount %",
+        "taxPerc": "Tax %",
+        "total": "Total"
+      },
+      "selectProductFirst": "Select a product first"
     }
-  }
-},
+  },
   "payments": {
     "title": "Payment Control",
     "subtitle": "Register payments, review payment history, and manage credit/debit notes.",
@@ -2546,7 +2607,8 @@
       "invoiceRequired": "A valid invoice is required.",
       "amountRequired": "A valid amount is required.",
       "cashInsufficient": "The amount tendered is less than the pending amount.",
-      "partialExceedsBalance": "The partial payment exceeds the remaining balance."
+      "partialExceedsBalance": "The partial payment exceeds the remaining balance.",
+      "invoiceAlreadyPaid": "This invoice is already paid in full."
     },
     "creditNotes": {
       "empty": "No credit notes found.",
@@ -2584,7 +2646,8 @@
       "messages": {
         "loadError": "Could not load credit notes.",
         "createSuccess": "Credit note created successfully.",
-        "createError": "Could not create credit note."
+        "createError": "Could not create credit note.",
+        "loadInvoiceError": "Could not load the invoice for the credit note."
       },
       "validation": {
         "required": "Invoice, reason, total amount, and issue date are required.",
@@ -2622,7 +2685,8 @@
       "messages": {
         "loadError": "Could not load debit notes.",
         "createSuccess": "Debit note created successfully.",
-        "createError": "Could not create debit note."
+        "createError": "Could not create debit note.",
+        "loadInvoiceError": "Could not load the invoice for the debit note."
       },
       "validation": {
         "required": "Invoice, reason, total amount, and issue date are required.",
@@ -2644,9 +2708,10 @@
     },
     "filters": {
       "periodCode": "Search by period code",
-      "status": "Search by status"
+      "status": "Search by status",
+      "fromDate": "From",
+      "toDate": "To"
     },
-
     "actions": {
       "search": "Search",
       "refresh": "Refresh",
@@ -2797,7 +2862,6 @@
     "subtitle": "Manage service catalog, service orders, service times, and technical assignments.",
     "uncategorized": "Uncategorized",
     "empty": "No services found.",
-  
     "emptyByCategory": "No services available in this category.",
     "filtered": "results",
     "summary": {
@@ -2816,11 +2880,12 @@
     },
     "status": {
       "active": "Active",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "availabilityMismatch": "Active in the catalog, but currently unavailable"
     },
     "availability": {
-      "active": "Active",
-      "inactive": "Inactive",
+      "active": "Available",
+      "inactive": "Unavailable",
       "maintenance": "Maintenance"
     },
     "fields": {
@@ -2973,23 +3038,23 @@
       "history": "History"
     },
     "stats": {
-    "activePolicies": "Active policies",
-    "pendingApprovals": "Pending approvals",
-    "totalDiscounted": "Total discounted amount"
-  },
-     "actions": {
-    "newPolicy": "New Policy",
-    "apply": "Apply",
-    "reject": "Reject",
-    "approve": "Approve",
-    "export": "Export",
-    "exportExcel": "Export Excel",
-    "requestApproval": "Request Approval",
-    "lineDiscount": "Line Discount",
-    "globalDiscount": "Global Discount",
-    "removeLineDiscount": "Remove Line Discount",
-    "removeGlobalDiscount": "Remove Global Discount"
-  },
+      "activePolicies": "Active policies",
+      "pendingApprovals": "Pending approvals",
+      "totalDiscounted": "Total discounted amount"
+    },
+    "actions": {
+      "newPolicy": "New Policy",
+      "apply": "Apply",
+      "reject": "Reject",
+      "approve": "Approve",
+      "export": "Export",
+      "exportExcel": "Export Excel",
+      "requestApproval": "Request Approval",
+      "lineDiscount": "Line Discount",
+      "globalDiscount": "Global Discount",
+      "removeLineDiscount": "Remove Line Discount",
+      "removeGlobalDiscount": "Remove Global Discount"
+    },
     "fields": {
       "globalDiscountPerc": "Global discount %",
       "globalDiscountAmount": "Global discount amount",
@@ -3062,10 +3127,10 @@
         "editTitle": "Edit policy",
         "editDescription": "Update the selected policy."
       },
-       "drawer": {
-    "title": "Policy Details",
-    "description": "Review discount policy details for {name}."
-  }
+      "drawer": {
+        "title": "Policy Details",
+        "description": "Review discount policy details for {name}."
+      }
     },
     "approvals": {
       "searchPlaceholder": "Search by order, user, or reason",
@@ -3206,7 +3271,7 @@
   "reports": {
     "title": "Reports",
     "subtitle": "Review financial, inventory, client, work order, and automatic scheduled reports.",
-     "filtered": "results",
+    "filtered": "results",
     "tabs": {
       "financial": "Financial",
       "inventory": "Inventory",
@@ -3275,7 +3340,6 @@
       "fields": {
         "category": "Category"
       },
-      
       "table": {
         "product": "Product",
         "category": "Category",
@@ -3419,32 +3483,31 @@
       }
     }
   },
-
- "accounting": {
-  "title": "Accounting",
-  "subtitle": "Register income and expenses, review income statement, cash flow, and reconciliation.",
-  "filtered": "results",
-  "tabs": {
-    "entries": "Entries",
-    "incomeStatement": "Income statement",
-    "cashFlow": "Cash flow"
-  },
-  "placeholders": {
-    "selectClient": "Select a client",
-    "selectSupplier": "Select a supplier"
-  },
-  "actions": {
-    "newIncome": "New income",
-    "newExpense": "New expense",
-    "reconcile": "Reconcile",
-    "search": "Search",
-    "refresh": "Refresh",
-    "generate": "Generate",
-    "exportPdf": "Export PDF",
-    "exportExcel": "Export Excel",
-    "viewReconciliation": "View reconciliation",
-    "alreadyReconciled": "Already reconciled"
-  },
+  "accounting": {
+    "title": "Accounting",
+    "subtitle": "Register income and expenses, review income statement, cash flow, and reconciliation.",
+    "filtered": "results",
+    "tabs": {
+      "entries": "Entries",
+      "incomeStatement": "Income statement",
+      "cashFlow": "Cash flow"
+    },
+    "placeholders": {
+      "selectClient": "Select a client",
+      "selectSupplier": "Select a supplier"
+    },
+    "actions": {
+      "newIncome": "New income",
+      "newExpense": "New expense",
+      "reconcile": "Reconcile",
+      "search": "Search",
+      "refresh": "Refresh",
+      "generate": "Generate",
+      "exportPdf": "Export PDF",
+      "exportExcel": "Export Excel",
+      "viewReconciliation": "View reconciliation",
+      "alreadyReconciled": "Already reconciled"
+    },
     "summary": {
       "totalIncome": "Income",
       "totalExpenses": "Expenses",
@@ -3545,49 +3608,78 @@
       "reconciliationLoadError": "Failed to load reconciliation."
     }
   },
-  
-"audit": {
-  "title": "Audit Log",
-  "subtitle": "Monitor system changes and activity.",
-  "empty": "No audit records found.",
-  "filtered": "results",
-  "noData": "No data",
-  "filters": {
-    "allModules": "All modules",
-    "allActions": "All actions"
+  "audit": {
+    "title": "Audit Log",
+    "subtitle": "Monitor system changes and activity.",
+    "empty": "No audit records found.",
+    "filtered": "results",
+    "noData": "No data",
+    "filters": {
+      "allModules": "All modules",
+      "allActions": "All actions"
+    },
+    "modules": {
+      "taxes": "Taxes",
+      "products": "Products",
+      "auth": "Security",
+      "inventory": "Inventory",
+      "users": "Users"
+    },
+    "actions": {
+      "search": "Search",
+      "refresh": "Refresh",
+      "create": "Create",
+      "update": "Update",
+      "delete": "Delete",
+      "exportPdf": "Export PDF",
+      "exportExcel": "Export Excel"
+    },
+    "table": {
+      "date": "Date",
+      "module": "Module",
+      "entity": "Entity",
+      "action": "Action",
+      "user": "User",
+      "ip": "IP"
+    },
+    "modal": {
+      "title": "Change Details",
+      "dataBefore": "Previous State",
+      "dataAfter": "New State"
+    },
+    "messages": {
+      "loadError": "Could not load audit records.",
+      "exportError": "The audit log could not be exported."
+    },
+    "searchPlaceholder": "Search by module, entity, action or IP"
   },
-  "modules": {
-    "taxes": "Taxes",
-    "products": "Products",
-    "auth": "Security",
-    "inventory": "Inventory",
-    "users": "Users"
-  },
-  "actions": {
-    "search": "Search",
-    "refresh": "Refresh",
-    "create": "Create",
-    "update": "Update",
-    "delete": "Delete",
-    "exportPdf": "Export PDF",
-    "exportExcel": "Export Excel"
-  },
-  "table": {
-    "date": "Date",
-    "module": "Module",
-    "entity": "Entity",
-    "action": "Action",
-    "user": "User",
-    "ip": "IP"
-  },
-  "modal": {
-    "title": "Change Details",
-    "dataBefore": "Previous State",
-    "dataAfter": "New State"
-  },
-  "messages": {
-    "loadError": "Could not load audit records."
+  "validation": {
+    "required": "{field} is required",
+    "arrayRequired": "Select at least one option in {field}",
+    "email": "{field} must be a valid email address (example: name@domain.com)",
+    "minLength": "{field} must be at least {min} characters long",
+    "maxLength": "{field} must not exceed {max} characters",
+    "nameNoDigits": "{field} cannot contain numbers",
+    "nameInvalid": "{field} must contain at least {min} letters and only text characters",
+    "textNotOnlyNumbers": "{field} cannot contain only numbers; enter a valid description",
+    "textTooShort": "{field} must be a descriptive text of at least {min} characters",
+    "identification": "{field} only accepts digits, with no separators",
+    "identificationLength": "{field} must have between {min} and {max} digits",
+    "phone": "{field} only accepts digits and the symbols + - ( )",
+    "phoneLength": "{field} must have between {min} and {max} digits",
+    "numeric": "{field} must contain digits only",
+    "code": "{field} only accepts letters, digits and the symbols - _ . (no spaces)",
+    "codeLength": "{field} must have between {min} and {max} characters",
+    "number": "{field} must be a valid number",
+    "numberMin": "{field} must be greater than or equal to {min}",
+    "numberMax": "{field} must be less than or equal to {max}",
+    "positive": "{field} must be greater than 0",
+    "percentage": "{field} must be between 0 and 100",
+    "password": "The password must be {min}-{max} characters long, with no spaces, and include an uppercase letter, a lowercase letter, a digit and a special character",
+    "sameAs": "{field} does not match {other}",
+    "dateRange": "The start date cannot be later than the end date",
+    "summary": "Review the fields highlighted in red before continuing",
+    "nameInvalidChars": "{field} contains characters that are not allowed; use letters, digits and the symbols ' . , & ( ) / -",
+    "passport": "{field} must be 5 to 20 characters long and only accepts letters, digits and the symbols . -"
   }
 }
-}
-

@@ -15,6 +15,12 @@ import EmployeeActionMenu from "@/modules/employees/components/EmployeeActionMen
 
 import type { Employee } from "@/core/interfaces/employees";
 
+/**
+ * Datos que devuelven los modales de crear/editar empleado.
+ *
+ * `phone`, `address` y `birthDate` se arrastraban aquí pero no existen en
+ * `EmployeeReadModel` ni en los requests de la API: siempre llegaban nulos.
+ */
 interface EmployeeSuccessPayload {
   employeeId: string;
   userId?: string | null;
@@ -22,9 +28,6 @@ interface EmployeeSuccessPayload {
   fullName: string;
   nationalId: string;
   email: string;
-  phone?: string | null;
-  address?: string | null;
-  birthDate?: string | null;
   hireDate?: string | null;
   terminationDate?: string | null;
   jobTitle: string;
@@ -124,11 +127,9 @@ function patchEmployeeInList(payload: EmployeeSuccessPayload) {
               fullName: payload.fullName,
               nationalId: payload.nationalId,
               email: payload.email,
-              phone: payload.phone ?? employee.phone ?? null,
-              address: payload.address ?? employee.address ?? null,
-              birthDate: payload.birthDate ?? employee.birthDate ?? null,
-              hireDate: payload.hireDate ?? employee.hireDate ?? null,
-              terminationDate: payload.terminationDate ?? employee.terminationDate ?? null,
+              hireDate: payload.hireDate ?? employee.hireDate ?? "",
+              terminationDate:
+                payload.terminationDate ?? employee.terminationDate ?? null,
               jobTitle: payload.jobTitle,
               baseSalary: payload.baseSalary,
               isActive: payload.isActive,
@@ -149,16 +150,14 @@ function patchEmployeeInList(payload: EmployeeSuccessPayload) {
       fullName: payload.fullName,
       nationalId: payload.nationalId,
       email: payload.email,
-      phone: payload.phone ?? null,
-      address: payload.address ?? null,
-      birthDate: payload.birthDate ?? null,
-      hireDate: payload.hireDate ?? null,
+      hireDate: payload.hireDate ?? "",
       terminationDate: payload.terminationDate ?? null,
       jobTitle: payload.jobTitle,
       baseSalary: payload.baseSalary,
       isActive: payload.isActive,
       branchName: payload.branchName ?? null,
-    } as Employee,
+      history: [],
+    },
     ...employees.value,
   ]);
 }
@@ -249,7 +248,9 @@ function openCreateModal() {
       if (payload?.employeeId) {
         await reloadEmployeesUntil(
           (fetchedEmployees) =>
-            fetchedEmployees.some((employee) => employee.employeeId === payload.employeeId),
+            fetchedEmployees.some(
+              (employee) => employee.employeeId === payload.employeeId,
+            ),
           { attempts: 12, delayMs: 500 },
         );
         return;
@@ -286,7 +287,8 @@ function openEditModal(employee: Employee) {
       });
 
       await reloadEmployeesUntil(
-        (fetchedEmployees) => hasEmployeeReachedExpectedState(fetchedEmployees, payload),
+        (fetchedEmployees) =>
+          hasEmployeeReachedExpectedState(fetchedEmployees, payload),
         { attempts: 12, delayMs: 500 },
       );
     },
@@ -305,7 +307,9 @@ function openDetailsDrawer(employee: Employee) {
     component: EmployeeDetailsDrawer,
     props: { employeeId: employee.employeeId },
     title: t("employees.drawer.title"),
-    description: t("employees.drawer.description", { fullName: employee.fullName }),
+    description: t("employees.drawer.description", {
+      fullName: employee.fullName,
+    }),
     direction: "right",
     size: "xl",
   });
@@ -317,11 +321,16 @@ async function toggleEmployeeStatus(employee: Employee) {
   try {
     await EmployeesService.update(employee.employeeId, {
       userId: employee.userId ?? "",
-      branchId: employee.branchId,
+      branchId: employee.branchId ?? "",
       fullName: employee.fullName,
+      // `Email` es obligatorio en el comando de actualización del backend.
+      email: employee.email,
       jobTitle: employee.jobTitle,
       baseSalary: employee.baseSalary,
-      terminationDate: employee.terminationDate ?? "",
+      // `DateOnly?`: enviar null en vez de "" cuando no hay fecha de salida.
+      terminationDate: employee.terminationDate
+        ? String(employee.terminationDate).slice(0, 10)
+        : null,
       isActive: nextIsActive,
     });
 
@@ -369,7 +378,9 @@ async function deleteEmployee(employee: Employee) {
 
     await reloadEmployeesUntil(
       (fetchedEmployees) =>
-        !fetchedEmployees.some((item) => item.employeeId === employee.employeeId),
+        !fetchedEmployees.some(
+          (item) => item.employeeId === employee.employeeId,
+        ),
       { attempts: 12, delayMs: 500 },
     );
   } catch {
@@ -387,7 +398,8 @@ async function onSearch() {
 }
 
 async function goToPage(targetPage: number) {
-  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value) return;
+  if (targetPage < 1 || targetPage > MAX_PAGE || targetPage === page.value)
+    return;
   page.value = targetPage;
   await loadEmployees();
 }
@@ -431,7 +443,9 @@ onMounted(async () => {
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 mb-bt-spacing-24 shrink-0"
       >
         <!-- Left: search + status filter + search button + refresh -->
-        <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+        <div
+          class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+        >
           <input
             v-model="search"
             type="text"
@@ -446,7 +460,9 @@ onMounted(async () => {
           >
             <option value="all">{{ $t("employees.filters.allStatus") }}</option>
             <option value="active">{{ $t("employees.filters.active") }}</option>
-            <option value="inactive">{{ $t("employees.filters.inactive") }}</option>
+            <option value="inactive">
+              {{ $t("employees.filters.inactive") }}
+            </option>
           </select>
 
           <!-- Primary query action -->
@@ -502,14 +518,32 @@ onMounted(async () => {
         <table v-else class="w-full border-collapse min-w-[1200px]">
           <thead class="sticky top-0 z-10">
             <tr class="bg-bt-primary-50 text-left">
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.fullName") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.nationalId") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.email") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.branch") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.jobTitle") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.baseSalary") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("employees.table.status") }}</th>
-              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20">{{ $t("employees.table.options") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.fullName") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.nationalId") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.email") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.branch") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.jobTitle") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.baseSalary") }}
+              </th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">
+                {{ $t("employees.table.status") }}
+              </th>
+              <th
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 w-20"
+              >
+                {{ $t("employees.table.options") }}
+              </th>
             </tr>
           </thead>
 
@@ -519,14 +553,26 @@ onMounted(async () => {
               :key="employee.employeeId"
               class="border-t border-bt-grey-200 hover:bg-bt-grey-50"
             >
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold">
+              <td
+                class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700 font-bt-semibold"
+              >
                 {{ employee.fullName }}
               </td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.nationalId }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.email }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.branchName ?? "-" }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.jobTitle }}</td>
-              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ employee.baseSalary }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ employee.nationalId }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ employee.email }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ employee.branchName ?? "-" }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ employee.jobTitle }}
+              </td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ employee.baseSalary }}
+              </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
                 <span
                   :class="[
@@ -536,7 +582,11 @@ onMounted(async () => {
                       : 'bg-bt-error-100 text-bt-error-700',
                   ]"
                 >
-                  {{ employee.isActive ? $t("employees.status.active") : $t("employees.status.inactive") }}
+                  {{
+                    employee.isActive
+                      ? $t("employees.status.active")
+                      : $t("employees.status.inactive")
+                  }}
                 </span>
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
@@ -593,7 +643,8 @@ onMounted(async () => {
         class="mt-bt-spacing-24 pt-bt-spacing-16 border-t border-bt-grey-200 flex flex-col md:flex-row md:items-center md:justify-between gap-bt-spacing-16 shrink-0"
       >
         <div class="text-sm text-bt-grey-600">
-          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }} {{ MAX_PAGE }}
+          {{ $t("pagination.page") }} {{ page }} {{ $t("pagination.of") }}
+          {{ MAX_PAGE }}
           <span class="text-bt-grey-500">
             ({{ filteredEmployees.length }} {{ $t("employees.filtered") }})
           </span>
@@ -619,7 +670,11 @@ onMounted(async () => {
             1
           </button>
 
-          <span v-if="pageNumbers[0] > 2" class="px-bt-spacing-8 text-bt-grey-500">...</span>
+          <span
+            v-if="pageNumbers[0] > 2"
+            class="px-bt-spacing-8 text-bt-grey-500"
+            >...</span
+          >
 
           <button
             v-for="pageNumber in pageNumbers"
@@ -639,7 +694,8 @@ onMounted(async () => {
           <span
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE - 1"
             class="px-bt-spacing-8 text-bt-grey-500"
-          >...</span>
+            >...</span
+          >
 
           <button
             v-if="pageNumbers[pageNumbers.length - 1] < MAX_PAGE"

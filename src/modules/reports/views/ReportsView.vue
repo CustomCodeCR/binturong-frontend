@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-  MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-vue-next";
+import { MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 import { ReportsService } from "@/core/services/reportsService";
 import { SelectService } from "@/core/services/selectService";
+import { describeDownloadError, downloadBlob } from "@/core/utils/download";
+import { isDateRangeValid } from "@/shared/validation/rules";
 
 import { useDrawerStore } from "@/core/stores/drawerStore";
 import { useModalStore } from "@/core/stores/modalStore";
@@ -18,6 +16,7 @@ import ReportsActionMenu from "@/modules/reports/components/ReportsActionMenu.vu
 import ReportScheduleModal from "@/modules/reports/components/ReportScheduleModal.vue";
 import ClientReportDrawer from "@/modules/reports/components/ClientReportDrawer.vue";
 import ServiceOrdersReportDrawer from "@/modules/reports/components/ServiceOrdersReportDrawer.vue";
+import BTFieldError from "@/shared/components/ui/BTFieldError.vue";
 
 import type {
   FinancialReport,
@@ -56,6 +55,10 @@ const schedules = ref<ReportSchedule[]>([]);
 
 const financialFromUtc = ref("");
 const financialToUtc = ref("");
+
+const financialRangeInvalid = computed(
+  () => !isDateRangeValid(financialFromUtc.value, financialToUtc.value),
+);
 
 const inventoryCategoryId = ref("");
 
@@ -195,13 +198,45 @@ async function loadCatalogs() {
   }
 }
 
-async function loadFinancialReport() {
-  if (!financialFromUtc.value || !financialToUtc.value) {
+/**
+ * Valida el rango de fechas antes de llamar a la API. Antes solo se exigía que
+ * ambas fechas estuvieran presentes, de modo que un inicio posterior al fin
+ * "generaba" un reporte vacío sin ningún aviso al usuario.
+ */
+function hasValidDateRange(
+  from: string,
+  to: string,
+  requiredMessage: string,
+): boolean {
+  if (!from || !to) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("reports.financial.validation.rangeRequired"),
+      message: requiredMessage,
     });
+    return false;
+  }
+
+  if (!isDateRangeValid(from, to)) {
+    toastStore.addToast({
+      severity: "error",
+      title: t("toast.error"),
+      message: t("validation.dateRange"),
+    });
+    return false;
+  }
+
+  return true;
+}
+
+async function loadFinancialReport() {
+  if (
+    !hasValidDateRange(
+      financialFromUtc.value,
+      financialToUtc.value,
+      t("reports.financial.validation.rangeRequired"),
+    )
+  ) {
     return;
   }
 
@@ -224,12 +259,13 @@ async function loadFinancialReport() {
 }
 
 async function exportFinancialPdf() {
-  if (!financialFromUtc.value || !financialToUtc.value) {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("reports.financial.validation.rangeRequired"),
-    });
+  if (
+    !hasValidDateRange(
+      financialFromUtc.value,
+      financialToUtc.value,
+      t("reports.financial.validation.rangeRequired"),
+    )
+  ) {
     return;
   }
 
@@ -239,17 +275,15 @@ async function exportFinancialPdf() {
       toUtcEndOfDay(financialToUtc.value),
     );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "financial-report.pdf";
-    link.click();
-    URL.revokeObjectURL(url);
-  } catch {
+    await downloadBlob(blob, "financial-report.pdf");
+  } catch (error) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("reports.financial.messages.exportError"),
+      message: describeDownloadError(
+        error,
+        t("reports.financial.messages.exportError"),
+      ),
     });
   }
 }
@@ -278,17 +312,15 @@ async function exportInventoryExcel() {
       inventoryCategoryId.value || null,
     );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "inventory-report.xlsx";
-    link.click();
-    URL.revokeObjectURL(url);
-  } catch {
+    await downloadBlob(blob, "inventory-report.xlsx");
+  } catch (error) {
     toastStore.addToast({
       severity: "error",
       title: t("toast.error"),
-      message: t("reports.inventory.messages.exportError"),
+      message: describeDownloadError(
+        error,
+        t("reports.inventory.messages.exportError"),
+      ),
     });
   }
 }
@@ -316,12 +348,13 @@ function openClientDrawer() {
 }
 
 async function loadServiceOrdersReport() {
-  if (!serviceOrdersFromUtc.value || !serviceOrdersToUtc.value) {
-    toastStore.addToast({
-      severity: "error",
-      title: t("toast.error"),
-      message: t("reports.serviceOrders.validation.rangeRequired"),
-    });
+  if (
+    !hasValidDateRange(
+      serviceOrdersFromUtc.value,
+      serviceOrdersToUtc.value,
+      t("reports.serviceOrders.validation.rangeRequired"),
+    )
+  ) {
     return;
   }
 
@@ -405,8 +438,7 @@ function openCreateScheduleModal() {
       toastStore.addToast({
         severity: "error",
         title: t("toast.error"),
-        message:
-          error?.message ?? t("reports.schedules.messages.createError"),
+        message: error?.message ?? t("reports.schedules.messages.createError"),
       });
     },
   });
@@ -428,8 +460,7 @@ function openEditScheduleModal(schedule: ReportSchedule) {
       toastStore.addToast({
         severity: "error",
         title: t("toast.error"),
-        message:
-          error?.message ?? t("reports.schedules.messages.updateError"),
+        message: error?.message ?? t("reports.schedules.messages.updateError"),
       });
     },
   });
@@ -601,7 +632,6 @@ onMounted(async () => {
       </div>
 
       <template v-else>
-
         <!-- ── FINANCIAL ── -->
         <div
           v-if="activeTab === 'financial'"
@@ -611,16 +641,30 @@ onMounted(async () => {
           <div
             class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+            <div
+              class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+            >
               <input
                 v-model="financialFromUtc"
                 type="date"
-                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                :max="financialToUtc || undefined"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                :class="
+                  financialRangeInvalid
+                    ? 'border-bt-error-500'
+                    : 'border-bt-grey-300'
+                "
               />
               <input
                 v-model="financialToUtc"
                 type="date"
-                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                :min="financialFromUtc || undefined"
+                class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+                :class="
+                  financialRangeInvalid
+                    ? 'border-bt-error-500'
+                    : 'border-bt-grey-300'
+                "
               />
               <!-- Generate: primary-500 -->
               <button
@@ -650,6 +694,10 @@ onMounted(async () => {
                 {{ $t("reports.actions.exportPdf") }}
               </button>
             </div>
+          </div>
+
+          <div v-if="financialRangeInvalid" class="shrink-0">
+            <BTFieldError :message="$t('validation.dateRange')" />
           </div>
 
           <!-- Results -->
@@ -742,7 +790,9 @@ onMounted(async () => {
           <div
             class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+            <div
+              class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+            >
               <select
                 v-model="inventoryCategoryId"
                 class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -881,7 +931,9 @@ onMounted(async () => {
           <div
             class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+            <div
+              class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+            >
               <select
                 v-model="clientId"
                 class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white text-bt-primary-700 focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
@@ -945,7 +997,9 @@ onMounted(async () => {
           <div
             class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-bt-spacing-16 shrink-0"
           >
-            <div class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl">
+            <div
+              class="flex flex-col sm:flex-row gap-bt-spacing-12 w-full lg:max-w-2xl"
+            >
               <input
                 v-model="serviceOrdersFromUtc"
                 type="date"
@@ -1440,7 +1494,6 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-
       </template>
     </div>
   </section>

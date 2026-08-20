@@ -26,17 +26,32 @@ const { t } = useI18n();
 const toastStore = useToastStore();
 const preferencesStore = usePreferencesStore();
 
-// La preferencia de actualización automática se persiste por usuario: antes
-// vivía solo en memoria y se reactivaba al refrescar o cambiar de módulo.
-preferencesStore.load();
+// La preferencia de actualización automática se persiste por usuario en el
+// backend: antes vivía solo en memoria y se reactivaba al refrescar o cambiar
+// de módulo. La carga es asíncrona; hasta que responda se usa la caché local.
+void preferencesStore.load();
 
 const loading = ref(false);
 const refreshing = ref(false);
 const dashboard = ref<Dashboard | null>(null);
 const branches = ref<SelectOption[]>([]);
 const selectedBranchId = ref<string>("");
-const autoRefreshEnabled = ref(preferencesStore.dashboard.autoRefreshEnabled);
-const autoRefreshSeconds = ref(preferencesStore.dashboard.autoRefreshSeconds);
+// Enlazadas al store en vez de copiadas: la carga desde el backend llega
+// después del montaje y una copia local se quedaría con el valor de la caché.
+const autoRefreshEnabled = computed({
+  get: () => preferencesStore.dashboard.autoRefreshEnabled,
+  set: (value: boolean) =>
+    void preferencesStore.setDashboardPreferences({
+      autoRefreshEnabled: value,
+    }),
+});
+const autoRefreshSeconds = computed({
+  get: () => preferencesStore.dashboard.autoRefreshSeconds,
+  set: (value: number) =>
+    void preferencesStore.setDashboardPreferences({
+      autoRefreshSeconds: value,
+    }),
+});
 const permissionDenied = ref(false);
 const hasLoadedOnce = ref(false);
 
@@ -242,13 +257,9 @@ watch(selectedBranchId, async () => {
   await loadDashboard();
 });
 
-watch(autoRefreshEnabled, (value) => {
-  preferencesStore.setDashboardPreferences({ autoRefreshEnabled: value });
-  configureAutoRefresh();
-});
-
-watch(autoRefreshSeconds, (value) => {
-  preferencesStore.setDashboardPreferences({ autoRefreshSeconds: value });
+// El guardado lo hace el setter de cada computed; aquí solo se reprograma el
+// temporizador, tanto si el cambio vino del usuario como del backend.
+watch([autoRefreshEnabled, autoRefreshSeconds], () => {
   configureAutoRefresh();
 });
 
@@ -556,10 +567,11 @@ onBeforeUnmount(() => {
                   v-if="!dashboard.monthlySales.hasRecords"
                   class="rounded-[18px] border border-bt-warning-200 bg-bt-warning-100 p-bt-spacing-16 text-bt-warning-700"
                 >
-                  {{
-                    dashboard.monthlySales.message ||
-                    $t("dashboard.monthlySales.empty")
-                  }}
+                  <!--
+                    Se ignora `message`: el backend lo devuelve con texto fijo
+                    en español, que aparecía tal cual con la interfaz en inglés.
+                  -->
+                  {{ $t("dashboard.monthlySales.empty") }}
                 </div>
 
                 <div
@@ -614,10 +626,7 @@ onBeforeUnmount(() => {
                   v-if="!dashboard.contracts.hasActiveContracts"
                   class="rounded-[18px] border border-bt-grey-200 bg-bt-grey-50 p-bt-spacing-16 text-bt-grey-600"
                 >
-                  {{
-                    dashboard.contracts.message ||
-                    $t("dashboard.contracts.empty")
-                  }}
+                  {{ $t("dashboard.contracts.empty") }}
                 </div>
 
                 <div
@@ -690,10 +699,7 @@ onBeforeUnmount(() => {
                   v-if="!dashboard.criticalInventory.hasAlerts"
                   class="rounded-[18px] border border-bt-success-200 bg-bt-success-100 p-bt-spacing-16 text-bt-success-700"
                 >
-                  {{
-                    dashboard.criticalInventory.message ||
-                    $t("dashboard.inventory.noAlerts")
-                  }}
+                  {{ $t("dashboard.inventory.noAlerts") }}
                 </div>
 
                 <div

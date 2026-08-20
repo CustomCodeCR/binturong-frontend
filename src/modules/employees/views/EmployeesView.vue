@@ -205,7 +205,9 @@ async function reloadEmployeesUntil(
   const attempts = options?.attempts ?? 12;
   const delayMs = options?.delayMs ?? 500;
 
-  loading.value = true;
+  // No se activa `loading`: eso oculta la tabla y con ella la fila que se acaba
+  // de actualizar de forma optimista, así que el usuario veía un spinner de
+  // varios segundos en vez de su cambio. La espera ocurre por detrás.
 
   try {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -228,8 +230,6 @@ async function reloadEmployeesUntil(
       title: t("toast.error"),
       message: t("employees.messages.loadError"),
     });
-  } finally {
-    loading.value = false;
   }
 }
 

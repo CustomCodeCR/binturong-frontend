@@ -20,6 +20,7 @@ import InvoiceCreateDrawer from "@/modules/billing/components/InvoiceCreateDrawe
 import InvoiceDetailsDrawer from "@/modules/billing/components/InvoiceDetailsDrawer.vue";
 import InvoiceEmitModal from "@/modules/billing/components/InvoiceEmitModal.vue";
 import InvoiceActionMenu from "@/modules/billing/components/InvoiceActionMenu.vue";
+import InvoiceEditModal from "@/modules/billing/components/InvoiceEditModal.vue";
 
 import type { Invoice } from "@/core/interfaces/invoices";
 
@@ -190,7 +191,13 @@ function getInvoiceActions(invoice: Invoice) {
       action: () => openDetailsDrawer(invoice),
     },
   ];
+  // Una factura ya emitida ante Hacienda no debería cambiar de encabezado, así
+  // que editar y emitir comparten la misma condición.
   if (!isTaxStatusEmitted(invoice.taxStatus)) {
+    actions.push({
+      label: t("billing.actions.edit"),
+      action: () => openEditModal(invoice),
+    });
     actions.push({
       label: t("billing.actions.emit"),
       action: () => openEmitModal(invoice),
@@ -232,6 +239,23 @@ function openDetailsDrawer(invoice: Invoice) {
     },
     onError: (error: any) => {
       showError(error?.message ?? t("billing.messages.loadError"));
+    },
+  });
+}
+
+function openEditModal(invoice: Invoice) {
+  modalStore.open({
+    component: InvoiceEditModal,
+    props: {
+      invoiceId: invoice.invoiceId,
+      code: invoice.consecutive || invoice.invoiceId,
+    },
+    onSuccess: async () => {
+      showSuccess(t("billing.messages.updateSuccess"));
+      await reloadEventually(loadInvoices);
+    },
+    onError: (error: any) => {
+      showError(error?.message ?? t("billing.messages.updateError"));
     },
   });
 }

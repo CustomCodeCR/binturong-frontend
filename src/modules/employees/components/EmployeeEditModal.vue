@@ -142,7 +142,26 @@ async function submit() {
       isActive: isActive.value,
     });
 
-    modalStore.onSuccess?.({ ok: true });
+    // La vista usa este payload para pintar la fila al instante y luego
+    // reintentar la carga hasta que la proyección de lectura se ponga al día.
+    // Devolver solo `{ ok: true }` la hacía recargar de inmediato y mostrar el
+    // dato viejo, que es lo que QA reportó como "los cambios no se guardan".
+    modalStore.onSuccess?.({
+      employeeId: employee.value.employeeId,
+      userId: userId.value.trim() || null,
+      branchId: branchId.value,
+      fullName: fullName.value.trim(),
+      nationalId: employee.value.nationalId,
+      email: email.value.trim(),
+      hireDate: employee.value.hireDate ?? null,
+      terminationDate: terminationDate.value || null,
+      jobTitle: jobTitle.value.trim(),
+      baseSalary: Number(baseSalary.value),
+      isActive: isActive.value,
+      branchName:
+        branches.value.find((branch) => branch.id === branchId.value)?.label ??
+        employee.value.branchName,
+    });
     modalStore.close();
   } catch (error: any) {
     modalStore.onError?.({

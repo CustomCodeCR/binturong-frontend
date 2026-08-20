@@ -2451,7 +2451,8 @@
       "refresh": "Refresh",
       "newInvoice": "New Invoice",
       "viewDetails": "View Details",
-      "emit": "Issue Invoice"
+      "emit": "Issue Invoice",
+      "edit": "Edit invoice"
     },
     "placeholders": {
       "selectSalesOrder": "Select a sales order",
@@ -2468,7 +2469,9 @@
       "createSuccess": "Invoice created successfully.",
       "createError": "Could not create invoice.",
       "emitSuccess": "Invoice issued successfully.",
-      "emitError": "Could not issue invoice."
+      "emitError": "Could not issue invoice.",
+      "updateSuccess": "Invoice updated successfully.",
+      "updateError": "Could not update the invoice."
     },
     "validation": {
       "requiredHeader": "Client, branch, issue date, currency, and document type are required.",
@@ -2511,6 +2514,12 @@
         "total": "Total"
       },
       "selectProductFirst": "Select a product first"
+    },
+    "editModal": {
+      "title": "Edit invoice",
+      "description": "Update the details of invoice {code}.",
+      "linesNotice": "Invoice lines and totals are not edited here: they are recalculated on the server.",
+      "internalStatusLocked": "The internal status is managed by the system: it changes with emission and payments."
     }
   },
   "payments": {
@@ -3499,7 +3508,7 @@
     "actions": {
       "newIncome": "New income",
       "newExpense": "New expense",
-      "reconcile": "Reconcile",
+      "reconcile": "Reconciliation",
       "search": "Search",
       "refresh": "Refresh",
       "generate": "Generate",

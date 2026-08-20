@@ -1559,6 +1559,20 @@ export const Endpoints: Record<string, Endpoint> = {
       Accept: "application/json",
     },
   },
+  getDashboardPreferences: {
+    method: "GET",
+    path: "/api/users/me/preferences/dashboard",
+    headers: {
+      Accept: "application/json",
+    },
+  },
+  updateDashboardPreferences: {
+    method: "PUT",
+    path: "/api/users/me/preferences/dashboard",
+    headers: {
+      Accept: "application/json",
+    },
+  },
   getFinancialReport: {
     method: "GET",
     path: "/api/reports/financial",

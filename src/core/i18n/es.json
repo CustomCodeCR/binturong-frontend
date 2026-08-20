@@ -2451,7 +2451,8 @@
       "refresh": "Actualizar",
       "newInvoice": "Nueva factura",
       "viewDetails": "Ver detalles",
-      "emit": "Emitir factura"
+      "emit": "Emitir factura",
+      "edit": "Editar factura"
     },
     "placeholders": {
       "selectSalesOrder": "Selecciona una orden de venta",
@@ -2468,7 +2469,9 @@
       "createSuccess": "Factura creada correctamente.",
       "createError": "No se pudo crear la factura.",
       "emitSuccess": "Factura emitida correctamente.",
-      "emitError": "No se pudo emitir la factura."
+      "emitError": "No se pudo emitir la factura.",
+      "updateSuccess": "Factura actualizada correctamente.",
+      "updateError": "No se pudo actualizar la factura."
     },
     "validation": {
       "requiredHeader": "El cliente, sucursal, fecha de emisión, moneda y tipo de documento son obligatorios.",
@@ -2511,6 +2514,12 @@
         "total": "Total"
       },
       "selectProductFirst": "Seleccione un producto"
+    },
+    "editModal": {
+      "title": "Editar factura",
+      "description": "Actualice los datos de la factura {code}.",
+      "linesNotice": "Las líneas y los totales no se editan aquí: se recalculan en el servidor.",
+      "internalStatusLocked": "El estado interno lo gobierna el sistema: cambia con la emisión y los pagos."
     }
   },
   "payments": {
@@ -3499,7 +3508,7 @@
     "actions": {
       "newIncome": "Nuevo ingreso",
       "newExpense": "Nuevo gasto",
-      "reconcile": "Conciliar",
+      "reconcile": "Conciliación",
       "search": "Buscar",
       "refresh": "Actualizar",
       "generate": "Generar",

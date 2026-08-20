@@ -137,7 +137,23 @@ async function submit() {
       isActive: isActive.value,
     });
 
-    modalStore.onSuccess?.({ ok: true });
+    // La vista usa este payload para pintar la fila al instante y reintentar la
+    // carga hasta que la proyección de lectura se ponga al día. Con solo
+    // `{ ok: true }` recargaba de inmediato y mostraba el dato viejo.
+    modalStore.onSuccess?.({
+      clientId: props.clientId,
+      identification: identification.value.trim(),
+      identificationType: identificationType.value,
+      tradeName: tradeName.value.trim(),
+      contactName: contactName.value.trim(),
+      email: email.value.trim(),
+      primaryPhone: primaryPhone.value.trim(),
+      secondaryPhone: secondaryPhone.value.trim(),
+      industry: industry.value.trim(),
+      clientType: clientType.value.trim(),
+      score: Number(score.value ?? 0),
+      isActive: isActive.value,
+    });
     modalStore.close();
   } catch (error: any) {
     modalStore.onError?.({

@@ -2,10 +2,10 @@
 set -e
 
 : "${VITE_APP_VERSION:=1.0.2}"
-: "${VITE_API_URL:=http://200.234.228.70:8080}"
+: "${VITE_API_URL:=https://api.cerrajeriacalderoncr.com}"
 : "${VITE_API_VERSION:=}"
 : "${VITE_APP_NAME:=Binturong}"
-: "${VITE_FRONTEND_DOMAIN:=http://200.234.228.70}"
+: "${VITE_FRONTEND_DOMAIN:=https://sistema.cerrajeriacalderoncr.com}"
 : "${SERVER_NAME:=_}"
 
 cat >/usr/share/nginx/html/env.js <<EOF
@@ -23,4 +23,3 @@ envsubst '${SERVER_NAME}' \
   >/etc/nginx/conf.d/default.conf
 
 exec "$@"
-

@@ -251,7 +251,8 @@
       "loadingScopes": "Loading permissions...",
       "noScopesSelected": "This role will be created without permissions. You can assign them later by editing the role.",
       "selectedCount": "{count} permissions selected",
-      "noScopesAvailable": "No permissions available"
+      "noScopesAvailable": "No permissions available",
+      "scopesRequired": "Select at least one permission for the role."
     },
     "modal": {
       "createTitle": "Create Role",
@@ -2069,7 +2070,8 @@
       "milestones": "Milestones",
       "options": "Options",
       "autoRenew": "Auto-renew",
-      "expiryNoticeDays": "Expiry notice days"
+      "expiryNoticeDays": "Expiry notice days",
+      "branch": "Branch"
     },
     "fields": {
       "code": "Code",
@@ -2087,7 +2089,9 @@
       "expiryAlertActive": "Alert active",
       "expiryLastNotifiedAtUtc": "Last notification",
       "renewedAtUtc": "Last renewal",
-      "responsibleUserId": "Responsible user"
+      "responsibleUserId": "Responsible user",
+      "branch": "Branch",
+      "branchHint": "Optional. Assigning a branch lets the contract be filtered on the dashboard."
     },
     "actions": {
       "search": "Search",
@@ -2135,7 +2139,8 @@
       "selectClient": "Select a client",
       "selectQuote": "Select a quote",
       "selectSalesOrder": "Select a sales order",
-      "selectInvoice": "Select an invoice"
+      "selectInvoice": "Select an invoice",
+      "selectBranch": "Select a branch"
     },
     "milestones": {
       "title": "Milestones",

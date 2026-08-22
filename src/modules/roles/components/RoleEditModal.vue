@@ -122,6 +122,15 @@ async function submit() {
     return;
   }
 
+  // El backend tampoco permite dejar un rol existente sin permisos.
+  if (normalizeSelectedScopeIds(selectedScopeIds.value).length === 0) {
+    modalStore.onError?.({
+      code: 400,
+      message: t("roles.validation.scopesRequired"),
+    });
+    return;
+  }
+
   saving.value = true;
 
   try {

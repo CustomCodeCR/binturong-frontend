@@ -23,12 +23,14 @@ const saving = ref(false);
 const loadingCatalogs = ref(false);
 
 const clients = ref<SelectOption[]>([]);
+const branches = ref<SelectOption[]>([]);
 const quotes = ref<SelectOption[]>([]);
 const salesOrders = ref<SelectOption[]>([]);
 const contract = ref<Contract | null>(null);
 
 const code = ref("");
 const clientId = ref("");
+const branchId = ref("");
 const quoteId = ref("");
 const salesOrderId = ref("");
 const startDate = ref("");
@@ -58,16 +60,22 @@ async function loadCatalogs() {
   loadingCatalogs.value = true;
 
   try {
-    const [clientsResponse, quotesResponse, salesOrdersResponse] =
-      await Promise.all([
-        SelectService.selectClients({ onlyActive: true }),
-        SelectService.selectQuotes(),
-        SelectService.selectSalesOrders(),
-      ]);
+    const [
+      clientsResponse,
+      quotesResponse,
+      salesOrdersResponse,
+      branchesResponse,
+    ] = await Promise.all([
+      SelectService.selectClients({ onlyActive: true }),
+      SelectService.selectQuotes(),
+      SelectService.selectSalesOrders(),
+      SelectService.selectBranches({ onlyActive: true }),
+    ]);
 
     clients.value = clientsResponse ?? [];
     quotes.value = quotesResponse ?? [];
     salesOrders.value = salesOrdersResponse ?? [];
+    branches.value = branchesResponse ?? [];
   } catch (error: any) {
     console.error("Load contract catalogs error:", error);
 
@@ -90,6 +98,7 @@ async function loadContract() {
 
     code.value = response?.code ?? "";
     clientId.value = response?.clientId ?? "";
+    branchId.value = response?.branchId ?? "";
     quoteId.value = response?.quoteId ?? "";
     salesOrderId.value = response?.salesOrderId ?? "";
     startDate.value = toDateInputValue(response?.startDate);
@@ -176,6 +185,8 @@ async function submit() {
     await ContractsService.update(props.contractId, {
       code: normalizedCode,
       clientId: normalizedClientId,
+      // Sin enviarla el backend la pondría en null y se perdería la sucursal.
+      branchId: branchId.value || undefined,
       quoteId: normalizedQuoteId || undefined,
       salesOrderId: normalizedSalesOrderId || undefined,
       startDate: startDate.value,
@@ -270,6 +281,23 @@ onMounted(async () => {
           </option>
           <option v-for="client in clients" :key="client.id" :value="client.id">
             {{ client.label }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+          {{ $t("contracts.fields.branch") }}
+        </label>
+        <select
+          v-model="branchId"
+          class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+        >
+          <option value="">
+            {{ $t("contracts.placeholders.selectBranch") }}
+          </option>
+          <option v-for="branch in branches" :key="branch.id" :value="branch.id">
+            {{ branch.label }}
           </option>
         </select>
       </div>

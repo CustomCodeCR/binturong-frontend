@@ -91,9 +91,14 @@ async function loadScopes() {
 function validateForm(): boolean {
   const nameLabel = t("roles.fields.name");
   const descriptionLabel = t("roles.fields.description");
+  const scopesLabel = t("roles.fields.scopes");
 
   return validate(
-    { name: name.value, description: description.value },
+    {
+      name: name.value,
+      description: description.value,
+      scopeIds: selectedScopeIds.value,
+    },
     {
       name: [
         rules.required(nameLabel),
@@ -105,6 +110,9 @@ function validateForm(): boolean {
         rules.meaningfulText(descriptionLabel, 5),
         rules.maxLength(255, descriptionLabel),
       ],
+      // El backend rechaza un rol sin permisos; sin esta regla el formulario
+      // enviaba igual y el usuario recibía un 400 genérico.
+      scopeIds: [rules.arrayRequired(scopesLabel)],
     },
   );
 }
@@ -118,13 +126,12 @@ async function submit() {
   loading.value = true;
 
   try {
+    // El rol y sus permisos se crean en una sola llamada: el backend los exige
+    // juntos y los persiste de forma atómica.
     const created = await RolesService.create({
       name: name.value.trim(),
       description: description.value.trim(),
       isActive: isActive.value,
-    });
-
-    await RolesService.setScopes(created.roleId, {
       scopeIds: normalizeSelectedScopeIds(selectedScopeIds.value),
     });
 

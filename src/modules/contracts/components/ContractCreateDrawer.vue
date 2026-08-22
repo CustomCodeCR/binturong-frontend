@@ -24,11 +24,13 @@ const loadingCatalogs = ref(false);
 const loading = ref(false);
 
 const clients = ref<SelectOption[]>([]);
+const branches = ref<SelectOption[]>([]);
 const quotes = ref<SelectOption[]>([]);
 const salesOrders = ref<SelectOption[]>([]);
 
 const code = ref("");
 const clientId = ref("");
+const branchId = ref("");
 const quoteId = ref("");
 const salesOrderId = ref("");
 const startDate = ref("");
@@ -85,16 +87,22 @@ async function loadCatalogs() {
   loadingCatalogs.value = true;
 
   try {
-    const [clientsResponse, quotesResponse, salesOrdersResponse] =
-      await Promise.all([
-        SelectService.selectClients({ onlyActive: true }),
-        SelectService.selectQuotes(),
-        SelectService.selectSalesOrders(),
-      ]);
+    const [
+      clientsResponse,
+      quotesResponse,
+      salesOrdersResponse,
+      branchesResponse,
+    ] = await Promise.all([
+      SelectService.selectClients({ onlyActive: true }),
+      SelectService.selectQuotes(),
+      SelectService.selectSalesOrders(),
+      SelectService.selectBranches({ onlyActive: true }),
+    ]);
 
     clients.value = clientsResponse ?? [];
     quotes.value = quotesResponse ?? [];
     salesOrders.value = salesOrdersResponse ?? [];
+    branches.value = branchesResponse ?? [];
   } catch (error: any) {
     console.error("Load contract catalogs error:", error);
 
@@ -229,6 +237,7 @@ async function submit() {
     const created = await ContractsService.create({
       code: normalizedCode,
       clientId: normalizedClientId,
+      branchId: branchId.value || undefined,
       quoteId: normalizedQuoteId || undefined,
       salesOrderId: normalizedSalesOrderId || undefined,
       startDate: startDate.value,
@@ -379,6 +388,30 @@ onMounted(async () => {
           </select>
           <BTFieldError :message="getError('clientId')" />
         </div>
+
+          <div>
+            <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">
+              {{ $t("contracts.fields.branch") }}
+            </label>
+            <select
+              v-model="branchId"
+              class="w-full px-bt-spacing-16 py-bt-spacing-12 rounded-m border border-bt-grey-300 bg-bt-white focus:outline-none focus:ring-2 focus:ring-bt-accent-500"
+            >
+              <option value="">
+                {{ $t("contracts.placeholders.selectBranch") }}
+              </option>
+              <option
+                v-for="branch in branches"
+                :key="branch.id"
+                :value="branch.id"
+              >
+                {{ branch.label }}
+              </option>
+            </select>
+            <p class="mt-bt-spacing-8 text-sm text-bt-grey-600">
+              {{ $t("contracts.fields.branchHint") }}
+            </p>
+          </div>
 
         <div>
           <label class="block mb-bt-spacing-8 text-sm text-bt-primary-700">

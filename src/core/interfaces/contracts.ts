@@ -29,6 +29,9 @@ export interface Contract {
   code: string;
   clientId: string;
   clientName: string;
+  branchId: string | null;
+  /** Nombre resuelto por el backend, con formato "CODIGO - Nombre". */
+  branchName: string | null;
   quoteId: string | null;
   salesOrderId: string | null;
   startDate: string;
@@ -52,6 +55,7 @@ export interface Contract {
 export interface ContractCreateRequest {
   code: string;
   clientId: string;
+  branchId?: string;
   quoteId?: string;
   salesOrderId?: string;
   startDate: string;
@@ -78,6 +82,7 @@ export interface ContractCreateResponse {
 export interface ContractUpdateRequest {
   code: string;
   clientId: string;
+  branchId?: string;
   quoteId?: string;
   salesOrderId?: string;
   startDate: string;

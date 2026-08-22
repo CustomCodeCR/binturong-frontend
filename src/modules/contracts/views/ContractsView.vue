@@ -53,6 +53,7 @@ const filteredContracts = computed(() => {
       (contract) =>
         (contract.code ?? "").toLowerCase().includes(term) ||
         (contract.clientName ?? "").toLowerCase().includes(term) ||
+        (contract.branchName ?? "").toLowerCase().includes(term) ||
         (contract.status ?? "").toLowerCase().includes(term) ||
         (contract.description ?? "").toLowerCase().includes(term) ||
         (contract.notes ?? "").toLowerCase().includes(term),
@@ -384,6 +385,7 @@ onMounted(async () => {
             <tr class="bg-bt-primary-50 text-left">
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("contracts.table.code") }}</th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("contracts.table.client") }}</th>
+              <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("contracts.table.branch") }}</th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("contracts.table.startDate") }}</th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("contracts.table.endDate") }}</th>
               <th class="px-bt-spacing-16 py-bt-spacing-12 text-bt-primary-700">{{ $t("contracts.table.status") }}</th>
@@ -404,6 +406,9 @@ onMounted(async () => {
                 {{ contract.code }}
               </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ contract.clientName }}</td>
+              <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">
+                {{ contract.branchName || "-" }}
+              </td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDate(contract.startDate) }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12 text-bt-grey-700">{{ formatDate(contract.endDate) }}</td>
               <td class="px-bt-spacing-16 py-bt-spacing-12">
@@ -442,7 +447,7 @@ onMounted(async () => {
             </tr>
 
             <tr v-if="!filteredContracts.length && !loading">
-              <td colspan="9" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
+              <td colspan="10" class="px-bt-spacing-16 py-bt-spacing-24 text-center text-bt-grey-500">
                 {{ $t("contracts.empty") }}
               </td>
             </tr>

@@ -17,6 +17,11 @@ export interface RoleCreateRequest {
   name: string;
   description: string;
   isActive: boolean;
+  /**
+   * El backend exige al menos un permiso al crear el rol y los guarda de forma
+   * atómica, así que se envían aquí en vez de en una segunda llamada.
+   */
+  scopeIds: string[];
 }
 
 export interface RoleCreateResponse {

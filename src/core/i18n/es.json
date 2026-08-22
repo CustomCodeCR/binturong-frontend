@@ -251,7 +251,8 @@
       "loadingScopes": "Cargando permisos...",
       "noScopesSelected": "Este rol se creará sin permisos asignados. Podrá asignarlos después desde la edición del rol.",
       "selectedCount": "{count} permisos seleccionados",
-      "noScopesAvailable": "No hay permisos disponibles"
+      "noScopesAvailable": "No hay permisos disponibles",
+      "scopesRequired": "Seleccione al menos un permiso para el rol."
     },
     "modal": {
       "createTitle": "Crear rol",
@@ -2069,7 +2070,8 @@
       "milestones": "Hitos",
       "options": "Opciones",
       "autoRenew": "Renovación automática",
-      "expiryNoticeDays": "Días de aviso de vencimiento"
+      "expiryNoticeDays": "Días de aviso de vencimiento",
+      "branch": "Sucursal"
     },
     "fields": {
       "code": "Código",
@@ -2087,7 +2089,9 @@
       "expiryAlertActive": "Alerta activa",
       "expiryLastNotifiedAtUtc": "Última notificación",
       "renewedAtUtc": "Última renovación",
-      "responsibleUserId": "Usuario responsable"
+      "responsibleUserId": "Usuario responsable",
+      "branch": "Sucursal",
+      "branchHint": "Opcional. Asignar una sucursal permite filtrar el contrato en el Panel de Control."
     },
     "actions": {
       "search": "Buscar",
@@ -2135,7 +2139,8 @@
       "selectClient": "Selecciona un cliente",
       "selectQuote": "Selecciona una cotización",
       "selectSalesOrder": "Selecciona una orden de venta",
-      "selectInvoice": "Selecciona una factura"
+      "selectInvoice": "Selecciona una factura",
+      "selectBranch": "Seleccione una sucursal"
     },
     "milestones": {
       "title": "Hitos",

@@ -66,8 +66,9 @@ export async function fetchClient<T>(
     // No content
     if (response.status === 204) return {} as T;
 
-    // Mantener tu comportamiento actual para 404
-    if (response.status === 404) return {} as T;
+    // Los 404 se tratan como cualquier otro error. Antes se devolvía `{}`, así
+    // que al abrir un registro inexistente la pantalla quedaba en blanco sin
+    // ningún mensaje; ahora se propaga el motivo que envía el servidor.
 
     // Errors
     if (!response.ok) {

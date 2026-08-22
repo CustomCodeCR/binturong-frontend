@@ -23,4 +23,3 @@ envsubst '${SERVER_NAME}' \
   >/etc/nginx/conf.d/default.conf
 
 exec "$@"
-
